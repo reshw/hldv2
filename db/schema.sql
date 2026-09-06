@@ -113,17 +113,18 @@ CREATE TABLE enemy_tips (
 );
 
 -- Reproduces ballistics.html's computeRow() exactly, for every (weapon, part) pair.
--- Sourced directly from DiversDex's own cell documentation (not guessed):
---   ARMOR:      AP > part's Armor Value -> 100% damage. AP == Armor -> 65% damage.
---               AP < Armor -> 0% damage (ricochet).
---   DURABILITY: independently of the above, a part's durability% always lets that
---               fraction of a hit through as "durable damage" (weapon_hits.durable,
---               a fraction of .dmg) regardless of the armor tier; the remaining
---               (1 - durability) fraction is gated by the armor tier above.
+-- Sourced directly from DiversDex's own cell documentation (not guessed), applied in
+-- TWO STEPS (not independently blended):
+--   1. DURABILITY blends the weapon's standard damage and durable damage into one "raw"
+--      value: 60% durability -> 40% standard + 60% durable (weapon_hits.durable is
+--      stored as a fraction of .dmg, so .dmg * .durable recovers the sheet's raw
+--      durable-damage number).
+--   2. That blended value is THEN multiplied by the ARMOR tier: AP > Armor -> 100%,
+--      AP == Armor -> 65%, AP < Armor -> 0%. A ricochet zeroes out the whole hit,
+--      durable share included - matches the doc's flat "AP < Armor: NO damage" with no
+--      durability exception.
 -- A weapon's BEST hit component (against this specific part's armor) is used, not just
 -- the first one - see weapon_hits' comment for why.
--- 'Infinity'::double precision shows up as a literal "Infinity" when queried - that's
--- correct, it means this part cannot kill the creature on its own (e.g. a pure shield).
 CREATE VIEW hit_eff_damage AS
 SELECT
   h.weapon_id,
@@ -133,10 +134,9 @@ SELECT
   h.type,
   h.ap_direct,
   CASE WHEN h.ap_direct > p.armor THEN 1.0 WHEN h.ap_direct = p.armor THEN 0.65 ELSE 0 END AS armor_mult,
-  h.dmg * (
-    (1 - COALESCE(p.durability, 0)) * (CASE WHEN h.ap_direct > p.armor THEN 1.0 WHEN h.ap_direct = p.armor THEN 0.65 ELSE 0 END)
-    + COALESCE(p.durability, 0) * h.durable
-  ) AS eff_dmg
+  (h.dmg * (1 - COALESCE(p.durability, 0)) + (h.dmg * h.durable) * COALESCE(p.durability, 0))
+    * (CASE WHEN h.ap_direct > p.armor THEN 1.0 WHEN h.ap_direct = p.armor THEN 0.65 ELSE 0 END)
+  AS eff_dmg
 FROM weapon_hits h
 JOIN enemy_parts p ON true; -- cross join: every hit component evaluated against every part
 

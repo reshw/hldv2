@@ -710,11 +710,15 @@ function weaponHits(w){
  * damage a part receives. A part with 60% durability receives 40% of the weapon's standard
  * damage and 60% of its durable damage."
  *
- * These are two independent axes that both apply to every hit: the armor tier above gates
- * the "standard damage" (weapon.dmg) share; the part's own durability% always lets its
- * durable-damage share through regardless of that armor tier. (`durable` here is stored as
- * a fraction of `dmg` - i.e. rawDurableDamage / rawDamage from the sheet - so multiplying
- * it by `dmg` recovers the raw durable-damage number the sheet lists separately.)
+ * These apply in TWO STEPS, not blended independently:
+ *   1. durability% blends the weapon's standard damage and durable damage into one
+ *      "raw" damage value (60% durability -> 40% standard + 60% durable).
+ *   2. THAT blended value is then multiplied by the armor tier (100%/65%/0%) - so a
+ *      ricochet (AP < Armor) zeroes out the WHOLE hit, durable share included. This
+ *      matches the doc's flat "AP < Armor: NO damage" with no exception for durability.
+ * (`durable` here is stored as a fraction of `dmg` - i.e. rawDurableDamage / rawDamage
+ * from the sheet - so multiplying it by `dmg` recovers the raw durable-damage number the
+ * sheet lists separately.)
  *
  * Only the primary (first-listed) hit component is used - whether a second component (e.g.
  * an explosion) also lands on the SAME struck part is a geometry question this project
@@ -727,7 +731,8 @@ function armorMultiplier(ap, armor){
 }
 function hitEffDamage(h, armor, partDurability){
   var pd = partDurability || 0;
-  return h.dmg * ((1 - pd) * armorMultiplier(h.apDirect, armor) + pd * h.durable);
+  var blended = h.dmg * (1 - pd) + (h.dmg * h.durable) * pd;
+  return blended * armorMultiplier(h.apDirect, armor);
 }
 /**
  * A weapon can list several hit components with DIFFERENT penetration ratings on purpose
