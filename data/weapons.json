@@ -1034,8 +1034,8 @@
       },
       {
         "type": "Explosion",
-        "dmg": 100,
-        "durable": 1,
+        "dmg": 200,
+        "durable": 0.5,
         "apDirect": 3,
         "apSlight": 0,
         "apLarge": 0,

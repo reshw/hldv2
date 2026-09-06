@@ -8,14 +8,16 @@ CREATE SCHEMA IF NOT EXISTS helldivers;
 SET search_path TO helldivers;
 
 DROP VIEW IF EXISTS btk_matrix;
+DROP VIEW IF EXISTS hit_eff_damage;
 DROP TABLE IF EXISTS enemy_tips;
 DROP TABLE IF EXISTS enemy_parts;
 DROP TABLE IF EXISTS enemies;
 DROP TABLE IF EXISTS weapon_hits;
 DROP TABLE IF EXISTS weapons;
 
--- pen/dmg/durable mirror hits[0] (the direct-hit component) - see the comment on
--- weapon_hits below for why only the first component feeds the BTK formula.
+-- pen/dmg/durable mirror weapon_hits' first row, kept for quick/simple lookups; the
+-- btk_matrix view below uses the full weapon_hits table (best component per target),
+-- not just this row - see weapon_hits' comment.
 CREATE TABLE weapons (
   id          TEXT PRIMARY KEY,
   name        TEXT NOT NULL,
@@ -38,10 +40,11 @@ CREATE TABLE weapons (
 );
 
 -- One row per damage component a single trigger-pull can deal (e.g. a grenade's direct
--- kinetic hit AND its explosion). ordinal 0 is always the "direct-hit" component and is
--- the ONLY one the btk_matrix view below uses - verified against the source spreadsheet's
--- own worked example (a splash component summed in would give the wrong BTK). Components
--- past ordinal 0 are kept here for reference/future use, not for the headline BTK number.
+-- kinetic hit AND its explosion). Some weapons are explicitly designed so different
+-- components penetrate different armor tiers (PLAS-1 Scorcher's own notes: "the explosion
+-- can penetrate medium armor but the plasma projectile has only light armor penetration") -
+-- btk_matrix picks whichever component deals the most damage against each target's armor,
+-- not just the first-listed one.
 CREATE TABLE weapon_hits (
   id             SERIAL PRIMARY KEY,
   weapon_id      TEXT NOT NULL REFERENCES weapons(id) ON DELETE CASCADE,
@@ -110,9 +113,39 @@ CREATE TABLE enemy_tips (
 );
 
 -- Reproduces ballistics.html's computeRow() exactly, for every (weapon, part) pair.
+-- Sourced directly from DiversDex's own cell documentation (not guessed):
+--   ARMOR:      AP > part's Armor Value -> 100% damage. AP == Armor -> 65% damage.
+--               AP < Armor -> 0% damage (ricochet).
+--   DURABILITY: independently of the above, a part's durability% always lets that
+--               fraction of a hit through as "durable damage" (weapon_hits.durable,
+--               a fraction of .dmg) regardless of the armor tier; the remaining
+--               (1 - durability) fraction is gated by the armor tier above.
+-- A weapon's BEST hit component (against this specific part's armor) is used, not just
+-- the first one - see weapon_hits' comment for why.
 -- 'Infinity'::double precision shows up as a literal "Infinity" when queried - that's
 -- correct, it means this part cannot kill the creature on its own (e.g. a pure shield).
+CREATE VIEW hit_eff_damage AS
+SELECT
+  h.weapon_id,
+  p.enemy_id,
+  p.id AS part_id,
+  h.ordinal,
+  h.type,
+  h.ap_direct,
+  CASE WHEN h.ap_direct > p.armor THEN 1.0 WHEN h.ap_direct = p.armor THEN 0.65 ELSE 0 END AS armor_mult,
+  h.dmg * (
+    (1 - COALESCE(p.durability, 0)) * (CASE WHEN h.ap_direct > p.armor THEN 1.0 WHEN h.ap_direct = p.armor THEN 0.65 ELSE 0 END)
+    + COALESCE(p.durability, 0) * h.durable
+  ) AS eff_dmg
+FROM weapon_hits h
+JOIN enemy_parts p ON true; -- cross join: every hit component evaluated against every part
+
 CREATE VIEW btk_matrix AS
+WITH best AS (
+  SELECT DISTINCT ON (weapon_id, part_id) *
+  FROM hit_eff_damage
+  ORDER BY weapon_id, part_id, eff_dmg DESC
+)
 SELECT
   w.id            AS weapon_id,
   w.name          AS weapon_name,
@@ -122,26 +155,25 @@ SELECT
   e.faction,
   p.name          AS part_name,
   p.lethal,
-  (w.pen >= p.armor)                                                      AS full_penetration,
-  CASE WHEN w.pen >= p.armor THEN w.dmg ELSE w.dmg * w.durable END        AS eff_dmg,
-  CEIL(
-    CASE
-      WHEN p.lethal THEN
-        (CASE WHEN p.hp > 0 THEN p.hp ELSE e.main_hp END)
-        / (CASE WHEN w.pen >= p.armor THEN w.dmg ELSE w.dmg * w.durable END)
-      WHEN p.to_main > 0 THEN
-        e.main_hp / ((CASE WHEN w.pen >= p.armor THEN w.dmg ELSE w.dmg * w.durable END) * p.to_main)
-      ELSE 'Infinity'::double precision
-    END
-  )               AS btk,
-  CASE WHEN p.hp > 0 THEN
-    CEIL(p.hp / (CASE WHEN w.pen >= p.armor THEN w.dmg ELSE w.dmg * w.durable END))
-  END             AS sever_shots   -- shots to destroy just this part's own hp; null if it has none
-FROM weapons w
-CROSS JOIN enemies e
-JOIN enemy_parts p ON p.enemy_id = e.id;
+  best.type       AS best_hit_component,
+  best.armor_mult,
+  best.eff_dmg,
+  -- NULLIF guards eff_dmg=0 (ricochet) - NULL below means "can't be killed via this path",
+  -- same meaning as the app's Infinity, just represented the way SQL represents "no answer".
+  CASE
+    WHEN p.lethal THEN CEIL((CASE WHEN p.hp > 0 THEN p.hp ELSE e.main_hp END) / NULLIF(best.eff_dmg, 0))
+    WHEN p.to_main > 0 THEN CEIL(e.main_hp / NULLIF(best.eff_dmg * p.to_main, 0))
+    ELSE NULL
+  END             AS btk,
+  CASE WHEN p.hp > 0 THEN CEIL(p.hp / NULLIF(best.eff_dmg, 0)) END AS sever_shots
+FROM best
+JOIN weapons w ON w.id = best.weapon_id
+JOIN enemy_parts p ON p.id = best.part_id
+JOIN enemies e ON e.id = p.enemy_id;
 
 COMMENT ON VIEW btk_matrix IS
-  'One row per (weapon, enemy body part). btk = shots needed via that part to kill the whole '
-  'creature; sever_shots = shots to destroy just that part''s own hp pool. See data/README.md '
-  'for the model this implements.';
+  'One row per (weapon, enemy body part), using whichever weapon_hits component deals the '
+  'most damage against that part''s armor. btk = shots needed via that part to kill the '
+  'whole creature; sever_shots = shots to destroy just that part''s own hp pool. Does NOT '
+  'account for regenerating enemies (see enemies.regen_rate) or multi-part splash. See '
+  'data/README.md for the full model.';

@@ -180,10 +180,16 @@ select.armor-sel{
 .img-credit{font-size:10.5px; color:var(--text-faint); align-self:center;}
 
 .bp-weapon-select{margin:6px 0 12px; font-size:13px; color:var(--text-dim); display:flex; align-items:center; gap:8px;}
-.bp-weapon-select select{
-  background:var(--surface-2); border:1px solid var(--border); color:var(--text); padding:6px 10px;
-  border-radius:4px; font-size:13px; max-width:320px;
+.weapon-combo{position:relative; width:320px; max-width:100%;}
+.weapon-combo input{width:100%; box-sizing:border-box;}
+.weapon-combo-list{
+  position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:20; max-height:280px; overflow-y:auto;
+  background:var(--surface-3); border:1px solid var(--border); border-radius:4px; box-shadow:var(--shadow);
 }
+.weapon-combo-item{padding:7px 10px; font-size:12.5px; color:var(--text-dim); cursor:pointer; display:flex; justify-content:space-between; gap:8px;}
+.weapon-combo-item:hover, .weapon-combo-item.hl{background:var(--surface-2); color:var(--text);}
+.weapon-combo-item .cat{font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.03em;}
+.weapon-combo-empty{padding:8px 10px; font-size:12px; color:var(--text-faint);}
 .bp-grid{display:grid; grid-template-columns:1fr 1fr 1.4fr; gap:14px; align-items:start;}
 @media (max-width:1100px){ .bp-grid{grid-template-columns:1fr;} }
 .bp-col{background:var(--surface-2); border:1px solid var(--border-soft); border-radius:4px; padding:12px 14px;}
@@ -503,7 +509,7 @@ function DEFAULT_WEAPONS(){ return [
   {id:"mp_98_knight", name:"MP-98 Knight", cat:"primary", pen:2, dmg:70, durable:0.1, rpm:1380, mag:70, reload:3,tacReload:2,ergonomics:70,spreadX:5,spreadY:5,caliber:9,speed:375,mass:7,notes:"Equipped with extended magazine. Falloff values are outdated : 1.003.000 increased Drag factor from 30% to 60%.",img:"https://i.postimg.cc/VNJfwtv9/Knight.jpg",
     hits:[{type:"Projectile",dmg:70,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:5,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21},{type:"Projectile",dmg:70,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:5,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21}]},
   {id:"plas_1_scorcher", name:"PLAS-1 Scorcher", cat:"primary", pen:2, dmg:100, durable:0.5, rpm:350, mag:20, reload:2.5,tacReload:2.5,ergonomics:65,spreadX:10,spreadY:10,caliber:20,speed:550,mass:25,notes:"The explosion can penetrate medium armor but the plasma projectile has only light armor penetration.",img:"https://i.postimg.cc/6psTYYQs/Scorcher.jpg",
-    hits:[{type:"Projectile",dmg:100,durable:0.5,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:20,pushForce:10,falloff25m:0.34,falloff50m:0.52,falloff100m:0.68},{type:"Explosion",dmg:100,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:1,outerRadius:2,staggerRadius:2,demolition:10,stagger:10,pushForce:7}]},
+    hits:[{type:"Projectile",dmg:100,durable:0.5,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:20,pushForce:10,falloff25m:0.34,falloff50m:0.52,falloff100m:0.68},{type:"Explosion",dmg:200,durable:0.5,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:1,outerRadius:2,staggerRadius:2,demolition:10,stagger:10,pushForce:7}]}, /* Explosion dmg/durable corrected 100/100%->200/50% per user's real-game report, 2026-09-07 */
   {id:"plas_101_purifier_charged", name:"PLAS-101 Purifier (charged)", cat:"primary", pen:3, dmg:200, durable:0.5, rpm:60, mag:15, reload:2.5,tacReload:2.5,ergonomics:65,spreadX:10,spreadY:10,caliber:20,speed:350,mass:25,notes:"Maximum charge of 1 sec gives a 100% damage multiplier. The explosion doesn’t scale but a fully charged shot has a bigger blast radius and higher damage.",img:"https://i.postimg.cc/X7BpfT4c/Purifier.jpg",
     hits:[{type:"Projectile",dmg:200,durable:0.5,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:10,falloff25m:0.32,falloff50m:0.48,falloff100m:0.64},{type:"Explosion",dmg:300,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:2.9,outerRadius:3,staggerRadius:4,demolition:10,stagger:35,pushForce:30}]},
   {id:"plas_101_purifier_uncharged", name:"PLAS-101 Purifier (uncharged)", cat:"primary", pen:3, dmg:100, durable:0.5, rpm:1000, mag:15, reload:2.5,tacReload:2.5,ergonomics:65,spreadX:10,spreadY:10,caliber:20,speed:550,mass:25,notes:"Minimum charge of 0.1 sec gives a 50% damage multiplier. The explosion doesn’t scale but a fully charged shot has a bigger blast radius and higher damage.",img:"https://i.postimg.cc/X7BpfT4c/Purifier.jpg",
@@ -678,8 +684,8 @@ function findEnemy(id){ for(var i=0;i<state.enemies.length;i++) if(state.enemies
 function findWeapon(id){ for(var i=0;i<state.weapons.length;i++) if(state.weapons[i].id===id) return state.weapons[i]; return state.weapons[0]; }
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
 function fmt(n, d){ d = d===undefined?0:d; return Number(n).toLocaleString("ko-KR", {minimumFractionDigits:d, maximumFractionDigits:d}); }
-function fmtNum(n, d){ return isFinite(n) ? fmt(n, d) : "∞"; }
-function fmtPct(n, d){ return isFinite(n) ? fmt(n*100, d===undefined?0:d)+"%" : "∞"; }
+function fmtNum(n, d){ return isFinite(n) ? fmt(n, d) : "-"; }
+function fmtPct(n, d){ return isFinite(n) ? fmt(n*100, d===undefined?0:d)+"%" : "-"; }
 
 function markSVG(kind, color){
   if(kind==="bug"){
@@ -694,25 +700,61 @@ function markSVG(kind, color){
 function weaponHits(w){
   return (w.hits && w.hits.length) ? w.hits : [{type:"Projectile", dmg:w.dmg, durable:w.durable, apDirect:w.pen}];
 }
-/** Effective damage of ONE hit component against a given armor value. */
-function hitEffDamage(h, armor){ return (h.apDirect >= armor) ? h.dmg : h.dmg * h.durable; }
 /**
- * BTK/TTK use ONLY the primary (direct-hit) component's damage - verified against the
- * source spreadsheet's own worked example (PLAS-101 Purifier vs Bile Spewer Head: using
- * just the 200-damage Projectile component gives BTK 2, matching the sheet exactly; summing
- * in the 300-damage Explosion component would wrongly give BTK 1). A projectile's splash
- * damage doesn't reliably land on the same collider the direct hit struck - the sheet itself
- * flags that geometry (which parts a given explosion's line-of-sight actually reaches) as
- * "experimental" and unresolved, so it's shown for reference in the Breakpoint tab but not
- * folded into the headline BTK.
+ * Straight from DiversDex's own cell documentation (pasted in by the user, not guessed):
+ *
+ * ARMOR: "If AP > part's Armor Value: 100% damage (Red Hitmarker). If AP == Armor: 65%
+ * damage (White Hitmarker). If AP < Armor: NO damage (Ricochet)."
+ *
+ * DURABILITY: "This percentage determines the proportion of standard damage and durable
+ * damage a part receives. A part with 60% durability receives 40% of the weapon's standard
+ * damage and 60% of its durable damage."
+ *
+ * These are two independent axes that both apply to every hit: the armor tier above gates
+ * the "standard damage" (weapon.dmg) share; the part's own durability% always lets its
+ * durable-damage share through regardless of that armor tier. (`durable` here is stored as
+ * a fraction of `dmg` - i.e. rawDurableDamage / rawDamage from the sheet - so multiplying
+ * it by `dmg` recovers the raw durable-damage number the sheet lists separately.)
+ *
+ * Only the primary (first-listed) hit component is used - whether a second component (e.g.
+ * an explosion) also lands on the SAME struck part is a geometry question this project
+ * doesn't model (see the Breakpoint tab's own note on that).
  */
-function totalEffDamage(w, armor){
-  return hitEffDamage(weaponHits(w)[0], armor);
+function armorMultiplier(ap, armor){
+  if(ap > armor) return 1;
+  if(ap === armor) return 0.65;
+  return 0;
 }
-function penStatus(w, armor){
-  var h = weaponHits(w)[0];
-  if(h.apDirect >= armor) return "full";
-  return h.durable > 0 ? "partial" : "blocked";
+function hitEffDamage(h, armor, partDurability){
+  var pd = partDurability || 0;
+  return h.dmg * ((1 - pd) * armorMultiplier(h.apDirect, armor) + pd * h.durable);
+}
+/**
+ * A weapon can list several hit components with DIFFERENT penetration ratings on purpose
+ * (e.g. PLAS-1 Scorcher's own notes: "the explosion can penetrate medium armor but the
+ * plasma projectile has only light armor penetration") - the player picks whichever one
+ * actually gets through. So BTK/TTK use whichever component deals the most damage against
+ * THIS target's armor, not just whichever is listed first.
+ */
+function bestHit(w, armor, partDurability){
+  var hits = weaponHits(w);
+  var best = hits[0], bestDmg = hitEffDamage(best, armor, partDurability);
+  for(var i=1;i<hits.length;i++){
+    var d = hitEffDamage(hits[i], armor, partDurability);
+    if(d > bestDmg){ bestDmg = d; best = hits[i]; }
+  }
+  return { hit: best, dmg: bestDmg };
+}
+function totalEffDamage(w, armor, partDurability){
+  return bestHit(w, armor, partDurability).dmg;
+}
+function penStatus(w, armor, partDurability){
+  var h = bestHit(w, armor, partDurability).hit;
+  var mult = armorMultiplier(h.apDirect, armor);
+  if(mult === 1) return "full";
+  if(mult === 0.65) return "half";
+  var pd = partDurability || 0;
+  return (pd > 0 && h.durable > 0) ? "partial" : "blocked";
 }
 
 /* ============ sidebar ============ */
@@ -764,13 +806,14 @@ function renderDossier(){
     '<input class="num-in mono" id="main-hp-in" type="number" min="1" value="'+e.mainHp+'">'+
     '<span style="color:var(--text-faint);font-size:12px;">치명(★) 표시가 없는 부위를 맞히면 이 체력을 "메인 기여율%"만큼만 깎습니다.</span></div>';
 
-  html += '<div class="section-label">부위별 장갑 · 체력 · 메인 기여율 (직접 수정 가능)</div>';
-  html += '<div class="table-wrap"><table><thead><tr><th>부위</th><th>장갑(AV)</th><th>체력(HP)</th><th>메인 기여율%</th><th>치명(★)</th></tr></thead><tbody>';
+  html += '<div class="section-label">부위별 장갑 · 체력 · 내구% · 메인 기여율 (직접 수정 가능)</div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>부위</th><th>장갑(AV)</th><th>체력(HP)</th><th>내구%</th><th>메인 기여율%</th><th>치명(★)</th></tr></thead><tbody>';
   e.parts.forEach(function(p, i){
     html += '<tr class="'+(p.lethal?'weak-row':'')+'">';
     html += '<td>'+esc(p.name)+'</td>';
     html += '<td><input class="num-in mono" type="number" min="0" max="10" value="'+p.armor+'" data-part="'+i+'" data-field="armor"></td>';
     html += '<td><input class="num-in mono" type="number" min="1" value="'+p.hp+'" data-part="'+i+'" data-field="hp"></td>';
+    html += '<td><input class="num-in mono" type="number" min="0" max="100" step="5" value="'+Math.round((p.durability||0)*100)+'" data-part="'+i+'" data-field="durabilityPct"></td>';
     html += '<td><input class="num-in mono" type="number" min="0" max="500" step="5" value="'+Math.round(p.toMain*100)+'" data-part="'+i+'" data-field="toMainPct"></td>';
     html += '<td><button class="starbtn'+(p.lethal?' on':'')+'" data-part="'+i+'" data-field="lethal">'+(p.lethal?'★':'☆')+'</button></td>';
     html += '</tr>';
@@ -793,6 +836,7 @@ function renderDossier(){
       var part = findEnemy(selectedEnemy).parts[i];
       var v = +inp.value;
       if(field==='toMainPct'){ part.toMain = Math.max(0, Math.min(100, v)) / 100; }
+      else if(field==='durabilityPct'){ part.durability = Math.max(0, Math.min(100, v)) / 100; }
       else if(field==='armor'){ part.armor = Math.max(0, Math.round(v)); }
       else if(field==='hp'){ part.hp = Math.max(1, Math.round(v)); }
       save(); renderWeaponPanel();
@@ -810,9 +854,11 @@ function renderDossier(){
 
 /* ============ shared BTK/TTK math ============ */
 function computeRow(w, part, mainHp, regen){
-  var effDmg = Math.max(totalEffDamage(w, part.armor), 0.01);
+  var effDmg = totalEffDamage(w, part.armor, part.durability);
   var btk;
-  if(part.lethal){
+  if(effDmg <= 0){
+    btk = Infinity; // ricocheting off the armor entirely - no amount of shots gets through
+  } else if(part.lethal){
     var lethalHp = part.hp > 0 ? part.hp : mainHp;
     btk = Math.ceil(lethalHp / effDmg);
   } else if(part.toMain > 0){
@@ -821,7 +867,7 @@ function computeRow(w, part, mainHp, regen){
     btk = Infinity;
   }
   btk = isFinite(btk) ? Math.max(1, btk) : btk;
-  var sever = part.hp > 0 ? Math.max(1, Math.ceil(part.hp / effDmg)) : null;
+  var sever = (part.hp > 0 && effDmg > 0) ? Math.max(1, Math.ceil(part.hp / effDmg)) : null;
   var shotInterval = w.mag > 1 ? (w.rpm > 0 ? 60 / w.rpm : 0) : 0;
   var reloadsNeeded = isFinite(btk) ? (w.mag > 1 ? Math.floor((btk - 1) / w.mag) : (btk - 1)) : Infinity;
   var ttk = isFinite(btk) ? (btk - 1) * shotInterval + reloadsNeeded * w.reload : Infinity;
@@ -843,7 +889,7 @@ function computeRow(w, part, mainHp, regen){
 
   return {
     eff: effDmg, btk: btk, sever: sever, ttk: ttk,
-    killsPerMag: killsPerMag, status: penStatus(w, part.armor),
+    killsPerMag: killsPerMag, status: penStatus(w, part.armor, part.durability),
     reloads: reloadsNeeded, overkill: overkill, regenWarning: regenWarning,
     magPct: isFinite(btk) ? btk / w.mag : Infinity
   };
@@ -909,7 +955,7 @@ function renderCompareHtml(e, part){
   });
 
   html += '<div class="table-wrap"><table><thead><tr>';
-  html += '<th>무기</th><th>종류</th><th class="mono">관통(AV)</th><th class="mono">피해</th><th class="mono">내구%</th><th class="mono">발사속도(RPM)</th><th class="mono">탄창</th><th class="mono">재장전(초)</th><th>상태</th>';
+  html += '<th>무기</th><th>종류</th><th class="mono">관통(AV)</th><th class="mono">피해</th><th class="mono">내구댐</th><th class="mono">발사속도(RPM)</th><th class="mono">탄창</th><th class="mono">재장전(초)</th><th>상태</th>';
   html += '<th class="sortable" data-sort="btk">BTK(처치)<span class="arrow">'+(sortKey==="btk"?(sortDir>0?'▲':'▼'):'')+'</span></th>';
   html += '<th class="sortable" data-sort="ttk">TTK(초)<span class="arrow">'+(sortKey==="ttk"?(sortDir>0?'▲':'▼'):'')+'</span></th>';
   html += '<th class="mono">탄창당 처치</th>';
@@ -919,16 +965,17 @@ function renderCompareHtml(e, part){
 
   computed.forEach(function(r){
     var w = r.w, c = r.c, h0 = weaponHits(w)[0];
-    var statusHtml = c.status==="full" ? '<span class="status-pill status-full">완전관통</span>'
-      : c.status==="partial" ? '<span class="status-pill status-partial">부분감쇠</span>'
-      : '<span class="status-pill status-blocked">관통불가</span>';
+    var statusHtml = c.status==="full" ? '<span class="status-pill status-full">완전관통(100%)</span>'
+      : c.status==="half" ? '<span class="status-pill status-partial">동일관통(65%)</span>'
+      : c.status==="partial" ? '<span class="status-pill status-partial">도탄+내구%</span>'
+      : '<span class="status-pill status-blocked">도탄(0%)</span>';
     var thumb = w.img ? '<img class="weapon-thumb" src="'+esc(w.img)+'" alt="" onerror="this.style.display=\'none\'">' : '';
     html += '<tr>';
     html += '<td><div class="weapon-name-cell">'+thumb+'<span>'+esc(w.name)+(c.btk===minBtk && isFinite(minBtk)?'<span class="best-badge">BEST BTK</span>':'')+(c.ttk===minTtk && isFinite(minTtk) ?'<span class="best-badge">BEST TTK</span>':'')+'</span></div></td>';
     html += '<td>'+CAT_LABEL[w.cat]+'</td>';
     html += '<td><input class="num-in mono" type="number" min="0" max="10" data-id="'+w.id+'" data-field="pen" value="'+h0.apDirect+'"></td>';
     html += '<td><input class="num-in mono" type="number" data-id="'+w.id+'" data-field="dmg" value="'+h0.dmg+'"></td>';
-    html += '<td><input class="num-in mono" type="number" step="5" min="0" max="100" data-id="'+w.id+'" data-field="durablePct" value="'+Math.round(h0.durable*100)+'"></td>';
+    html += '<td><input class="num-in mono" type="number" step="5" min="0" data-id="'+w.id+'" data-field="durableDmg" value="'+Math.round(h0.dmg*h0.durable)+'"></td>';
     html += '<td><input class="num-in mono" type="number" data-id="'+w.id+'" data-field="rpm" value="'+w.rpm+'"></td>';
     html += '<td><input class="num-in mono" type="number" data-id="'+w.id+'" data-field="mag" value="'+w.mag+'"></td>';
     html += '<td><input class="num-in mono" type="number" step="0.1" data-id="'+w.id+'" data-field="reload" value="'+w.reload+'"></td>';
@@ -962,15 +1009,10 @@ function renderBreakpointHtml(e, part){
       (isInvuln?'<b>⚠ 이 부위는 관통·데미지 무관하게 무적입니다.</b> ':'<b>참고:</b> ')+esc(part.notes)+'</div>';
   }
 
-  html += '<div class="bp-weapon-select">무기 선택: <select id="bp-weapon-sel">';
-  ['primary','secondary','support'].forEach(function(cat){
-    html += '<optgroup label="'+CAT_LABEL[cat]+'">';
-    state.weapons.filter(function(x){return x.cat===cat;}).forEach(function(x){
-      html += '<option value="'+x.id+'"'+(x.id===w.id?' selected':'')+'>'+esc(x.name)+'</option>';
-    });
-    html += '</optgroup>';
-  });
-  html += '</select></div>';
+  html += '<div class="bp-weapon-select">무기 선택: '+
+    '<div class="weapon-combo"><input type="text" id="bp-weapon-search" class="num-in" autocomplete="off" '+
+    'value="'+esc(w.name)+'" placeholder="무기 이름 검색..."><div id="bp-weapon-list" class="weapon-combo-list" hidden></div></div>'+
+    '</div>';
 
   html += '<div class="bp-grid">';
 
@@ -990,7 +1032,7 @@ function renderBreakpointHtml(e, part){
     html += '<div class="bp-hit">';
     html += '<div class="bp-hit-type">'+esc(h.type)+'</div>';
     html += statRow('피해량', fmt(h.dmg));
-    html += statRow('내구%', fmtPct(h.durable));
+    html += statRow('내구댐(Durable)', fmt(h.dmg*h.durable));
     html += statRow('관통 (직격/경사/대경사/극단)', h.apDirect+' / '+h.apSlight+' / '+h.apLarge+' / '+h.apExtreme);
     if(h.outerRadius) html += statRow('폭발 반경(내/외)', fmt(h.innerRadius,1)+'m / '+fmt(h.outerRadius,1)+'m');
     if(h.falloff50m) html += statRow('50m 낙하 감쇠', fmtPct(h.falloff50m));
@@ -1003,6 +1045,7 @@ function renderBreakpointHtml(e, part){
   html += statRow('부위 체력', part.hp > 0 ? fmt(part.hp) : '해당없음(메인만)');
   html += statRow('메인 체력', fmt(mainHp));
   html += statRow('장갑(AV)', avLabel(part.armor));
+  html += statRow('부위 내구%', fmtPct(part.durability||0));
   html += statRow('메인 기여율', fmtPct(part.toMain));
   html += statRow('치명(파괴시 즉사)', part.lethal ? 'Yes' : 'No');
   if(part.exdr) html += statRow('ExDR', fmtPct(part.exdr));
@@ -1031,20 +1074,25 @@ function renderBreakpointHtml(e, part){
   // ---- column 3: detailed calculation ----
   html += '<div class="bp-col bp-col-wide"><div class="bp-col-title">상세 계산</div>';
   html += '<div class="table-wrap"><table><thead><tr><th>피해 성분</th><th class="mono">관통(직격)</th><th class="mono">장갑(AV)</th><th>판정</th><th class="mono">피해</th><th>BTK 반영</th></tr></thead><tbody>';
-  hits.forEach(function(h, i){
-    var pen = h.apDirect >= part.armor;
-    html += '<tr'+(i>0?' style="opacity:.55;"':'')+'><td>'+esc(h.type)+'</td><td class="mono">'+h.apDirect+'</td><td class="mono">'+part.armor+'</td>'+
-      '<td>'+(pen?'<span class="status-pill status-full">관통</span>':'<span class="status-pill status-partial">내구만</span>')+'</td>'+
-      '<td class="mono">'+fmtNum(pen?h.dmg:h.dmg*h.durable)+'</td>'+
-      '<td>'+(i===0?'<span class="status-pill status-full">적용</span>':'<span class="status-pill status-blocked">참고용</span>')+'</td></tr>';
+  var chosen = bestHit(w, part.armor, part.durability).hit;
+  hits.forEach(function(h){
+    var mult = armorMultiplier(h.apDirect, part.armor);
+    var judgeHtml = mult===1 ? '<span class="status-pill status-full">완전관통(100%)</span>'
+      : mult===0.65 ? '<span class="status-pill status-partial">동일관통(65%)</span>'
+      : '<span class="status-pill status-blocked">도탄(0%)</span>';
+    var isChosen = h === chosen;
+    html += '<tr'+(isChosen?'':' style="opacity:.55;"')+'><td>'+esc(h.type)+'</td><td class="mono">'+h.apDirect+'</td><td class="mono">'+part.armor+'</td>'+
+      '<td>'+judgeHtml+'</td>'+
+      '<td class="mono">'+fmtNum(hitEffDamage(h, part.armor, part.durability))+'</td>'+
+      '<td>'+(isChosen?'<span class="status-pill status-full">적용(최댓값)</span>':'<span class="status-pill status-blocked">미적용</span>')+'</td></tr>';
   });
-  html += '<tr style="font-weight:600;"><td colspan="4">BTK/TTK에 실제 적용된 피해 (직격 성분만)</td><td class="mono">'+fmtNum(c.eff)+'</td><td></td></tr>';
+  html += '<tr style="font-weight:600;"><td colspan="4">BTK/TTK에 실제 적용된 피해 (장갑 대비 가장 센 성분 하나)</td><td class="mono">'+fmtNum(c.eff)+'</td><td></td></tr>';
   if(!part.lethal){
     html += '<tr><td colspan="4">메인 체력 반영분 (× 메인 기여율 '+fmtPct(part.toMain)+')</td><td class="mono">'+fmtNum(c.eff*part.toMain)+'</td><td></td></tr>';
   }
   html += '</tbody></table></div>';
   if(hits.length > 1){
-    html += '<div class="img-credit" style="margin-top:6px;">2번째 이후 성분(주로 폭발 스플래시)은 참고용으로만 표시됩니다 — 직격 지점과 같은 부위에 얼마나 들어가는지는 원본 시트도 "실험적"이라 명시한 부분이라 BTK 계산엔 포함하지 않았습니다.</div>';
+    html += '<div class="img-credit" style="margin-top:6px;">이 부위 장갑 기준으로 가장 효과적인 피해 성분 하나만 골라 씁니다(예: 스코처는 저장갑엔 직격탄, 중장갑엔 폭발탄). 같은 발사에 여러 성분이 동시에 같은 부위에 들어가는지는 원본 시트도 "실험적"이라 명시한 부분이라 합산하지 않습니다.</div>';
   }
 
   html += '<div class="section-label" style="margin-top:14px;">결과 요약</div>';
@@ -1095,7 +1143,7 @@ function wireWeaponPanelEvents(){
         var w = findWeapon(id);
         var h0 = weaponHits(w)[0];
         var v = +inp.value;
-        if(field==="durablePct"){ h0.durable = Math.max(0, Math.min(100, v))/100; }
+        if(field==="durableDmg"){ h0.durable = Math.max(0, v) / Math.max(h0.dmg, 0.01); }
         else if(field==="mag"){ w.mag = Math.max(1, Math.round(v)); }
         else if(field==="pen"){ h0.apDirect = Math.max(0, Math.round(v)); }
         else if(field==="dmg"){ h0.dmg = Math.max(0, v); }
@@ -1104,8 +1152,28 @@ function wireWeaponPanelEvents(){
       });
     });
   } else {
-    var sel = document.getElementById('bp-weapon-sel');
-    if(sel) sel.addEventListener('change', function(){ selectedWeapon = this.value; renderWeaponPanel(); });
+    var searchInput = document.getElementById('bp-weapon-search');
+    var listBox = document.getElementById('bp-weapon-list');
+    if(searchInput && listBox){
+      var renderComboList = function(query){
+        var q = (query||'').trim().toLowerCase();
+        var matches = state.weapons.filter(function(x){ return !q || x.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 30);
+        if(!matches.length){ listBox.innerHTML = '<div class="weapon-combo-empty">일치하는 무기 없음</div>'; return; }
+        listBox.innerHTML = matches.map(function(x){
+          return '<div class="weapon-combo-item'+(x.id===selectedWeapon?' hl':'')+'" data-id="'+x.id+'"><span>'+esc(x.name)+'</span><span class="cat">'+CAT_LABEL[x.cat]+'</span></div>';
+        }).join('');
+        Array.prototype.forEach.call(listBox.querySelectorAll('.weapon-combo-item'), function(item){
+          item.addEventListener('mousedown', function(e){
+            e.preventDefault(); // fires before input's blur, so the click still registers
+            selectedWeapon = item.getAttribute('data-id');
+            renderWeaponPanel();
+          });
+        });
+      };
+      searchInput.addEventListener('focus', function(){ this.select(); renderComboList(''); listBox.hidden = false; });
+      searchInput.addEventListener('input', function(){ renderComboList(this.value); listBox.hidden = false; });
+      searchInput.addEventListener('blur', function(){ setTimeout(function(){ listBox.hidden = true; }, 150); });
+    }
   }
 }
 
