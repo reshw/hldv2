@@ -93,10 +93,11 @@ button{font-family:inherit;}
 }
 .disclaimer b{color:var(--warn);}
 
-.layout{display:grid; grid-template-columns:260px 1fr; gap:18px; align-items:start;}
-@media (max-width:900px){ .layout{grid-template-columns:1fr;} }
+.picker-layout{display:grid; grid-template-columns:260px 260px 1fr; gap:18px; align-items:start;}
+@media (max-width:1150px){ .picker-layout{grid-template-columns:1fr 1fr;} #calculator-panel{grid-column:1 / -1;} }
+@media (max-width:700px){ .picker-layout{grid-template-columns:1fr;} #calculator-panel{grid-column:auto;} }
 
-/* ---------- sidebar ---------- */
+/* ---------- pickers (mob / weapon) ---------- */
 .panel{
   background:var(--surface); border:1px solid var(--border); border-radius:4px;
   box-shadow:var(--shadow);
@@ -112,25 +113,27 @@ button{font-family:inherit;}
 }
 .dot{width:9px; height:9px; border-radius:50%; flex:none;}
 .enemy-list{list-style:none; margin:0; padding:0 6px 8px;}
-.enemy-btn{
+.pick-list-wrap{max-height:340px; overflow-y:auto;}
+.pick-btn{
   width:100%; text-align:left; background:transparent; border:1px solid transparent; color:var(--text-dim);
   padding:7px 8px; border-radius:3px; cursor:pointer; font-size:13.5px; display:flex; justify-content:space-between; gap:8px;
   align-items:center;
 }
-.enemy-btn:hover{background:var(--surface-2); color:var(--text);}
-.enemy-btn.active{background:var(--surface-3); border-color:var(--border); color:var(--accent); font-weight:600;}
-.enemy-btn .hp{font-size:10.5px; color:var(--text-faint); font-family:'IBM Plex Mono';}
+.pick-btn:hover{background:var(--surface-2); color:var(--text);}
+.pick-btn.active{background:var(--surface-3); border-color:var(--border); color:var(--accent); font-weight:600;}
+.pick-btn .hp{font-size:10.5px; color:var(--text-faint); font-family:'IBM Plex Mono';}
+.pick-btn.active .hp{color:var(--accent-dim);}
 .sub-tag{
   display:inline-block; font-size:9px; letter-spacing:.03em; text-transform:uppercase;
   color:var(--illuminate); border:1px solid var(--illuminate); border-radius:3px;
   padding:1px 4px; margin-right:2px; vertical-align:middle; opacity:.85;
 }
-.enemy-btn.active .hp{color:var(--accent-dim);}
+.weapon-pick-list{list-style:none; margin:0; padding:6px;}
+.weapon-pick-list li + li{margin-top:2px;}
+.weapon-pick-cat{font-size:9.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.03em;}
 
-/* ---------- main column ---------- */
-.main-col{display:flex; flex-direction:column; gap:18px;}
-
-.dossier{padding:18px 20px;}
+/* ---------- calculator / mob detail ---------- */
+#mob-detail, #calculator-panel{padding:16px 18px;}
 .dossier-top{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;}
 .dossier-name{font-size:28px; margin:0 0 4px; color:var(--text);}
 .dossier-meta{display:flex; gap:8px; flex-wrap:wrap;}
@@ -275,20 +278,28 @@ footer a{color:var(--text-faint); text-decoration:underline;}
 
   <div class="disclaimer" id="disclaimer-box"></div>
 
-  <div class="layout">
-    <!-- SIDEBAR -->
-    <div class="panel" id="sidebar">
-      <div class="panel-head" id="sidebar-head"></div>
+  <div class="picker-layout">
+    <!-- 1. MOB PICKER -->
+    <div class="panel" id="mob-panel">
+      <div class="panel-head" id="mob-panel-head"></div>
       <div class="sidebar-search"><input type="text" id="enemy-search-input" autocomplete="off"></div>
-      <div id="sidebar-body"></div>
+      <div id="mob-list"></div>
+      <div id="mob-detail"></div>
     </div>
 
-    <!-- MAIN -->
-    <div class="main-col">
-      <div class="panel dossier" id="dossier"></div>
-      <div class="panel weapon-panel" id="weapon-panel"></div>
+    <!-- 2. WEAPON PICKER -->
+    <div class="panel" id="weapon-picker-panel">
+      <div class="panel-head" id="weapon-picker-head"></div>
+      <div class="sidebar-search"><input type="text" id="weapon-search-input" autocomplete="off"></div>
+      <div class="chips-row" id="weapon-cat-filter" style="padding:8px 10px 0;"></div>
+      <div id="weapon-list"></div>
     </div>
+
+    <!-- 3. CALCULATOR -->
+    <div class="panel" id="calculator-panel"></div>
   </div>
+
+  <div class="panel" id="compare-panel" hidden></div>
 
   <footer id="footer-box"></footer>
 </div>
@@ -339,6 +350,7 @@ var STRINGS = {
     detail_total_row: "BTK/TTK에 실제 적용된 피해 (장갑 대비 가장 센 성분 하나)", detail_mainshare_row: "메인 체력 반영분 (× 메인 기여율",
     results_summary_label: "결과 요약", invuln_prefix: "⚠ 이 부위는 관통·데미지 무관하게 무적입니다.", ref_prefix: "참고:", subfaction_suffix: "서브팩션 전용", invuln_tag: "[무적]",
     multi_hit_note: '이 부위 장갑 기준으로 가장 효과적인 피해 성분 하나만 골라 씁니다(예: 스코처는 저장갑엔 직격탄, 중장갑엔 폭발탄). 같은 발사에 여러 성분이 동시에 같은 부위에 들어가는지는 원본 시트도 "실험적"이라 명시한 부분이라 합산하지 않습니다.',
+    weapon_picker_head: "무기 검색", compare_toggle_show: "전체 무기 비교표 보기", compare_toggle_hide: "비교표 닫기",
     disclaimer_html: '<b>데이터 출처:</b> 무기 92종·몹 48종 전체가 <b>DiversDex</b>(커뮤니티 제작, 인게임 테스트로 교차검증된 스프레드시트)와 '+
       '<a href="https://github.com/helldivers-2/json" target="_blank" rel="noopener">helldivers-2/json</a>(MIT, GitHub)로 채워져 있습니다 — 더 이상 순수 추정값이 아닙니다. '+
       '다만 두 소스 다 Arrowhead 공식은 아니라 패치 후 오차가 생길 수 있어요. '+
@@ -381,6 +393,7 @@ var STRINGS = {
     detail_total_row: "Damage actually applied to BTK/TTK (best component vs this armor)", detail_mainshare_row: "Main HP share (× main share",
     results_summary_label: "Summary", invuln_prefix: "⚠ This part is invulnerable regardless of penetration/damage.", ref_prefix: "Note:", subfaction_suffix: "subfaction-only", invuln_tag: "[INVULN]",
     multi_hit_note: 'Only the single most effective damage component for this part\'s armor is used (e.g. the Scorcher uses its direct shot on light armor, its explosion on medium armor). Whether multiple components from one shot both land on the same part is something even the source sheet calls "experimental", so they are not summed.',
+    weapon_picker_head: "Weapon Search", compare_toggle_show: "Show full weapon comparison", compare_toggle_hide: "Hide comparison",
     disclaimer_html: '<b>Data sources:</b> all 92 weapons and 48 enemies come from <b>DiversDex</b> (a community spreadsheet, cross-checked and in-game tested) and '+
       '<a href="https://github.com/helldivers-2/json" target="_blank" rel="noopener">helldivers-2/json</a> (MIT, GitHub) — no longer pure guesswork. '+
       "Neither source is official Arrowhead data though, so patches can drift out of sync. "+
@@ -789,7 +802,6 @@ var selectedWeapon = state.weapons[0].id;
 var catFilter = "all";
 var sortKey = "btk";
 var sortDir = 1;
-var viewMode = "compare"; // "compare" | "breakpoint"
 
 /* ============ helpers ============ */
 function findEnemy(id){ for(var i=0;i<state.enemies.length;i++) if(state.enemies[i].id===id) return state.enemies[i]; return state.enemies[0]; }
@@ -874,10 +886,10 @@ function penStatus(w, armor, partDurability){
   return (pd > 0 && h.durable > 0) ? "partial" : "blocked";
 }
 
-/* ============ sidebar ============ */
+/* ============ 1. mob picker ============ */
 var enemySearchQuery = "";
 
-function renderSidebar(){
+function renderMobList(){
   var searchInput = document.getElementById("enemy-search-input");
   searchInput.placeholder = t("sidebar_search_ph");
 
@@ -900,15 +912,15 @@ function renderSidebar(){
     html += '<ul class="enemy-list">';
     list.forEach(function(e){
       var sub = e.subfaction ? '<span class="sub-tag" title="'+esc(e.subfaction)+'">'+esc(e.subfaction)+'</span> ' : '';
-      html += '<li><button class="enemy-btn'+(e.id===selectedEnemy?' active':'')+'" data-id="'+e.id+'">'+
+      html += '<li><button class="pick-btn'+(e.id===selectedEnemy?' active':'')+'" data-id="'+e.id+'">'+
         '<span>'+sub+esc(e.name)+'</span><span class="hp">'+fmt(e.mainHp)+'HP</span></button></li>';
     });
     html += '</ul></div>';
   });
   if(!any) html += '<div class="enemy-empty">'+esc(t("enemy_empty"))+'</div>';
 
-  document.getElementById("sidebar-body").innerHTML = html;
-  Array.prototype.forEach.call(document.querySelectorAll(".enemy-btn"), function(btn){
+  document.getElementById("mob-list").innerHTML = '<div class="pick-list-wrap">'+html+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll("#mob-list .pick-btn"), function(btn){
     btn.addEventListener("click", function(){
       selectedEnemy = btn.getAttribute("data-id");
       selectedPart = 0;
@@ -918,11 +930,11 @@ function renderSidebar(){
 }
 document.getElementById("enemy-search-input").addEventListener("input", function(){
   enemySearchQuery = this.value;
-  renderSidebar();
+  renderMobList();
 });
 
-/* ============ dossier ============ */
-function renderDossier(){
+/* ---- mob detail: reference info + editable data for the selected creature ---- */
+function renderMobDetail(){
   var e = findEnemy(selectedEnemy);
   var f = FACTIONS[e.faction];
   var html = '';
@@ -958,13 +970,13 @@ function renderDossier(){
   html += '<div class="section-label">'+t('intel_label')+'</div>';
   html += '<div class="intel"><ul>'+e.tips.map(function(tip){return '<li>'+esc(tip)+'</li>';}).join('')+'</ul></div>';
 
-  document.getElementById("dossier").innerHTML = html;
+  document.getElementById("mob-detail").innerHTML = html;
 
   document.getElementById('main-hp-in').addEventListener('change', function(){
     findEnemy(selectedEnemy).mainHp = Math.max(1, Math.round(+this.value || 1));
-    save(); renderSidebar(); renderWeaponPanel();
+    save(); renderMobList(); renderCalculator();
   });
-  Array.prototype.forEach.call(document.querySelectorAll('#dossier input.num-in[data-field]'), function(inp){
+  Array.prototype.forEach.call(document.querySelectorAll('#mob-detail input.num-in[data-field]'), function(inp){
     inp.addEventListener('change', function(){
       var i = +inp.getAttribute('data-part');
       var field = inp.getAttribute('data-field');
@@ -974,15 +986,15 @@ function renderDossier(){
       else if(field==='durabilityPct'){ part.durability = Math.max(0, Math.min(100, v)) / 100; }
       else if(field==='armor'){ part.armor = Math.max(0, Math.round(v)); }
       else if(field==='hp'){ part.hp = Math.max(1, Math.round(v)); }
-      save(); renderWeaponPanel();
+      save(); renderCalculator();
     });
   });
-  Array.prototype.forEach.call(document.querySelectorAll('#dossier .starbtn'), function(btn){
+  Array.prototype.forEach.call(document.querySelectorAll('#mob-detail .starbtn'), function(btn){
     btn.addEventListener('click', function(){
       var i = +btn.getAttribute('data-part');
       var parts = findEnemy(selectedEnemy).parts;
       parts[i].lethal = !parts[i].lethal;
-      save(); renderDossier(); renderWeaponPanel();
+      save(); renderMobDetail(); renderCalculator();
     });
   });
 }
@@ -1030,19 +1042,81 @@ function computeRow(w, part, mainHp, regen){
   };
 }
 
-/* ============ weapon panel (comparison table + breakpoint calculator) ============ */
-function renderWeaponPanel(){
+/* ============ 2. weapon picker ============ */
+var weaponSearchQuery = "";
+var compareVisible = false;
+
+function catChipsHtml(){
+  return ['all','primary','secondary','support'].map(function(c){
+    return '<button class="tab-btn cat-chip'+(catFilter===c?' active':'')+'" data-cat="'+c+'" style="border-radius:20px;">'+(c==='all'?t('cat_all'):catLabel(c))+'</button>';
+  }).join('');
+}
+function wireCatChips(scopeSel){
+  Array.prototype.forEach.call(document.querySelectorAll(scopeSel+' .cat-chip'), function(btn){
+    btn.addEventListener('click', function(){
+      catFilter = btn.getAttribute('data-cat');
+      renderWeaponPicker();
+      if(compareVisible) renderComparePanel();
+    });
+  });
+}
+
+function renderWeaponPicker(){
+  var searchInput = document.getElementById("weapon-search-input");
+  searchInput.placeholder = t("bp_search_ph");
+
+  document.getElementById("weapon-cat-filter").innerHTML = catChipsHtml();
+
+  var q = weaponSearchQuery.trim().toLowerCase();
+  var byCat = {};
+  state.weapons.forEach(function(w){
+    if(catFilter !== "all" && w.cat !== catFilter) return;
+    if(q && w.name.toLowerCase().indexOf(q) === -1) return;
+    (byCat[w.cat]=byCat[w.cat]||[]).push(w);
+  });
+
+  var html = "";
+  var any = false;
+  ['primary','secondary','support'].forEach(function(cat){
+    var list = byCat[cat]||[];
+    if(!list.length) return;
+    any = true;
+    html += '<div class="weapon-pick-cat">'+catLabel(cat)+'</div>';
+    html += '<ul class="enemy-list">';
+    list.forEach(function(w){
+      html += '<li><button class="pick-btn'+(w.id===selectedWeapon?' active':'')+'" data-id="'+w.id+'">'+
+        '<span>'+esc(w.name)+'</span><span class="hp">'+t('col_pen')+' '+weaponHits(w)[0].apDirect+'</span></button></li>';
+    });
+    html += '</ul>';
+  });
+  if(!any) html += '<div class="enemy-empty">'+esc(t("bp_empty"))+'</div>';
+
+  document.getElementById("weapon-list").innerHTML = '<div class="pick-list-wrap weapon-pick-list">'+html+'</div>';
+  Array.prototype.forEach.call(document.querySelectorAll("#weapon-list .pick-btn"), function(btn){
+    btn.addEventListener("click", function(){
+      selectedWeapon = btn.getAttribute("data-id");
+      renderWeaponPicker();
+      renderCalculator();
+      if(compareVisible) renderComparePanel();
+    });
+  });
+  wireCatChips('#weapon-picker-panel');
+}
+document.getElementById("weapon-search-input").addEventListener("input", function(){
+  weaponSearchQuery = this.value;
+  renderWeaponPicker();
+});
+
+/* ============ 3. calculator ============ */
+function renderCalculator(){
   var e = findEnemy(selectedEnemy);
   if(selectedPart >= e.parts.length) selectedPart = 0;
   var part = e.parts[selectedPart];
 
   var html = '';
   html += '<div class="weapon-head">';
-  html += '<div class="tabs">'+
-    [["compare",t("tab_compare")],["breakpoint",t("tab_breakpoint")]].map(function(v){
-      return '<button class="tab-btn'+(viewMode===v[0]?' active':'')+'" data-view="'+v[0]+'">'+v[1]+'</button>';
-    }).join('')+
-    '</div>';
+  html += '<div class="tabs"><button class="tab-btn active" disabled>'+t("bp_title")+'</button></div>';
+  html += '<button class="reset-btn" id="compare-toggle-btn">'+(compareVisible?t("compare_toggle_hide"):t("compare_toggle_show"))+'</button>';
   html += '<button class="reset-btn" id="reset-btn">'+t("reset_btn")+'</button>';
   html += '</div>';
 
@@ -1064,20 +1138,42 @@ function renderWeaponPanel(){
     html += '</div>';
   }
 
-  html += viewMode === "breakpoint" ? renderBreakpointHtml(e, part) : renderCompareHtml(e, part);
+  html += renderBreakpointHtml(e, part);
 
-  document.getElementById("weapon-panel").innerHTML = html;
-  wireWeaponPanelEvents();
+  document.getElementById("calculator-panel").innerHTML = html;
+  wireCalculatorEvents();
 }
 
-function renderCompareHtml(e, part){
-  var html = '<div class="section-label" style="margin-top:16px;">'+t("compare_hint")+'</div>';
+function wireCalculatorEvents(){
+  Array.prototype.forEach.call(document.querySelectorAll('#calculator-panel .part-chip'), function(chip){
+    chip.addEventListener('click', function(){ selectedPart = +chip.getAttribute('data-idx'); renderCalculator(); if(compareVisible) renderComparePanel(); });
+  });
+  document.getElementById('reset-btn').addEventListener('click', function(){
+    if(confirm(t('reset_confirm'))) resetAll();
+  });
+  document.getElementById('compare-toggle-btn').addEventListener('click', function(){
+    compareVisible = !compareVisible;
+    document.getElementById('compare-panel').hidden = !compareVisible;
+    renderCalculator();
+    if(compareVisible) renderComparePanel();
+  });
+}
+
+/* ============ 4. compare panel (secondary/optional full comparison table) ============ */
+function renderComparePanel(){
+  var panel = document.getElementById('compare-panel');
+  panel.hidden = !compareVisible;
+  if(!compareVisible) return;
+
+  var e = findEnemy(selectedEnemy);
+  if(selectedPart >= e.parts.length) selectedPart = 0;
+  var part = e.parts[selectedPart];
+
+  var html = '<div class="weapon-head"><div class="tabs"><button class="tab-btn active" disabled>'+t("tab_compare")+'</button></div></div>';
+  html += '<div class="section-label" style="margin-top:16px;">'+t("compare_hint")+'</div>';
 
   var rows = state.weapons.filter(function(w){ return catFilter==="all" || w.cat===catFilter; });
-  html += '<div class="chips-row" style="margin-bottom:10px;">'+
-    ['all','primary','secondary','support'].map(function(c){
-      return '<button class="tab-btn'+(catFilter===c?' active':'')+'" data-cat="'+c+'" style="border-radius:20px;">'+(c==='all'?t('cat_all'):catLabel(c))+'</button>';
-    }).join('')+'</div>';
+  html += '<div class="chips-row" style="margin-bottom:10px;">'+catChipsHtml()+'</div>';
 
   var computed = rows.map(function(w){ return {w:w, c:computeRow(w, part, e.mainHp, e.regen)}; });
   var minBtk = Math.min.apply(null, computed.map(function(r){return r.c.btk;}));
@@ -1123,7 +1219,42 @@ function renderCompareHtml(e, part){
     html += '</tr>';
   });
   html += '</tbody></table></div>';
-  return html;
+
+  panel.innerHTML = html;
+  wireComparePanelEvents();
+}
+
+function wireComparePanelEvents(){
+  wireCatChips('#compare-panel');
+  Array.prototype.forEach.call(document.querySelectorAll('#compare-panel th.sortable'), function(th){
+    th.addEventListener('click', function(){
+      var k = th.getAttribute('data-sort');
+      if(sortKey===k) sortDir *= -1; else { sortKey = k; sortDir = 1; }
+      renderComparePanel();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#compare-panel .bp-jump'), function(btn){
+    btn.addEventListener('click', function(){
+      selectedWeapon = btn.getAttribute('data-id');
+      renderWeaponPicker();
+      renderCalculator();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#compare-panel input.num-in'), function(inp){
+    inp.addEventListener('change', function(){
+      var id = inp.getAttribute('data-id'), field = inp.getAttribute('data-field');
+      var w = findWeapon(id);
+      var h0 = weaponHits(w)[0];
+      var v = +inp.value;
+      if(field==="durableDmg"){ h0.durable = Math.max(0, v) / Math.max(h0.dmg, 0.01); }
+      else if(field==="mag"){ w.mag = Math.max(1, Math.round(v)); }
+      else if(field==="pen"){ h0.apDirect = Math.max(0, Math.round(v)); }
+      else if(field==="dmg"){ h0.dmg = Math.max(0, v); }
+      else { w[field] = Math.max(0, v); }
+      save(); renderComparePanel();
+      if(id===selectedWeapon){ renderCalculator(); renderWeaponPicker(); }
+    });
+  });
 }
 
 function statRow(label, value){
@@ -1143,11 +1274,6 @@ function renderBreakpointHtml(e, part){
     html += '<div class="disclaimer" style="border-left-color:'+(isInvuln?'var(--danger)':'var(--accent)')+';margin-bottom:12px;">'+
       (isInvuln?'<b>'+t("invuln_prefix")+'</b> ':'<b>'+t("ref_prefix")+'</b> ')+esc(part.notes)+'</div>';
   }
-
-  html += '<div class="bp-weapon-select">'+t("bp_weapon_select")+' '+
-    '<div class="weapon-combo"><input type="text" id="bp-weapon-search" class="num-in" autocomplete="off" '+
-    'value="'+esc(w.name)+'" placeholder="'+esc(t("bp_search_ph"))+'"><div id="bp-weapon-list" class="weapon-combo-list" hidden></div></div>'+
-    '</div>';
 
   html += '<div class="bp-grid">';
 
@@ -1243,81 +1369,12 @@ function renderBreakpointHtml(e, part){
   return html;
 }
 
-function wireWeaponPanelEvents(){
-  Array.prototype.forEach.call(document.querySelectorAll('.weapon-head .tab-btn'), function(btn){
-    btn.addEventListener('click', function(){ viewMode = btn.getAttribute('data-view'); renderWeaponPanel(); });
-  });
-  Array.prototype.forEach.call(document.querySelectorAll('.part-chip'), function(chip){
-    chip.addEventListener('click', function(){ selectedPart = +chip.getAttribute('data-idx'); renderWeaponPanel(); });
-  });
-  document.getElementById('reset-btn').addEventListener('click', function(){
-    if(confirm(t('reset_confirm'))) resetAll();
-  });
-
-  if(viewMode === "compare"){
-    Array.prototype.forEach.call(document.querySelectorAll('.chips-row .tab-btn[data-cat]'), function(btn){
-      btn.addEventListener('click', function(){ catFilter = btn.getAttribute('data-cat'); renderWeaponPanel(); });
-    });
-    Array.prototype.forEach.call(document.querySelectorAll('th.sortable'), function(th){
-      th.addEventListener('click', function(){
-        var k = th.getAttribute('data-sort');
-        if(sortKey===k) sortDir *= -1; else { sortKey = k; sortDir = 1; }
-        renderWeaponPanel();
-      });
-    });
-    Array.prototype.forEach.call(document.querySelectorAll('.bp-jump'), function(btn){
-      btn.addEventListener('click', function(){
-        selectedWeapon = btn.getAttribute('data-id');
-        viewMode = "breakpoint";
-        renderWeaponPanel();
-      });
-    });
-    Array.prototype.forEach.call(document.querySelectorAll('#weapon-panel input.num-in'), function(inp){
-      inp.addEventListener('change', function(){
-        var id = inp.getAttribute('data-id'), field = inp.getAttribute('data-field');
-        var w = findWeapon(id);
-        var h0 = weaponHits(w)[0];
-        var v = +inp.value;
-        if(field==="durableDmg"){ h0.durable = Math.max(0, v) / Math.max(h0.dmg, 0.01); }
-        else if(field==="mag"){ w.mag = Math.max(1, Math.round(v)); }
-        else if(field==="pen"){ h0.apDirect = Math.max(0, Math.round(v)); }
-        else if(field==="dmg"){ h0.dmg = Math.max(0, v); }
-        else { w[field] = Math.max(0, v); }
-        save(); renderWeaponPanel();
-      });
-    });
-  } else {
-    var searchInput = document.getElementById('bp-weapon-search');
-    var listBox = document.getElementById('bp-weapon-list');
-    if(searchInput && listBox){
-      var renderComboList = function(query){
-        var q = (query||'').trim().toLowerCase();
-        var matches = state.weapons.filter(function(x){ return !q || x.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 30);
-        if(!matches.length){ listBox.innerHTML = '<div class="weapon-combo-empty">'+esc(t('bp_empty'))+'</div>'; return; }
-        listBox.innerHTML = matches.map(function(x){
-          return '<div class="weapon-combo-item'+(x.id===selectedWeapon?' hl':'')+'" data-id="'+x.id+'"><span>'+esc(x.name)+'</span><span class="cat">'+catLabel(x.cat)+'</span></div>';
-        }).join('');
-        Array.prototype.forEach.call(listBox.querySelectorAll('.weapon-combo-item'), function(item){
-          item.addEventListener('mousedown', function(e){
-            e.preventDefault(); // fires before input's blur, so the click still registers
-            selectedWeapon = item.getAttribute('data-id');
-            renderWeaponPanel();
-          });
-        });
-      };
-      searchInput.addEventListener('focus', function(){ this.select(); renderComboList(''); listBox.hidden = false; });
-      searchInput.addEventListener('input', function(){ renderComboList(this.value); listBox.hidden = false; });
-      searchInput.addEventListener('blur', function(){ setTimeout(function(){ listBox.hidden = true; }, 150); });
-    }
-  }
-}
-
-
 function applyStaticStrings(){
   document.getElementById("hdr-sub").textContent = t("app_sub");
   document.getElementById("hdr-tag").textContent = t("app_tag");
   document.getElementById("disclaimer-box").innerHTML = t("disclaimer_html");
-  document.getElementById("sidebar-head").textContent = t("sidebar_head");
+  document.getElementById("mob-panel-head").textContent = t("sidebar_head");
+  document.getElementById("weapon-picker-head").textContent = t("weapon_picker_head");
   document.getElementById("footer-box").innerHTML = t("footer_html");
   var toggle = document.getElementById("lang-toggle");
   toggle.textContent = t("lang_toggle");
@@ -1327,7 +1384,14 @@ document.getElementById("lang-toggle").addEventListener("click", function(){
   setLang(lang === "ko" ? "en" : "ko");
 });
 
-function renderAll(){ renderSidebar(); renderDossier(); renderWeaponPanel(); }
+function renderAll(){
+  renderMobList();
+  renderMobDetail();
+  renderWeaponPicker();
+  renderCalculator();
+  if(compareVisible) renderComparePanel();
+}
+document.getElementById("compare-panel").hidden = true;
 applyStaticStrings();
 renderAll();
 })();
