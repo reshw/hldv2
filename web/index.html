@@ -93,14 +93,18 @@ button{font-family:inherit;}
 }
 .disclaimer b{color:var(--warn);}
 
-.picker-layout{display:grid; grid-template-columns:260px 260px 1fr; gap:18px; align-items:start;}
-@media (max-width:1150px){ .picker-layout{grid-template-columns:1fr 1fr;} #calculator-panel{grid-column:1 / -1;} }
-@media (max-width:700px){ .picker-layout{grid-template-columns:1fr;} #calculator-panel{grid-column:auto;} }
+.picker-layout{display:grid; grid-template-columns:minmax(0,260px) minmax(0,260px) minmax(0,1fr); gap:18px; align-items:start;}
+@media (max-width:1150px){ .picker-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);} #calculator-panel{grid-column:1 / -1;} }
+@media (max-width:700px){ .picker-layout{grid-template-columns:minmax(0,1fr);} #calculator-panel{grid-column:auto;} }
+#mob-detail, #compare-panel{margin-top:18px;}
+.panel-head-row{display:flex; justify-content:space-between; align-items:center; gap:8px; padding-right:10px;}
+.panel-head-row .panel-head{padding-right:0;}
+.panel-head-row .reset-btn{flex:none;}
 
 /* ---------- pickers (mob / weapon) ---------- */
 .panel{
   background:var(--surface); border:1px solid var(--border); border-radius:4px;
-  box-shadow:var(--shadow);
+  box-shadow:var(--shadow); min-width:0;
 }
 .panel-head{
   padding:10px 14px; border-bottom:1px solid var(--border-soft);
@@ -117,11 +121,12 @@ button{font-family:inherit;}
 .pick-btn{
   width:100%; text-align:left; background:transparent; border:1px solid transparent; color:var(--text-dim);
   padding:7px 8px; border-radius:3px; cursor:pointer; font-size:13.5px; display:flex; justify-content:space-between; gap:8px;
-  align-items:center;
+  align-items:center; overflow:hidden; box-sizing:border-box;
 }
 .pick-btn:hover{background:var(--surface-2); color:var(--text);}
 .pick-btn.active{background:var(--surface-3); border-color:var(--border); color:var(--accent); font-weight:600;}
-.pick-btn .hp{font-size:10.5px; color:var(--text-faint); font-family:'IBM Plex Mono';}
+.pick-btn .pick-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;}
+.pick-btn .hp{font-size:10.5px; color:var(--text-faint); font-family:'IBM Plex Mono'; flex:none;}
 .pick-btn.active .hp{color:var(--accent-dim);}
 .sub-tag{
   display:inline-block; font-size:9px; letter-spacing:.03em; text-transform:uppercase;
@@ -205,9 +210,9 @@ select.armor-sel{
 .weapon-combo-item:hover, .weapon-combo-item.hl{background:var(--surface-2); color:var(--text);}
 .weapon-combo-item .cat{font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.03em;}
 .weapon-combo-empty{padding:8px 10px; font-size:12px; color:var(--text-faint);}
-.bp-grid{display:grid; grid-template-columns:1fr 1fr 1.4fr; gap:14px; align-items:start;}
-@media (max-width:1100px){ .bp-grid{grid-template-columns:1fr;} }
-.bp-col{background:var(--surface-2); border:1px solid var(--border-soft); border-radius:4px; padding:12px 14px;}
+.bp-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr); gap:14px; align-items:start;}
+@media (max-width:1100px){ .bp-grid{grid-template-columns:minmax(0,1fr);} }
+.bp-col{background:var(--surface-2); border:1px solid var(--border-soft); border-radius:4px; padding:12px 14px; min-width:0;}
 .bp-col-wide{grid-column:span 1;}
 .bp-col-title{font-family:'Oswald'; font-size:13px; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border-soft);}
 .weapon-name-cell{display:flex; align-items:center; gap:8px;}
@@ -281,10 +286,12 @@ footer a{color:var(--text-faint); text-decoration:underline;}
   <div class="picker-layout">
     <!-- 1. MOB PICKER -->
     <div class="panel" id="mob-panel">
-      <div class="panel-head" id="mob-panel-head"></div>
+      <div class="panel-head-row">
+        <div class="panel-head" id="mob-panel-head"></div>
+        <button class="reset-btn" id="mobdetail-toggle-btn" style="padding:3px 8px;font-size:10.5px;"></button>
+      </div>
       <div class="sidebar-search"><input type="text" id="enemy-search-input" autocomplete="off"></div>
       <div id="mob-list"></div>
-      <div id="mob-detail"></div>
     </div>
 
     <!-- 2. WEAPON PICKER -->
@@ -298,6 +305,8 @@ footer a{color:var(--text-faint); text-decoration:underline;}
     <!-- 3. CALCULATOR -->
     <div class="panel" id="calculator-panel"></div>
   </div>
+
+  <div class="panel" id="mob-detail"></div>
 
   <div class="panel" id="compare-panel" hidden></div>
 
@@ -351,6 +360,7 @@ var STRINGS = {
     results_summary_label: "결과 요약", invuln_prefix: "⚠ 이 부위는 관통·데미지 무관하게 무적입니다.", ref_prefix: "참고:", subfaction_suffix: "서브팩션 전용", invuln_tag: "[무적]",
     multi_hit_note: '이 부위 장갑 기준으로 가장 효과적인 피해 성분 하나만 골라 씁니다(예: 스코처는 저장갑엔 직격탄, 중장갑엔 폭발탄). 같은 발사에 여러 성분이 동시에 같은 부위에 들어가는지는 원본 시트도 "실험적"이라 명시한 부분이라 합산하지 않습니다.',
     weapon_picker_head: "무기 검색", compare_toggle_show: "전체 무기 비교표 보기", compare_toggle_hide: "비교표 닫기",
+    mobdetail_toggle_show: "상세정보 보기", mobdetail_toggle_hide: "상세정보 숨기기",
     disclaimer_html: '<b>데이터 출처:</b> 무기 92종·몹 48종 전체가 <b>DiversDex</b>(커뮤니티 제작, 인게임 테스트로 교차검증된 스프레드시트)와 '+
       '<a href="https://github.com/helldivers-2/json" target="_blank" rel="noopener">helldivers-2/json</a>(MIT, GitHub)로 채워져 있습니다 — 더 이상 순수 추정값이 아닙니다. '+
       '다만 두 소스 다 Arrowhead 공식은 아니라 패치 후 오차가 생길 수 있어요. '+
@@ -394,6 +404,7 @@ var STRINGS = {
     results_summary_label: "Summary", invuln_prefix: "⚠ This part is invulnerable regardless of penetration/damage.", ref_prefix: "Note:", subfaction_suffix: "subfaction-only", invuln_tag: "[INVULN]",
     multi_hit_note: 'Only the single most effective damage component for this part\'s armor is used (e.g. the Scorcher uses its direct shot on light armor, its explosion on medium armor). Whether multiple components from one shot both land on the same part is something even the source sheet calls "experimental", so they are not summed.',
     weapon_picker_head: "Weapon Search", compare_toggle_show: "Show full weapon comparison", compare_toggle_hide: "Hide comparison",
+    mobdetail_toggle_show: "Show details", mobdetail_toggle_hide: "Hide details",
     disclaimer_html: '<b>Data sources:</b> all 92 weapons and 48 enemies come from <b>DiversDex</b> (a community spreadsheet, cross-checked and in-game tested) and '+
       '<a href="https://github.com/helldivers-2/json" target="_blank" rel="noopener">helldivers-2/json</a> (MIT, GitHub) — no longer pure guesswork. '+
       "Neither source is official Arrowhead data though, so patches can drift out of sync. "+
@@ -913,7 +924,7 @@ function renderMobList(){
     list.forEach(function(e){
       var sub = e.subfaction ? '<span class="sub-tag" title="'+esc(e.subfaction)+'">'+esc(e.subfaction)+'</span> ' : '';
       html += '<li><button class="pick-btn'+(e.id===selectedEnemy?' active':'')+'" data-id="'+e.id+'">'+
-        '<span>'+sub+esc(e.name)+'</span><span class="hp">'+fmt(e.mainHp)+'HP</span></button></li>';
+        '<span class="pick-name">'+sub+esc(e.name)+'</span><span class="hp">'+fmt(e.mainHp)+'HP</span></button></li>';
     });
     html += '</ul></div>';
   });
@@ -934,7 +945,21 @@ document.getElementById("enemy-search-input").addEventListener("input", function
 });
 
 /* ---- mob detail: reference info + editable data for the selected creature ---- */
+var mobDetailVisible = true;
+function updateMobDetailToggleBtn(){
+  document.getElementById('mobdetail-toggle-btn').textContent = mobDetailVisible ? t('mobdetail_toggle_hide') : t('mobdetail_toggle_show');
+}
+document.getElementById('mobdetail-toggle-btn').addEventListener('click', function(){
+  mobDetailVisible = !mobDetailVisible;
+  updateMobDetailToggleBtn();
+  renderMobDetail();
+});
+
 function renderMobDetail(){
+  var panel = document.getElementById("mob-detail");
+  panel.hidden = !mobDetailVisible;
+  if(!mobDetailVisible) return;
+
   var e = findEnemy(selectedEnemy);
   var f = FACTIONS[e.faction];
   var html = '';
@@ -970,7 +995,7 @@ function renderMobDetail(){
   html += '<div class="section-label">'+t('intel_label')+'</div>';
   html += '<div class="intel"><ul>'+e.tips.map(function(tip){return '<li>'+esc(tip)+'</li>';}).join('')+'</ul></div>';
 
-  document.getElementById("mob-detail").innerHTML = html;
+  panel.innerHTML = html;
 
   document.getElementById('main-hp-in').addEventListener('change', function(){
     findEnemy(selectedEnemy).mainHp = Math.max(1, Math.round(+this.value || 1));
@@ -1085,7 +1110,7 @@ function renderWeaponPicker(){
     html += '<ul class="enemy-list">';
     list.forEach(function(w){
       html += '<li><button class="pick-btn'+(w.id===selectedWeapon?' active':'')+'" data-id="'+w.id+'">'+
-        '<span>'+esc(w.name)+'</span><span class="hp">'+t('col_pen')+' '+weaponHits(w)[0].apDirect+'</span></button></li>';
+        '<span class="pick-name">'+esc(w.name)+'</span><span class="hp">'+t('col_pen')+' '+weaponHits(w)[0].apDirect+'</span></button></li>';
     });
     html += '</ul>';
   });
@@ -1375,6 +1400,7 @@ function applyStaticStrings(){
   document.getElementById("disclaimer-box").innerHTML = t("disclaimer_html");
   document.getElementById("mob-panel-head").textContent = t("sidebar_head");
   document.getElementById("weapon-picker-head").textContent = t("weapon_picker_head");
+  updateMobDetailToggleBtn();
   document.getElementById("footer-box").innerHTML = t("footer_html");
   var toggle = document.getElementById("lang-toggle");
   toggle.textContent = t("lang_toggle");
