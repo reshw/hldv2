@@ -2,8 +2,12 @@
 function fakeEl() {
   return {
     innerHTML: "",
+    textContent: "",
+    placeholder: "",
     addEventListener: function () {},
     getAttribute: function () { return null; },
+    setAttribute: function () {},
+    select: function () {},
     value: "0",
   };
 }

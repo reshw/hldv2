@@ -90,6 +90,26 @@ separate column in the calculator; it does not feed into `btk` itself.
   the rest. Not sourced from anywhere external - treat as reasonable but
   unverified tactical color.
 
+## Planned: stage/mission rosters (not built yet)
+
+End goal (per user, 2026-09-07): pick a **stage/mission type** and see the full
+expected enemy roster for it, per-weapon coverage across that whole roster, and
+eventually score a 4-stratagem loadout against it. `subfaction` (currently just
+`"Vote Snatchers"` on `crusher`/`wretch`) was a first pass at this, but it's the
+wrong shape - an enemy can belong to MULTIPLE stage types (e.g. `Voteless`
+appears in both a "Normal" Illuminate roster and a "Vote Snatchers" one), so a
+single string field can't represent that.
+
+Planned shape once this gets built out (fill in gradually, don't guess):
+```jsonc
+// a new top-level stages.json:
+[{ "id": "vote_snatchers", "faction": "illuminate", "name": "Vote Snatchers" }, ...]
+// enemies.json gains an array instead of the current single string:
+"stages": ["normal_illuminate", "vote_snatchers"]
+```
+`subfaction` on the two existing entries should migrate to this once the full
+stage list exists - don't build UI on top of `subfaction` as-is, it's a stub.
+
 ## Known gaps / things to treat carefully
 
 - `durability` on enemy parts is captured but **not used** by the BTK

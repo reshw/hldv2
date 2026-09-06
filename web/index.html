@@ -73,6 +73,18 @@ button{font-family:inherit;}
   font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink);
   background:var(--accent); padding:4px 8px; border-radius:2px; font-weight:600;
 }
+.lang-toggle{
+  font-size:11px; letter-spacing:.04em; color:var(--text-dim); background:var(--surface-2);
+  border:1px solid var(--border); padding:5px 10px; border-radius:3px; cursor:pointer; font-weight:600;
+}
+.lang-toggle:hover{border-color:var(--accent); color:var(--accent);}
+.sidebar-search{padding:8px 10px 4px;}
+.sidebar-search input{
+  width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border);
+  color:var(--text); padding:7px 10px; border-radius:20px; font-size:13px;
+}
+.sidebar-search input:focus{border-color:var(--accent);}
+.enemy-empty{padding:14px 12px; color:var(--text-faint); font-size:12.5px;}
 
 .disclaimer{
   background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--warn);
@@ -252,27 +264,22 @@ footer a{color:var(--text-faint); text-decoration:underline;}
       <div class="brand-mark">SE</div>
       <div>
         <h1>Super Earth Ballistics</h1>
-        <div class="sub">전장 병기 데이터 · 몹 대응 전략 단말</div>
+        <div class="sub" id="hdr-sub"></div>
       </div>
     </div>
     <div class="topbar-right">
-      <span class="tag">Managed Democracy Field Manual</span>
+      <span class="tag" id="hdr-tag"></span>
+      <button class="lang-toggle" id="lang-toggle" type="button"></button>
     </div>
   </div>
 
-  <div class="disclaimer">
-    <b>데이터 출처:</b> 무기 92종·몹 48종 전체가 <b>DiversDex</b>(커뮤니티 제작, 인게임 테스트로 교차검증된 스프레드시트)와
-    <a href="https://github.com/helldivers-2/json" target="_blank" rel="noopener">helldivers-2/json</a>(MIT, GitHub)로 채워져 있습니다 — 더 이상 순수 추정값이 아닙니다.
-    다만 두 소스 다 Arrowhead 공식은 아니라 패치 후 오차가 생길 수 있어요.
-    <b>메인 체력</b>은 몹의 전체 처치 기준 체력, <b>메인 기여율%</b>은 치명(★) 아닌 부위를 맞혔을 때 이 체력이 깎이는 비율입니다.
-    표의 회색 입력칸은 모두 <b>직접 수정 가능</b>하고 브라우저에 자동 저장됩니다.
-    총알 수 계산은 <b>BTK(Bullets To Kill)</b>, 시간 계산은 <b>TTK(Time To Kill)</b> 기준입니다.
-  </div>
+  <div class="disclaimer" id="disclaimer-box"></div>
 
   <div class="layout">
     <!-- SIDEBAR -->
     <div class="panel" id="sidebar">
-      <div class="panel-head">적 세력 색인</div>
+      <div class="panel-head" id="sidebar-head"></div>
+      <div class="sidebar-search"><input type="text" id="enemy-search-input" autocomplete="off"></div>
       <div id="sidebar-body"></div>
     </div>
 
@@ -283,24 +290,129 @@ footer a{color:var(--text-faint); text-decoration:underline;}
     </div>
   </div>
 
-  <footer>
-    데이터 출처: 커뮤니티 관찰치 기반 근사값 (검증 필요) · 로컬 브라우저에만 저장되며 서버로 전송되지 않습니다.<br>
-    For Super Earth. For Managed Democracy.
-  </footer>
+  <footer id="footer-box"></footer>
 </div>
 
 <script>
 (function(){
 "use strict";
 
+/* ============ i18n ============ */
+/* Infrastructure only for now: UI chrome (labels/headers/buttons) is translated below.
+   Entity proper nouns (enemy/weapon names) are NOT auto-translated - HD2's own Korean
+   localization mixes transliteration ("Bile Spewer" -> "바일 스퓨어") and semantic
+   translation ("PATRIOT" -> "애국자") unpredictably per term, so guessing would risk
+   real inaccuracy. Each enemy/weapon has an optional `nameKo` field (currently empty)
+   that display falls back from - fill it in per-item with verified names, not generated. */
+var STRINGS = {
+  ko: {
+    app_sub: "전장 병기 데이터 · 몹 대응 전략 단말", app_tag: "Managed Democracy Field Manual", lang_toggle: "EN",
+    sidebar_head: "적 세력 색인", sidebar_search_ph: "몹 검색...", enemy_empty: "일치하는 몹 없음",
+    faction_terminid: "터미니드", faction_automaton: "오토마톤", faction_illuminate: "일루미네이트",
+    cat_primary: "주무기", cat_secondary: "보조무기", cat_support: "지원화기", cat_all: "전체",
+    tab_compare: "비교표", tab_breakpoint: "브레이크포인트",
+    reset_btn: "전체 데이터 초기화", reset_confirm: "모든 적/무기 데이터를 기본값으로 되돌립니다. 계속할까요?",
+    part_select_label: "대상 부위 선택 —", img_credit: "부위 다이어그램 출처: DiversDex (제작: Roy)", fig_front: "정면", fig_side: "측면",
+    main_hp_label: "메인 체력 (전체 처치 기준)", main_hp_hint: '치명(★) 표시가 없는 부위를 맞히면 이 체력을 "메인 기여율%"만큼만 깎습니다.',
+    parts_table_label: "부위별 장갑 · 체력 · 내구% · 메인 기여율 (직접 수정 가능)",
+    col_part: "부위", col_armor: "장갑(AV)", col_hp: "체력(HP)", col_durability: "내구%", col_tomain: "메인 기여율%", col_lethal: "치명(★)",
+    intel_label: "교전 지침",
+    compare_hint: "무기별 BTK / TTK 비교 — 표 헤더 클릭 시 정렬, 회색 칸은 직접 수정 (1번째 피해 성분만 수정됨)",
+    col_weapon: "무기", col_category: "종류", col_pen: "관통(AV)", col_dmg: "피해", col_durabledmg: "내구댐",
+    col_rpm: "발사속도(RPM)", col_mag: "탄창", col_reload: "재장전(초)", col_status: "상태",
+    col_btk: "BTK(처치)", col_ttk: "TTK(초)", col_killspermag: "탄창당 처치", col_sever: "이 부위 파괴", col_detail: "상세",
+    status_full: "완전관통(100%)", status_half: "동일관통(65%)", status_partial: "도탄+내구%", status_blocked: "도탄(0%)",
+    regen_badge: "재생우세", regen_title: "지속 DPS가 이 몹의 재생 속도를 못 넘김", best_btk: "BEST BTK", best_ttk: "BEST TTK",
+    bp_title: "브레이크포인트 계산기 — 무기 하나 vs 부위 하나 상세 분석",
+    bp_weapon_select: "무기 선택:", bp_search_ph: "무기 이름 검색...", bp_empty: "일치하는 무기 없음",
+    bp_col_weapon: "무기", bp_col_target: "타겟 —", bp_col_detail: "상세 계산",
+    stat_cat: "분류", stat_mag: "탄창", stat_rpm: "발사속도(RPM)", stat_reload: "재장전(초)", stat_tacreload: "전술 재장전(초)", stat_ergo: "인체공학",
+    hit_components: "피해 성분", stat_dmg: "피해량", stat_durabledmg: "내구댐(Durable)",
+    stat_pen4: "관통 (직격/경사/대경사/극단)", stat_blastradius: "폭발 반경(내/외)", stat_falloff50: "50m 낙하 감쇠",
+    target_parthp: "부위 체력", target_parthp_na: "해당없음(메인만)", target_mainhp: "메인 체력", target_armor: "장갑(AV)",
+    target_durability: "부위 내구%", target_tomain: "메인 기여율", target_lethal: "치명(파괴시 즉사)",
+    target_exdr: "ExDR", target_badr: "BaDR", target_firemult: "화염 배율", target_regen: "재생", target_regen_none: "없음 (이 부위는 재생 제외)", regen_resume_suffix: "뒤 재개",
+    target_stagger_label: "스태거 임계값 (경/중/중重/massive)",
+    tile_btk:"BTK", tile_ttk:"TTK(초)", tile_overkill:"오버킬", tile_reloads:"재장전 횟수", tile_magpct:"탄창 소모", tile_killspermag:"탄창당 처치",
+    detail_col_component:"피해 성분", detail_col_pen:"관통(직격)", detail_col_armor:"장갑(AV)", detail_col_judge:"판정",
+    detail_col_dmg:"피해", detail_col_applied:"BTK 반영", detail_applied:"적용(최댓값)", detail_notapplied:"미적용",
+    detail_total_row: "BTK/TTK에 실제 적용된 피해 (장갑 대비 가장 센 성분 하나)", detail_mainshare_row: "메인 체력 반영분 (× 메인 기여율",
+    results_summary_label: "결과 요약", invuln_prefix: "⚠ 이 부위는 관통·데미지 무관하게 무적입니다.", ref_prefix: "참고:", subfaction_suffix: "서브팩션 전용", invuln_tag: "[무적]",
+    multi_hit_note: '이 부위 장갑 기준으로 가장 효과적인 피해 성분 하나만 골라 씁니다(예: 스코처는 저장갑엔 직격탄, 중장갑엔 폭발탄). 같은 발사에 여러 성분이 동시에 같은 부위에 들어가는지는 원본 시트도 "실험적"이라 명시한 부분이라 합산하지 않습니다.',
+    disclaimer_html: '<b>데이터 출처:</b> 무기 92종·몹 48종 전체가 <b>DiversDex</b>(커뮤니티 제작, 인게임 테스트로 교차검증된 스프레드시트)와 '+
+      '<a href="https://github.com/helldivers-2/json" target="_blank" rel="noopener">helldivers-2/json</a>(MIT, GitHub)로 채워져 있습니다 — 더 이상 순수 추정값이 아닙니다. '+
+      '다만 두 소스 다 Arrowhead 공식은 아니라 패치 후 오차가 생길 수 있어요. '+
+      '<b>메인 체력</b>은 몹의 전체 처치 기준 체력, <b>메인 기여율%</b>은 치명(★) 아닌 부위를 맞혔을 때 이 체력이 깎이는 비율입니다. '+
+      '표의 회색 입력칸은 모두 <b>직접 수정 가능</b>하고 브라우저에 자동 저장됩니다. '+
+      '총알 수 계산은 <b>BTK(Bullets To Kill)</b>, 시간 계산은 <b>TTK(Time To Kill)</b> 기준입니다.',
+    footer_html: '데이터 출처: 커뮤니티 관찰치 기반 근사값 (검증 필요) · 로컬 브라우저에만 저장되며 서버로 전송되지 않습니다.<br>For Super Earth. For Managed Democracy.'
+  },
+  en: {
+    app_sub: "Battlefield weapons data · hostile response terminal", app_tag: "Managed Democracy Field Manual", lang_toggle: "KO",
+    sidebar_head: "Hostile Faction Index", sidebar_search_ph: "Search enemies...", enemy_empty: "No matching enemy",
+    faction_terminid: "Terminids", faction_automaton: "Automatons", faction_illuminate: "Illuminate",
+    cat_primary: "Primary", cat_secondary: "Secondary", cat_support: "Support", cat_all: "All",
+    tab_compare: "Compare", tab_breakpoint: "Breakpoint",
+    reset_btn: "Reset all data", reset_confirm: "This resets all enemy/weapon data to defaults. Continue?",
+    part_select_label: "Target part —", img_credit: "Part diagram source: DiversDex (by Roy)", fig_front: "Front", fig_side: "Side",
+    main_hp_label: "Main HP (overall kill threshold)", main_hp_hint: 'Hitting a part with no lethal(★) mark only drains this by its "main share %".',
+    parts_table_label: "Per-part armor · HP · durability% · main share (editable)",
+    col_part: "Part", col_armor: "Armor(AV)", col_hp: "HP", col_durability: "Durability%", col_tomain: "Main share%", col_lethal: "Lethal(★)",
+    intel_label: "Field notes",
+    compare_hint: "BTK/TTK per weapon — click a header to sort, gray cells are editable (only the 1st damage component)",
+    col_weapon: "Weapon", col_category: "Category", col_pen: "Pen(AV)", col_dmg: "Damage", col_durabledmg: "Durable dmg",
+    col_rpm: "RPM", col_mag: "Mag", col_reload: "Reload(s)", col_status: "Status",
+    col_btk: "BTK", col_ttk: "TTK(s)", col_killspermag: "Kills/mag", col_sever: "Sever part", col_detail: "Detail",
+    status_full: "Full pen (100%)", status_half: "Equal AV (65%)", status_partial: "Ricochet+durable%", status_blocked: "Ricochet (0%)",
+    regen_badge: "Regen wins", regen_title: "Sustained DPS can't outpace this target's regen", best_btk: "BEST BTK", best_ttk: "BEST TTK",
+    bp_title: "Breakpoint Calculator — one weapon vs one part, in detail",
+    bp_weapon_select: "Weapon:", bp_search_ph: "Search weapon name...", bp_empty: "No matching weapon",
+    bp_col_weapon: "Weapon", bp_col_target: "Target —", bp_col_detail: "Detailed calculation",
+    stat_cat: "Category", stat_mag: "Magazine", stat_rpm: "RPM", stat_reload: "Reload(s)", stat_tacreload: "Tactical reload(s)", stat_ergo: "Ergonomics",
+    hit_components: "Damage components", stat_dmg: "Damage", stat_durabledmg: "Durable damage",
+    stat_pen4: "Pen (direct/slight/large/extreme)", stat_blastradius: "Blast radius (in/out)", stat_falloff50: "50m falloff",
+    target_parthp: "Part HP", target_parthp_na: "N/A (main only)", target_mainhp: "Main HP", target_armor: "Armor(AV)",
+    target_durability: "Part durability%", target_tomain: "Main share", target_lethal: "Lethal (kills on destroy)",
+    target_exdr: "ExDR", target_badr: "BaDR", target_firemult: "Fire multiplier", target_regen: "Regen", target_regen_none: "None (exempt part)", regen_resume_suffix: "delay",
+    target_stagger_label: "Stagger thresholds (light/medium/heavy/massive)",
+    tile_btk:"BTK", tile_ttk:"TTK(s)", tile_overkill:"Overkill", tile_reloads:"Reloads", tile_magpct:"Mag used", tile_killspermag:"Kills/mag",
+    detail_col_component:"Component", detail_col_pen:"Pen(direct)", detail_col_armor:"Armor(AV)", detail_col_judge:"Result",
+    detail_col_dmg:"Damage", detail_col_applied:"Used for BTK", detail_applied:"Used (max)", detail_notapplied:"Not used",
+    detail_total_row: "Damage actually applied to BTK/TTK (best component vs this armor)", detail_mainshare_row: "Main HP share (× main share",
+    results_summary_label: "Summary", invuln_prefix: "⚠ This part is invulnerable regardless of penetration/damage.", ref_prefix: "Note:", subfaction_suffix: "subfaction-only", invuln_tag: "[INVULN]",
+    multi_hit_note: 'Only the single most effective damage component for this part\'s armor is used (e.g. the Scorcher uses its direct shot on light armor, its explosion on medium armor). Whether multiple components from one shot both land on the same part is something even the source sheet calls "experimental", so they are not summed.',
+    disclaimer_html: '<b>Data sources:</b> all 92 weapons and 48 enemies come from <b>DiversDex</b> (a community spreadsheet, cross-checked and in-game tested) and '+
+      '<a href="https://github.com/helldivers-2/json" target="_blank" rel="noopener">helldivers-2/json</a> (MIT, GitHub) — no longer pure guesswork. '+
+      "Neither source is official Arrowhead data though, so patches can drift out of sync. "+
+      "<b>Main HP</b> is the creature's overall kill threshold; <b>main share%</b> is how much of that drains when a non-lethal(★) part is hit. "+
+      "Every gray input cell is <b>directly editable</b> and auto-saves to this browser. "+
+      "Shot counts use <b>BTK (Bullets To Kill)</b>, time uses <b>TTK (Time To Kill)</b>.",
+    footer_html: 'Data: community-observed approximations (unverified) · stored only in your local browser, never sent to a server.<br>For Super Earth. For Managed Democracy.'
+  }
+};
+var lang = (function(){ try{ return localStorage.getItem("se-lang") || "ko"; }catch(e){ return "ko"; } })();
+function t(key){
+  var v = STRINGS[lang] && STRINGS[lang][key];
+  if(v === undefined) v = STRINGS.ko[key];
+  return v === undefined ? key : v;
+}
+function setLang(l){
+  lang = l;
+  try{ localStorage.setItem("se-lang", l); }catch(e){}
+  applyStaticStrings();
+  renderAll();
+}
+
 /* ============ constants ============ */
-var CAT_LABEL = {primary:"주무기", secondary:"보조무기", support:"지원화기"};
+var CAT_LABEL = {primary:"cat_primary", secondary:"cat_secondary", support:"cat_support"};
+function catLabel(cat){ return t(CAT_LABEL[cat] || cat); }
 
 var FACTIONS = {
-  terminid:  {name:"터미니드", color:"var(--terminid)", mark:"bug"},
-  automaton: {name:"오토마톤", color:"var(--automaton)", mark:"bot"},
-  illuminate:{name:"일루미네이트", color:"var(--illuminate)", mark:"eye"}
+  terminid:  {key:"faction_terminid", color:"var(--terminid)", mark:"bug"},
+  automaton: {key:"faction_automaton", color:"var(--automaton)", mark:"bot"},
+  illuminate:{key:"faction_illuminate", color:"var(--illuminate)", mark:"eye"}
 };
+function factionName(fid){ return t(FACTIONS[fid].key); }
 
 function avLabel(n){ return "AV" + n; }
 
@@ -763,24 +875,38 @@ function penStatus(w, armor, partDurability){
 }
 
 /* ============ sidebar ============ */
+var enemySearchQuery = "";
+
 function renderSidebar(){
+  var searchInput = document.getElementById("enemy-search-input");
+  searchInput.placeholder = t("sidebar_search_ph");
+
+  var q = enemySearchQuery.trim().toLowerCase();
   var byFaction = {};
-  state.enemies.forEach(function(e){ (byFaction[e.faction]=byFaction[e.faction]||[]).push(e); });
+  state.enemies.forEach(function(e){
+    if(q && e.name.toLowerCase().indexOf(q) === -1) return;
+    (byFaction[e.faction]=byFaction[e.faction]||[]).push(e);
+  });
+
   var html = "";
+  var any = false;
   Object.keys(FACTIONS).forEach(function(fid){
     var f = FACTIONS[fid];
     var list = byFaction[fid]||[];
     if(!list.length) return;
+    any = true;
     html += '<div class="faction-group">';
-    html += '<div class="faction-title" style="color:'+f.color+'"><span class="dot" style="background:'+f.color+'"></span>'+f.name+'</div>';
+    html += '<div class="faction-title" style="color:'+f.color+'"><span class="dot" style="background:'+f.color+'"></span>'+factionName(fid)+'</div>';
     html += '<ul class="enemy-list">';
     list.forEach(function(e){
-      var sub = e.subfaction ? '<span class="sub-tag" title="'+esc(e.subfaction)+' 서브팩션 전용 — 이 서브팩션이 활성화된 행성/미션에서만 등장">'+esc(e.subfaction)+'</span> ' : '';
+      var sub = e.subfaction ? '<span class="sub-tag" title="'+esc(e.subfaction)+'">'+esc(e.subfaction)+'</span> ' : '';
       html += '<li><button class="enemy-btn'+(e.id===selectedEnemy?' active':'')+'" data-id="'+e.id+'">'+
         '<span>'+sub+esc(e.name)+'</span><span class="hp">'+fmt(e.mainHp)+'HP</span></button></li>';
     });
     html += '</ul></div>';
   });
+  if(!any) html += '<div class="enemy-empty">'+esc(t("enemy_empty"))+'</div>';
+
   document.getElementById("sidebar-body").innerHTML = html;
   Array.prototype.forEach.call(document.querySelectorAll(".enemy-btn"), function(btn){
     btn.addEventListener("click", function(){
@@ -790,6 +916,10 @@ function renderSidebar(){
     });
   });
 }
+document.getElementById("enemy-search-input").addEventListener("input", function(){
+  enemySearchQuery = this.value;
+  renderSidebar();
+});
 
 /* ============ dossier ============ */
 function renderDossier(){
@@ -798,21 +928,21 @@ function renderDossier(){
   var html = '';
   html += '<div class="dossier-top">';
   html += '<div>';
-  html += '<div class="dossier-meta" style="margin-bottom:6px;"><span class="chip" style="color:'+f.color+';border-color:'+f.color+'">'+f.name+'</span>'+
-    (e.subfaction ? '<span class="chip" style="color:'+f.color+';border-color:'+f.color+';border-style:dashed;">'+esc(e.subfaction)+' 서브팩션 전용</span>' : '')+
+  html += '<div class="dossier-meta" style="margin-bottom:6px;"><span class="chip" style="color:'+f.color+';border-color:'+f.color+'">'+factionName(e.faction)+'</span>'+
+    (e.subfaction ? '<span class="chip" style="color:'+f.color+';border-color:'+f.color+';border-style:dashed;">'+esc(e.subfaction)+' '+t('subfaction_suffix')+'</span>' : '')+
     '</div>';
   html += '<h2 class="dossier-name">'+esc(e.name)+'</h2>';
   html += '</div>';
   html += markSVG(f.mark, f.color);
   html += '</div>';
 
-  html += '<div class="section-label">메인 체력 (전체 처치 기준)</div>';
+  html += '<div class="section-label">'+t('main_hp_label')+'</div>';
   html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">'+
     '<input class="num-in mono" id="main-hp-in" type="number" min="1" value="'+e.mainHp+'">'+
-    '<span style="color:var(--text-faint);font-size:12px;">치명(★) 표시가 없는 부위를 맞히면 이 체력을 "메인 기여율%"만큼만 깎습니다.</span></div>';
+    '<span style="color:var(--text-faint);font-size:12px;">'+t('main_hp_hint')+'</span></div>';
 
-  html += '<div class="section-label">부위별 장갑 · 체력 · 내구% · 메인 기여율 (직접 수정 가능)</div>';
-  html += '<div class="table-wrap"><table><thead><tr><th>부위</th><th>장갑(AV)</th><th>체력(HP)</th><th>내구%</th><th>메인 기여율%</th><th>치명(★)</th></tr></thead><tbody>';
+  html += '<div class="section-label">'+t('parts_table_label')+'</div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>'+t('col_part')+'</th><th>'+t('col_armor')+'</th><th>'+t('col_hp')+'</th><th>'+t('col_durability')+'</th><th>'+t('col_tomain')+'</th><th>'+t('col_lethal')+'</th></tr></thead><tbody>';
   e.parts.forEach(function(p, i){
     html += '<tr class="'+(p.lethal?'weak-row':'')+'">';
     html += '<td>'+esc(p.name)+'</td>';
@@ -825,8 +955,8 @@ function renderDossier(){
   });
   html += '</tbody></table></div>';
 
-  html += '<div class="section-label">교전 지침</div>';
-  html += '<div class="intel"><ul>'+e.tips.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul></div>';
+  html += '<div class="section-label">'+t('intel_label')+'</div>';
+  html += '<div class="intel"><ul>'+e.tips.map(function(tip){return '<li>'+esc(tip)+'</li>';}).join('')+'</ul></div>';
 
   document.getElementById("dossier").innerHTML = html;
 
@@ -909,28 +1039,28 @@ function renderWeaponPanel(){
   var html = '';
   html += '<div class="weapon-head">';
   html += '<div class="tabs">'+
-    [["compare","비교표"],["breakpoint","브레이크포인트"]].map(function(v){
+    [["compare",t("tab_compare")],["breakpoint",t("tab_breakpoint")]].map(function(v){
       return '<button class="tab-btn'+(viewMode===v[0]?' active':'')+'" data-view="'+v[0]+'">'+v[1]+'</button>';
     }).join('')+
     '</div>';
-  html += '<button class="reset-btn" id="reset-btn">전체 데이터 초기화</button>';
+  html += '<button class="reset-btn" id="reset-btn">'+t("reset_btn")+'</button>';
   html += '</div>';
 
-  html += '<div class="section-label">대상 부위 선택 — <span class="mono" style="color:var(--text-dim)">'+esc(e.name)+'</span></div>';
+  html += '<div class="section-label">'+t("part_select_label")+' <span class="mono" style="color:var(--text-dim)">'+esc(e.name)+'</span></div>';
   html += '<div class="chips-row">';
   e.parts.forEach(function(p, i){
     var invuln = p.notes && /invulnerable/i.test(p.notes);
-    html += '<button class="part-chip'+(i===selectedPart?' active':'')+'"'+(p.notes?' title="'+esc(p.notes)+'"':'')+' data-idx="'+i+'">'+(p.lethal?'<span class="w">★</span> ':'')+(invuln?'<span class="w" style="color:var(--danger);">[무적]</span> ':'')+esc(p.name)+' <span class="mono">('+fmt(p.hp)+'HP · '+avLabel(p.armor)+')</span></button>';
+    html += '<button class="part-chip'+(i===selectedPart?' active':'')+'"'+(p.notes?' title="'+esc(p.notes)+'"':'')+' data-idx="'+i+'">'+(p.lethal?'<span class="w">★</span> ':'')+(invuln?'<span class="w" style="color:var(--danger);">'+t("invuln_tag")+'</span> ':'')+esc(p.name)+' <span class="mono">('+fmt(p.hp)+'HP · '+avLabel(p.armor)+')</span></button>';
   });
   html += '</div>';
 
   if(part.img){
     html += '<div class="part-images">';
-    html += '<figure><img src="'+esc(part.img)+'" alt="'+esc(part.name)+' 정면" onerror="this.closest(\'figure\').style.display=\'none\'"><figcaption>정면</figcaption></figure>';
+    html += '<figure><img src="'+esc(part.img)+'" alt="'+esc(part.name)+' '+t("fig_front")+'" onerror="this.closest(\'figure\').style.display=\'none\'"><figcaption>'+t("fig_front")+'</figcaption></figure>';
     if(part.altImg){
-      html += '<figure><img src="'+esc(part.altImg)+'" alt="'+esc(part.name)+' 측면" onerror="this.closest(\'figure\').style.display=\'none\'"><figcaption>측면</figcaption></figure>';
+      html += '<figure><img src="'+esc(part.altImg)+'" alt="'+esc(part.name)+' '+t("fig_side")+'" onerror="this.closest(\'figure\').style.display=\'none\'"><figcaption>'+t("fig_side")+'</figcaption></figure>';
     }
-    html += '<div class="img-credit">부위 다이어그램 출처: DiversDex (제작: Roy)</div>';
+    html += '<div class="img-credit">'+t("img_credit")+'</div>';
     html += '</div>';
   }
 
@@ -941,12 +1071,12 @@ function renderWeaponPanel(){
 }
 
 function renderCompareHtml(e, part){
-  var html = '<div class="section-label" style="margin-top:16px;">무기별 BTK / TTK 비교 — 표 헤더 클릭 시 정렬, 회색 칸은 직접 수정 (1번째 피해 성분만 수정됨)</div>';
+  var html = '<div class="section-label" style="margin-top:16px;">'+t("compare_hint")+'</div>';
 
   var rows = state.weapons.filter(function(w){ return catFilter==="all" || w.cat===catFilter; });
   html += '<div class="chips-row" style="margin-bottom:10px;">'+
     ['all','primary','secondary','support'].map(function(c){
-      return '<button class="tab-btn'+(catFilter===c?' active':'')+'" data-cat="'+c+'" style="border-radius:20px;">'+(c==='all'?'전체':CAT_LABEL[c])+'</button>';
+      return '<button class="tab-btn'+(catFilter===c?' active':'')+'" data-cat="'+c+'" style="border-radius:20px;">'+(c==='all'?t('cat_all'):catLabel(c))+'</button>';
     }).join('')+'</div>';
 
   var computed = rows.map(function(w){ return {w:w, c:computeRow(w, part, e.mainHp, e.regen)}; });
@@ -960,24 +1090,24 @@ function renderCompareHtml(e, part){
   });
 
   html += '<div class="table-wrap"><table><thead><tr>';
-  html += '<th>무기</th><th>종류</th><th class="mono">관통(AV)</th><th class="mono">피해</th><th class="mono">내구댐</th><th class="mono">발사속도(RPM)</th><th class="mono">탄창</th><th class="mono">재장전(초)</th><th>상태</th>';
-  html += '<th class="sortable" data-sort="btk">BTK(처치)<span class="arrow">'+(sortKey==="btk"?(sortDir>0?'▲':'▼'):'')+'</span></th>';
-  html += '<th class="sortable" data-sort="ttk">TTK(초)<span class="arrow">'+(sortKey==="ttk"?(sortDir>0?'▲':'▼'):'')+'</span></th>';
-  html += '<th class="mono">탄창당 처치</th>';
-  html += '<th class="mono">이 부위 파괴</th>';
+  html += '<th>'+t("col_weapon")+'</th><th>'+t("col_category")+'</th><th class="mono">'+t("col_pen")+'</th><th class="mono">'+t("col_dmg")+'</th><th class="mono">'+t("col_durabledmg")+'</th><th class="mono">'+t("col_rpm")+'</th><th class="mono">'+t("col_mag")+'</th><th class="mono">'+t("col_reload")+'</th><th>'+t("col_status")+'</th>';
+  html += '<th class="sortable" data-sort="btk">'+t("col_btk")+'<span class="arrow">'+(sortKey==="btk"?(sortDir>0?'▲':'▼'):'')+'</span></th>';
+  html += '<th class="sortable" data-sort="ttk">'+t("col_ttk")+'<span class="arrow">'+(sortKey==="ttk"?(sortDir>0?'▲':'▼'):'')+'</span></th>';
+  html += '<th class="mono">'+t("col_killspermag")+'</th>';
+  html += '<th class="mono">'+t("col_sever")+'</th>';
   html += '<th></th>';
   html += '</tr></thead><tbody>';
 
   computed.forEach(function(r){
     var w = r.w, c = r.c, h0 = weaponHits(w)[0];
-    var statusHtml = c.status==="full" ? '<span class="status-pill status-full">완전관통(100%)</span>'
-      : c.status==="half" ? '<span class="status-pill status-partial">동일관통(65%)</span>'
-      : c.status==="partial" ? '<span class="status-pill status-partial">도탄+내구%</span>'
-      : '<span class="status-pill status-blocked">도탄(0%)</span>';
+    var statusHtml = c.status==="full" ? '<span class="status-pill status-full">'+t("status_full")+'</span>'
+      : c.status==="half" ? '<span class="status-pill status-partial">'+t("status_half")+'</span>'
+      : c.status==="partial" ? '<span class="status-pill status-partial">'+t("status_partial")+'</span>'
+      : '<span class="status-pill status-blocked">'+t("status_blocked")+'</span>';
     var thumb = w.img ? '<img class="weapon-thumb" src="'+esc(w.img)+'" alt="" onerror="this.style.display=\'none\'">' : '';
     html += '<tr>';
-    html += '<td><div class="weapon-name-cell">'+thumb+'<span>'+esc(w.name)+(c.btk===minBtk && isFinite(minBtk)?'<span class="best-badge">BEST BTK</span>':'')+(c.ttk===minTtk && isFinite(minTtk) ?'<span class="best-badge">BEST TTK</span>':'')+'</span></div></td>';
-    html += '<td>'+CAT_LABEL[w.cat]+'</td>';
+    html += '<td><div class="weapon-name-cell">'+thumb+'<span>'+esc(w.name)+(c.btk===minBtk && isFinite(minBtk)?'<span class="best-badge">'+t("best_btk")+'</span>':'')+(c.ttk===minTtk && isFinite(minTtk) ?'<span class="best-badge">'+t("best_ttk")+'</span>':'')+'</span></div></td>';
+    html += '<td>'+catLabel(w.cat)+'</td>';
     html += '<td><input class="num-in mono" type="number" min="0" max="10" data-id="'+w.id+'" data-field="pen" value="'+h0.apDirect+'"></td>';
     html += '<td><input class="num-in mono" type="number" data-id="'+w.id+'" data-field="dmg" value="'+h0.dmg+'"></td>';
     html += '<td><input class="num-in mono" type="number" step="5" min="0" data-id="'+w.id+'" data-field="durableDmg" value="'+Math.round(h0.dmg*h0.durable)+'"></td>';
@@ -985,11 +1115,11 @@ function renderCompareHtml(e, part){
     html += '<td><input class="num-in mono" type="number" data-id="'+w.id+'" data-field="mag" value="'+w.mag+'"></td>';
     html += '<td><input class="num-in mono" type="number" step="0.1" data-id="'+w.id+'" data-field="reload" value="'+w.reload+'"></td>';
     html += '<td>'+statusHtml+'</td>';
-    html += '<td class="mono">'+fmtNum(c.btk)+(c.regenWarning?' <span class="status-pill status-partial" title="지속 DPS가 이 몹의 재생 속도를 못 넘김">재생우세</span>':'')+'</td>';
+    html += '<td class="mono">'+fmtNum(c.btk)+(c.regenWarning?' <span class="status-pill status-partial" title="'+t("regen_title")+'">'+t("regen_badge")+'</span>':'')+'</td>';
     html += '<td class="mono">'+fmtNum(c.ttk,2)+'</td>';
     html += '<td class="mono">'+c.killsPerMag+'</td>';
     html += '<td class="mono">'+(c.sever===null?'-':c.sever)+'</td>';
-    html += '<td><button class="reset-btn bp-jump" data-id="'+w.id+'" style="padding:3px 8px;font-size:11px;">상세</button></td>';
+    html += '<td><button class="reset-btn bp-jump" data-id="'+w.id+'" style="padding:3px 8px;font-size:11px;">'+t("col_detail")+'</button></td>';
     html += '</tr>';
   });
   html += '</tbody></table></div>';
@@ -1006,101 +1136,101 @@ function renderBreakpointHtml(e, part){
   var c = computeRow(w, part, mainHp, e.regen);
   var hits = weaponHits(w);
 
-  var html = '<div class="section-label" style="margin-top:16px;">브레이크포인트 계산기 — 무기 하나 vs 부위 하나 상세 분석</div>';
+  var html = '<div class="section-label" style="margin-top:16px;">'+t("bp_title")+'</div>';
 
   if(part.notes){
     var isInvuln = /invulnerable/i.test(part.notes);
     html += '<div class="disclaimer" style="border-left-color:'+(isInvuln?'var(--danger)':'var(--accent)')+';margin-bottom:12px;">'+
-      (isInvuln?'<b>⚠ 이 부위는 관통·데미지 무관하게 무적입니다.</b> ':'<b>참고:</b> ')+esc(part.notes)+'</div>';
+      (isInvuln?'<b>'+t("invuln_prefix")+'</b> ':'<b>'+t("ref_prefix")+'</b> ')+esc(part.notes)+'</div>';
   }
 
-  html += '<div class="bp-weapon-select">무기 선택: '+
+  html += '<div class="bp-weapon-select">'+t("bp_weapon_select")+' '+
     '<div class="weapon-combo"><input type="text" id="bp-weapon-search" class="num-in" autocomplete="off" '+
-    'value="'+esc(w.name)+'" placeholder="무기 이름 검색..."><div id="bp-weapon-list" class="weapon-combo-list" hidden></div></div>'+
+    'value="'+esc(w.name)+'" placeholder="'+esc(t("bp_search_ph"))+'"><div id="bp-weapon-list" class="weapon-combo-list" hidden></div></div>'+
     '</div>';
 
   html += '<div class="bp-grid">';
 
   // ---- column 1: weapon ----
-  html += '<div class="bp-col"><div class="bp-col-title">무기</div>';
+  html += '<div class="bp-col"><div class="bp-col-title">'+t("bp_col_weapon")+'</div>';
   if(w.img){
     html += '<div class="bp-weapon-img"><img src="'+esc(w.img)+'" alt="'+esc(w.name)+'" onerror="this.parentElement.style.display=\'none\'"></div>';
   }
-  html += statRow('분류', CAT_LABEL[w.cat]);
-  html += statRow('탄창', fmt(w.mag));
-  html += statRow('발사속도(RPM)', fmt(w.rpm));
-  html += statRow('재장전(초)', fmt(w.reload,2));
-  if(w.tacReload) html += statRow('전술 재장전(초)', fmt(w.tacReload,2));
-  if(w.ergonomics) html += statRow('인체공학', fmt(w.ergonomics));
-  html += '<div class="bp-subhead">피해 성분 ('+hits.length+'개)</div>';
+  html += statRow(t('stat_cat'), catLabel(w.cat));
+  html += statRow(t('stat_mag'), fmt(w.mag));
+  html += statRow(t('stat_rpm'), fmt(w.rpm));
+  html += statRow(t('stat_reload'), fmt(w.reload,2));
+  if(w.tacReload) html += statRow(t('stat_tacreload'), fmt(w.tacReload,2));
+  if(w.ergonomics) html += statRow(t('stat_ergo'), fmt(w.ergonomics));
+  html += '<div class="bp-subhead">'+t('hit_components')+' ('+hits.length+')</div>';
   hits.forEach(function(h){
     html += '<div class="bp-hit">';
     html += '<div class="bp-hit-type">'+esc(h.type)+'</div>';
-    html += statRow('피해량', fmt(h.dmg));
-    html += statRow('내구댐(Durable)', fmt(h.dmg*h.durable));
-    html += statRow('관통 (직격/경사/대경사/극단)', h.apDirect+' / '+h.apSlight+' / '+h.apLarge+' / '+h.apExtreme);
-    if(h.outerRadius) html += statRow('폭발 반경(내/외)', fmt(h.innerRadius,1)+'m / '+fmt(h.outerRadius,1)+'m');
-    if(h.falloff50m) html += statRow('50m 낙하 감쇠', fmtPct(h.falloff50m));
+    html += statRow(t('stat_dmg'), fmt(h.dmg));
+    html += statRow(t('stat_durabledmg'), fmt(h.dmg*h.durable));
+    html += statRow(t('stat_pen4'), h.apDirect+' / '+h.apSlight+' / '+h.apLarge+' / '+h.apExtreme);
+    if(h.outerRadius) html += statRow(t('stat_blastradius'), fmt(h.innerRadius,1)+'m / '+fmt(h.outerRadius,1)+'m');
+    if(h.falloff50m) html += statRow(t('stat_falloff50'), fmtPct(h.falloff50m));
     html += '</div>';
   });
   html += '</div>';
 
   // ---- column 2: target ----
-  html += '<div class="bp-col"><div class="bp-col-title">타겟 — '+esc(e.name)+' / '+esc(part.name)+'</div>';
-  html += statRow('부위 체력', part.hp > 0 ? fmt(part.hp) : '해당없음(메인만)');
-  html += statRow('메인 체력', fmt(mainHp));
-  html += statRow('장갑(AV)', avLabel(part.armor));
-  html += statRow('부위 내구%', fmtPct(part.durability||0));
-  html += statRow('메인 기여율', fmtPct(part.toMain));
-  html += statRow('치명(파괴시 즉사)', part.lethal ? 'Yes' : 'No');
-  if(part.exdr) html += statRow('ExDR', fmtPct(part.exdr));
-  if(part.badr) html += statRow('BaDR', fmtPct(part.badr));
-  if(part.fireMult || e.fireMult) html += statRow('화염 배율', fmtPct(part.fireMult || e.fireMult));
+  html += '<div class="bp-col"><div class="bp-col-title">'+t("bp_col_target")+' '+esc(e.name)+' / '+esc(part.name)+'</div>';
+  html += statRow(t('target_parthp'), part.hp > 0 ? fmt(part.hp) : t('target_parthp_na'));
+  html += statRow(t('target_mainhp'), fmt(mainHp));
+  html += statRow(t('target_armor'), avLabel(part.armor));
+  html += statRow(t('target_durability'), fmtPct(part.durability||0));
+  html += statRow(t('target_tomain'), fmtPct(part.toMain));
+  html += statRow(t('target_lethal'), part.lethal ? 'Yes' : 'No');
+  if(part.exdr) html += statRow(t('target_exdr'), fmtPct(part.exdr));
+  if(part.badr) html += statRow(t('target_badr'), fmtPct(part.badr));
+  if(part.fireMult || e.fireMult) html += statRow(t('target_firemult'), fmtPct(part.fireMult || e.fireMult));
   if(e.regen){
     var exempt = e.regen.exempt.indexOf(part.name) !== -1;
-    html += statRow('재생', exempt ? '없음 (이 부위는 재생 제외)' : ('초당 '+e.regen.rate+' (피격 후 '+e.regen.delay+'초 뒤 재개)'));
+    html += statRow(t('target_regen'), exempt ? t('target_regen_none') : (e.regen.rate+'/s ('+e.regen.delay+'s '+t('regen_resume_suffix')+')'));
   }
   if(part.lightStagger || part.mediumStagger || part.heavyStagger || part.massiveStagger){
-    html += '<div class="bp-subhead">스태거 임계값 (경/중/중重/massive)</div>';
+    html += '<div class="bp-subhead">'+t('target_stagger_label')+'</div>';
     html += '<div class="bp-stat"><span class="mono" style="font-size:11px;">'+
       [part.lightStagger,part.mediumStagger,part.heavyStagger,part.massiveStagger].map(function(s){return s||'-';}).join(' · ')+
       '</span></div>';
   }
   html += '<div class="bp-tiles">';
-  html += '<div class="bp-tile"><span>BTK</span><b>'+fmtNum(c.btk)+'</b></div>';
-  html += '<div class="bp-tile"><span>TTK(초)</span><b>'+fmtNum(c.ttk,2)+'</b></div>';
-  html += '<div class="bp-tile"><span>오버킬</span><b>'+fmtNum(c.overkill)+'</b></div>';
-  html += '<div class="bp-tile"><span>재장전 횟수</span><b>'+fmtNum(c.reloads)+'</b></div>';
-  html += '<div class="bp-tile"><span>탄창 소모</span><b>'+fmtPct(c.magPct)+'</b></div>';
-  html += '<div class="bp-tile"><span>탄창당 처치</span><b>'+c.killsPerMag+'</b></div>';
+  html += '<div class="bp-tile"><span>'+t('tile_btk')+'</span><b>'+fmtNum(c.btk)+'</b></div>';
+  html += '<div class="bp-tile"><span>'+t('tile_ttk')+'</span><b>'+fmtNum(c.ttk,2)+'</b></div>';
+  html += '<div class="bp-tile"><span>'+t('tile_overkill')+'</span><b>'+fmtNum(c.overkill)+'</b></div>';
+  html += '<div class="bp-tile"><span>'+t('tile_reloads')+'</span><b>'+fmtNum(c.reloads)+'</b></div>';
+  html += '<div class="bp-tile"><span>'+t('tile_magpct')+'</span><b>'+fmtPct(c.magPct)+'</b></div>';
+  html += '<div class="bp-tile"><span>'+t('tile_killspermag')+'</span><b>'+c.killsPerMag+'</b></div>';
   html += '</div>';
   html += '</div>';
 
   // ---- column 3: detailed calculation ----
-  html += '<div class="bp-col bp-col-wide"><div class="bp-col-title">상세 계산</div>';
-  html += '<div class="table-wrap"><table><thead><tr><th>피해 성분</th><th class="mono">관통(직격)</th><th class="mono">장갑(AV)</th><th>판정</th><th class="mono">피해</th><th>BTK 반영</th></tr></thead><tbody>';
+  html += '<div class="bp-col bp-col-wide"><div class="bp-col-title">'+t("bp_col_detail")+'</div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>'+t('detail_col_component')+'</th><th class="mono">'+t('detail_col_pen')+'</th><th class="mono">'+t('detail_col_armor')+'</th><th>'+t('detail_col_judge')+'</th><th class="mono">'+t('detail_col_dmg')+'</th><th>'+t('detail_col_applied')+'</th></tr></thead><tbody>';
   var chosen = bestHit(w, part.armor, part.durability).hit;
   hits.forEach(function(h){
     var mult = armorMultiplier(h.apDirect, part.armor);
-    var judgeHtml = mult===1 ? '<span class="status-pill status-full">완전관통(100%)</span>'
-      : mult===0.65 ? '<span class="status-pill status-partial">동일관통(65%)</span>'
-      : '<span class="status-pill status-blocked">도탄(0%)</span>';
+    var judgeHtml = mult===1 ? '<span class="status-pill status-full">'+t('status_full')+'</span>'
+      : mult===0.65 ? '<span class="status-pill status-partial">'+t('status_half')+'</span>'
+      : '<span class="status-pill status-blocked">'+t('status_blocked')+'</span>';
     var isChosen = h === chosen;
     html += '<tr'+(isChosen?'':' style="opacity:.55;"')+'><td>'+esc(h.type)+'</td><td class="mono">'+h.apDirect+'</td><td class="mono">'+part.armor+'</td>'+
       '<td>'+judgeHtml+'</td>'+
       '<td class="mono">'+fmtNum(hitEffDamage(h, part.armor, part.durability))+'</td>'+
-      '<td>'+(isChosen?'<span class="status-pill status-full">적용(최댓값)</span>':'<span class="status-pill status-blocked">미적용</span>')+'</td></tr>';
+      '<td>'+(isChosen?'<span class="status-pill status-full">'+t('detail_applied')+'</span>':'<span class="status-pill status-blocked">'+t('detail_notapplied')+'</span>')+'</td></tr>';
   });
-  html += '<tr style="font-weight:600;"><td colspan="4">BTK/TTK에 실제 적용된 피해 (장갑 대비 가장 센 성분 하나)</td><td class="mono">'+fmtNum(c.eff)+'</td><td></td></tr>';
+  html += '<tr style="font-weight:600;"><td colspan="4">'+t('detail_total_row')+'</td><td class="mono">'+fmtNum(c.eff)+'</td><td></td></tr>';
   if(!part.lethal){
-    html += '<tr><td colspan="4">메인 체력 반영분 (× 메인 기여율 '+fmtPct(part.toMain)+')</td><td class="mono">'+fmtNum(c.eff*part.toMain)+'</td><td></td></tr>';
+    html += '<tr><td colspan="4">'+t('detail_mainshare_row')+' '+fmtPct(part.toMain)+')</td><td class="mono">'+fmtNum(c.eff*part.toMain)+'</td><td></td></tr>';
   }
   html += '</tbody></table></div>';
   if(hits.length > 1){
-    html += '<div class="img-credit" style="margin-top:6px;">이 부위 장갑 기준으로 가장 효과적인 피해 성분 하나만 골라 씁니다(예: 스코처는 저장갑엔 직격탄, 중장갑엔 폭발탄). 같은 발사에 여러 성분이 동시에 같은 부위에 들어가는지는 원본 시트도 "실험적"이라 명시한 부분이라 합산하지 않습니다.</div>';
+    html += '<div class="img-credit" style="margin-top:6px;">'+t('multi_hit_note')+'</div>';
   }
 
-  html += '<div class="section-label" style="margin-top:14px;">결과 요약</div>';
+  html += '<div class="section-label" style="margin-top:14px;">'+t('results_summary_label')+'</div>';
   html += '<div class="intel"><ul>';
   html += '<li>'+esc(w.name)+'(으)로 '+esc(part.name)+' 부위를 '+fmtNum(c.btk)+'발 맞히면 '+(part.lethal?'그 부위 파괴로 즉사':'메인 체력 소모로 처치')+'됩니다 (약 '+fmtNum(c.ttk,2)+'초, 재장전 '+fmtNum(c.reloads)+'회 포함).</li>';
   html += '<li>마지막 한 발의 초과 피해(오버킬)는 약 '+fmtNum(c.overkill)+'이며, 탄창의 '+fmtPct(c.magPct)+'을 소모합니다.</li>';
@@ -1121,7 +1251,7 @@ function wireWeaponPanelEvents(){
     chip.addEventListener('click', function(){ selectedPart = +chip.getAttribute('data-idx'); renderWeaponPanel(); });
   });
   document.getElementById('reset-btn').addEventListener('click', function(){
-    if(confirm('모든 적/무기 데이터를 기본값으로 되돌립니다. 계속할까요?')) resetAll();
+    if(confirm(t('reset_confirm'))) resetAll();
   });
 
   if(viewMode === "compare"){
@@ -1163,9 +1293,9 @@ function wireWeaponPanelEvents(){
       var renderComboList = function(query){
         var q = (query||'').trim().toLowerCase();
         var matches = state.weapons.filter(function(x){ return !q || x.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 30);
-        if(!matches.length){ listBox.innerHTML = '<div class="weapon-combo-empty">일치하는 무기 없음</div>'; return; }
+        if(!matches.length){ listBox.innerHTML = '<div class="weapon-combo-empty">'+esc(t('bp_empty'))+'</div>'; return; }
         listBox.innerHTML = matches.map(function(x){
-          return '<div class="weapon-combo-item'+(x.id===selectedWeapon?' hl':'')+'" data-id="'+x.id+'"><span>'+esc(x.name)+'</span><span class="cat">'+CAT_LABEL[x.cat]+'</span></div>';
+          return '<div class="weapon-combo-item'+(x.id===selectedWeapon?' hl':'')+'" data-id="'+x.id+'"><span>'+esc(x.name)+'</span><span class="cat">'+catLabel(x.cat)+'</span></div>';
         }).join('');
         Array.prototype.forEach.call(listBox.querySelectorAll('.weapon-combo-item'), function(item){
           item.addEventListener('mousedown', function(e){
@@ -1183,7 +1313,22 @@ function wireWeaponPanelEvents(){
 }
 
 
+function applyStaticStrings(){
+  document.getElementById("hdr-sub").textContent = t("app_sub");
+  document.getElementById("hdr-tag").textContent = t("app_tag");
+  document.getElementById("disclaimer-box").innerHTML = t("disclaimer_html");
+  document.getElementById("sidebar-head").textContent = t("sidebar_head");
+  document.getElementById("footer-box").innerHTML = t("footer_html");
+  var toggle = document.getElementById("lang-toggle");
+  toggle.textContent = t("lang_toggle");
+  toggle.setAttribute("aria-label", lang === "ko" ? "Switch to English" : "한국어로 전환");
+}
+document.getElementById("lang-toggle").addEventListener("click", function(){
+  setLang(lang === "ko" ? "en" : "ko");
+});
+
 function renderAll(){ renderSidebar(); renderDossier(); renderWeaponPanel(); }
+applyStaticStrings();
 renderAll();
 })();
 </script>
