@@ -1,6 +1,13 @@
+// NOTE: newscript.js has drifted from web/index.html's actual <script> content -
+// several fixes (Crusher regen/fireMult, subfaction tags, invulnerable-part warnings,
+// weapon thumbnails in the comparison table) were made by editing web/index.html
+// directly and were NOT ported back into newscript.js. Running this script now would
+// overwrite those fixes. Re-sync newscript.js from web/index.html's <script> block
+// before using this again.
 const fs = require("fs");
+const path = require("path");
 
-const HTML_PATH = "C:\\Users\\seoka\\AppData\\Local\\Temp\\claude\\D--dev-helldivers2dex\\7f7bd04d-4ec9-4b95-8288-708b073bd7a9\\scratchpad\\ballistics.html";
+const HTML_PATH = path.join(__dirname, "..", "..", "web", "index.html");
 
 let html = fs.readFileSync(HTML_PATH, "utf8");
 

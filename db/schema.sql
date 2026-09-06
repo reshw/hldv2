@@ -66,10 +66,15 @@ CREATE TABLE weapon_hits (
 );
 
 CREATE TABLE enemies (
-  id       TEXT PRIMARY KEY,
-  faction  TEXT NOT NULL CHECK (faction IN ('terminid','automaton','illuminate')),
-  name     TEXT NOT NULL,
-  main_hp  DOUBLE PRECISION NOT NULL    -- the creature's overall/shared health pool
+  id            TEXT PRIMARY KEY,
+  faction       TEXT NOT NULL CHECK (faction IN ('terminid','automaton','illuminate')),
+  name          TEXT NOT NULL,
+  main_hp       DOUBLE PRECISION NOT NULL,  -- the creature's overall/shared health pool
+  fire_mult     DOUBLE PRECISION,           -- damage multiplier for fire/incendiary sources
+  subfaction    TEXT,                       -- e.g. "Vote Snatchers" - only spawns on missions with that subfaction active
+  regen_rate    DOUBLE PRECISION,           -- hp/sec regenerated on non-exempt parts (e.g. Crusher)
+  regen_delay   DOUBLE PRECISION,           -- seconds after being hit before regen resumes
+  regen_exempt  TEXT[]                      -- part names that do NOT regenerate
 );
 
 CREATE TABLE enemy_parts (

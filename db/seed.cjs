@@ -50,9 +50,12 @@ async function main() {
     }
 
     for (const e of enemies) {
-      await client.query(`INSERT INTO enemies (id, faction, name, main_hp) VALUES ($1,$2,$3,$4)`, [
-        e.id, e.faction, e.name, e.mainHp,
-      ]);
+      await client.query(
+        `INSERT INTO enemies (id, faction, name, main_hp, fire_mult, subfaction, regen_rate, regen_delay, regen_exempt)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+        [e.id, e.faction, e.name, e.mainHp, e.fireMult ?? null, e.subfaction ?? null,
+         e.regen?.rate ?? null, e.regen?.delay ?? null, e.regen?.exempt ?? null]
+      );
 
       for (let i = 0; i < e.parts.length; i++) {
         const p = e.parts[i];

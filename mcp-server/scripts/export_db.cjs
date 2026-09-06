@@ -1,10 +1,10 @@
 // Extracts the exact DEFAULT_ENEMIES()/DEFAULT_WEAPONS() arrays currently shipping in
-// ballistics.html and writes them out as the canonical DB under /data - guarantees the
-// DB always matches what the artifact actually contains (no manual-transcription drift).
+// web/index.html (the canonical, git-tracked copy of the calculator) and writes them out
+// as the canonical DB under /data - guarantees the DB always matches what's deployed.
 const fs = require("fs");
 const path = require("path");
 
-const HTML_PATH = "C:\\Users\\seoka\\AppData\\Local\\Temp\\claude\\D--dev-helldivers2dex\\7f7bd04d-4ec9-4b95-8288-708b073bd7a9\\scratchpad\\ballistics.html";
+const HTML_PATH = path.join(__dirname, "..", "..", "web", "index.html");
 const DB_DIR = path.join(__dirname, "..", "..", "data");
 
 const html = fs.readFileSync(HTML_PATH, "utf8");
