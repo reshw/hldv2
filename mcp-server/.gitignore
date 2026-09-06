@@ -1,0 +1,8 @@
+node_modules/
+dist/
+cache/**/*.json
+!cache/**/.gitkeep
+data/sheet-raw/
+data/transformed-*.json
+data/generated-data.js
+scripts/_extracted.js

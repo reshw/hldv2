@@ -1,0 +1,1101 @@
+<title>Super Earth Ballistics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#0c1210;
+  --bg-grid:#0f1613;
+  --surface:#141c19;
+  --surface-2:#1b2521;
+  --surface-3:#22302a;
+  --border:#2b3833;
+  --border-soft:#1f2925;
+  --text:#e9efe7;
+  --text-dim:#9fb0a6;
+  --text-faint:#6c8078;
+  --accent:#ffc93c;
+  --accent-dim:#c99f2e;
+  --accent-ink:#241a04;
+  --good:#6fcf7d;
+  --good-dim:#264a2c;
+  --warn:#f2a33f;
+  --warn-dim:#4a3a1f;
+  --danger:#e2564a;
+  --danger-dim:#4a2420;
+  --terminid:#e3873a;
+  --automaton:#5f9bd6;
+  --illuminate:#b073e0;
+  --shadow: 0 8px 24px rgba(0,0,0,.45);
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    linear-gradient(180deg, rgba(255,201,60,.04), transparent 220px),
+    repeating-linear-gradient(0deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(90deg, var(--bg-grid) 0 1px, transparent 1px 28px),
+    var(--bg);
+  color:var(--text);
+  font-family:'IBM Plex Sans KR', 'IBM Plex Sans', sans-serif;
+  min-height:100vh;
+}
+h1,h2,h3,.display{
+  font-family:'Oswald', 'IBM Plex Sans KR', sans-serif;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  text-wrap:balance;
+}
+.mono{font-family:'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums;}
+a{color:var(--accent);}
+button{font-family:inherit;}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+/* ---------- shell ---------- */
+.shell{max-width:1400px; margin:0 auto; padding:20px 20px 64px;}
+
+.topbar{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:24px;
+  border-bottom:2px solid var(--accent-dim); padding-bottom:14px; margin-bottom:18px;
+  flex-wrap:wrap;
+}
+.brand{display:flex; align-items:center; gap:14px;}
+.brand-mark{
+  width:44px; height:44px; border:2px solid var(--accent); border-radius:3px;
+  display:flex; align-items:center; justify-content:center; color:var(--accent);
+  font-family:'Oswald'; font-weight:700; font-size:20px; flex:none;
+  background: repeating-linear-gradient(45deg, rgba(255,201,60,.08) 0 4px, transparent 4px 8px);
+}
+.brand h1{font-size:26px; margin:0; color:var(--text); font-weight:700;}
+.brand .sub{color:var(--text-faint); font-size:11px; letter-spacing:.12em; text-transform:uppercase; margin-top:2px;}
+.topbar-right{display:flex; align-items:center; gap:10px;}
+.tag{
+  font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink);
+  background:var(--accent); padding:4px 8px; border-radius:2px; font-weight:600;
+}
+
+.disclaimer{
+  background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--warn);
+  color:var(--text-dim); font-size:12.5px; line-height:1.6; padding:10px 14px; border-radius:2px;
+  margin-bottom:18px;
+}
+.disclaimer b{color:var(--warn);}
+
+.layout{display:grid; grid-template-columns:260px 1fr; gap:18px; align-items:start;}
+@media (max-width:900px){ .layout{grid-template-columns:1fr;} }
+
+/* ---------- sidebar ---------- */
+.panel{
+  background:var(--surface); border:1px solid var(--border); border-radius:4px;
+  box-shadow:var(--shadow);
+}
+.panel-head{
+  padding:10px 14px; border-bottom:1px solid var(--border-soft);
+  font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); font-weight:600;
+}
+.faction-group + .faction-group{border-top:1px solid var(--border-soft);}
+.faction-title{
+  display:flex; align-items:center; gap:8px; padding:10px 14px 4px;
+  font-family:'Oswald'; font-size:13px; letter-spacing:.06em; text-transform:uppercase;
+}
+.dot{width:9px; height:9px; border-radius:50%; flex:none;}
+.enemy-list{list-style:none; margin:0; padding:0 6px 8px;}
+.enemy-btn{
+  width:100%; text-align:left; background:transparent; border:1px solid transparent; color:var(--text-dim);
+  padding:7px 8px; border-radius:3px; cursor:pointer; font-size:13.5px; display:flex; justify-content:space-between; gap:8px;
+  align-items:center;
+}
+.enemy-btn:hover{background:var(--surface-2); color:var(--text);}
+.enemy-btn.active{background:var(--surface-3); border-color:var(--border); color:var(--accent); font-weight:600;}
+.enemy-btn .hp{font-size:10.5px; color:var(--text-faint); font-family:'IBM Plex Mono';}
+.enemy-btn.active .hp{color:var(--accent-dim);}
+
+/* ---------- main column ---------- */
+.main-col{display:flex; flex-direction:column; gap:18px;}
+
+.dossier{padding:18px 20px;}
+.dossier-top{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;}
+.dossier-name{font-size:28px; margin:0 0 4px; color:var(--text);}
+.dossier-meta{display:flex; gap:8px; flex-wrap:wrap;}
+.chip{
+  font-size:11px; padding:3px 8px; border-radius:20px; border:1px solid var(--border);
+  color:var(--text-dim); letter-spacing:.03em; display:inline-flex; align-items:center; gap:5px;
+}
+.mark{width:64px; height:64px; flex:none;}
+
+.section-label{
+  font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint);
+  margin:18px 0 8px; display:flex; align-items:center; gap:8px;
+}
+.section-label::after{content:''; flex:1; height:1px; background:var(--border-soft);}
+
+table{border-collapse:collapse; width:100%; font-size:13px;}
+.table-wrap{overflow-x:auto; border:1px solid var(--border-soft); border-radius:3px;}
+th{
+  text-align:left; font-family:'Oswald'; font-weight:500; letter-spacing:.05em; text-transform:uppercase;
+  font-size:11px; color:var(--text-faint); padding:8px 10px; background:var(--surface-2);
+  border-bottom:1px solid var(--border); white-space:nowrap; position:sticky; top:0;
+}
+th.sortable{cursor:pointer; user-select:none;}
+th.sortable:hover{color:var(--accent);}
+th .arrow{opacity:.6; margin-left:3px;}
+td{padding:7px 10px; border-bottom:1px solid var(--border-soft); white-space:nowrap; color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr.weak-row td:first-child{color:var(--accent);}
+.num-in{
+  width:64px; background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+  padding:3px 5px; border-radius:3px; font-family:'IBM Plex Mono'; font-size:12.5px;
+}
+select.armor-sel{
+  background:var(--surface-2); border:1px solid var(--border); color:var(--text); padding:3px 5px;
+  border-radius:3px; font-size:12px;
+}
+.starbtn{background:none;border:none;cursor:pointer;font-size:15px;color:var(--text-faint);line-height:1;}
+.starbtn.on{color:var(--accent);}
+
+.intel{
+  background:var(--surface-2); border:1px dashed var(--border); border-radius:3px; padding:12px 14px; margin-top:6px;
+}
+.intel ul{margin:0; padding-left:18px; color:var(--text-dim); font-size:13px; line-height:1.75;}
+.intel li::marker{color:var(--accent-dim);}
+.intel b{color:var(--text);}
+
+.chips-row{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 2px;}
+.part-chip{
+  background:var(--surface-2); border:1px solid var(--border); color:var(--text-dim);
+  padding:5px 10px; border-radius:20px; font-size:12.5px; cursor:pointer; display:flex; align-items:center; gap:5px;
+}
+.part-chip.active{background:var(--accent); border-color:var(--accent); color:var(--accent-ink); font-weight:600;}
+.part-chip .w{color:var(--accent);}
+
+.part-images{display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; margin:4px 0 10px;}
+.part-images figure{margin:0; background:var(--surface-2); border:1px solid var(--border); border-radius:4px; padding:6px; text-align:center;}
+.part-images img{display:block; max-height:150px; max-width:220px; width:auto; border-radius:2px; background:#000;}
+.part-images figcaption{font-size:10.5px; color:var(--text-faint); margin-top:4px; letter-spacing:.04em; text-transform:uppercase;}
+.img-credit{font-size:10.5px; color:var(--text-faint); align-self:center;}
+
+.bp-weapon-select{margin:6px 0 12px; font-size:13px; color:var(--text-dim); display:flex; align-items:center; gap:8px;}
+.bp-weapon-select select{
+  background:var(--surface-2); border:1px solid var(--border); color:var(--text); padding:6px 10px;
+  border-radius:4px; font-size:13px; max-width:320px;
+}
+.bp-grid{display:grid; grid-template-columns:1fr 1fr 1.4fr; gap:14px; align-items:start;}
+@media (max-width:1100px){ .bp-grid{grid-template-columns:1fr;} }
+.bp-col{background:var(--surface-2); border:1px solid var(--border-soft); border-radius:4px; padding:12px 14px;}
+.bp-col-wide{grid-column:span 1;}
+.bp-col-title{font-family:'Oswald'; font-size:13px; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border-soft);}
+.weapon-name-cell{display:flex; align-items:center; gap:8px;}
+.weapon-thumb{width:36px; height:26px; object-fit:cover; border-radius:2px; border:1px solid var(--border-soft); background:#000; flex:none;}
+.bp-weapon-img{background:var(--surface); border:1px solid var(--border-soft); border-radius:4px; padding:8px; margin-bottom:10px; text-align:center;}
+.bp-weapon-img img{max-width:100%; max-height:130px; border-radius:2px;}
+.bp-subhead{font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint); margin:10px 0 4px;}
+.bp-stat{display:flex; justify-content:space-between; gap:10px; padding:3px 0; font-size:12.5px; color:var(--text-dim); border-bottom:1px dotted var(--border-soft);}
+.bp-stat span:first-child{color:var(--text-faint);}
+.bp-stat span:last-child{color:var(--text);}
+.bp-hit{background:var(--surface); border:1px solid var(--border-soft); border-radius:3px; padding:8px 10px; margin-bottom:8px;}
+.bp-hit-type{font-size:11px; font-weight:600; color:var(--accent-dim); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px;}
+.bp-tiles{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;}
+.bp-tile{background:var(--surface); border:1px solid var(--border-soft); border-radius:4px; padding:8px 10px; display:flex; flex-direction:column; gap:2px;}
+.bp-tile span{font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.04em;}
+.bp-tile b{font-family:'IBM Plex Mono'; font-size:17px; color:var(--accent); font-weight:600;}
+.part-chip.active .w{color:var(--accent-ink);}
+
+.weapon-panel{padding:18px 20px;}
+.weapon-head{display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:6px;}
+.tabs{display:flex; gap:4px; background:var(--surface-2); padding:3px; border-radius:20px; border:1px solid var(--border);}
+.tab-btn{
+  background:transparent; border:none; color:var(--text-dim); padding:6px 14px; border-radius:16px;
+  font-size:12.5px; cursor:pointer; font-weight:500;
+}
+.tab-btn.active{background:var(--accent); color:var(--accent-ink); font-weight:600;}
+.reset-btn{
+  background:transparent; border:1px solid var(--border); color:var(--text-dim); padding:6px 12px;
+  border-radius:3px; cursor:pointer; font-size:12px;
+}
+.reset-btn:hover{border-color:var(--danger); color:var(--danger);}
+
+.status-pill{
+  font-size:11px; padding:2px 8px; border-radius:20px; font-weight:600; display:inline-flex; align-items:center; gap:4px;
+}
+.status-full{background:var(--good-dim); color:var(--good);}
+.status-partial{background:var(--warn-dim); color:var(--warn);}
+.status-blocked{background:var(--danger-dim); color:var(--danger);}
+
+.best-badge{
+  background:var(--accent); color:var(--accent-ink); font-size:10px; font-weight:700; padding:1px 6px;
+  border-radius:3px; margin-left:6px; letter-spacing:.03em;
+}
+
+footer{margin-top:26px; color:var(--text-faint); font-size:11.5px; text-align:center; line-height:1.8;}
+footer a{color:var(--text-faint); text-decoration:underline;}
+
+@media (prefers-reduced-motion: no-preference){
+  .panel, tr{transition: background-color .12s ease, border-color .12s ease;}
+}
+</style>
+
+<div class="shell">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">SE</div>
+      <div>
+        <h1>Super Earth Ballistics</h1>
+        <div class="sub">전장 병기 데이터 · 몹 대응 전략 단말</div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <span class="tag">Managed Democracy Field Manual</span>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    <b>데이터 출처:</b> 무기 92종·몹 48종 전체가 <b>DiversDex</b>(커뮤니티 제작, 인게임 테스트로 교차검증된 스프레드시트)와
+    <a href="https://github.com/helldivers-2/json" target="_blank" rel="noopener">helldivers-2/json</a>(MIT, GitHub)로 채워져 있습니다 — 더 이상 순수 추정값이 아닙니다.
+    다만 두 소스 다 Arrowhead 공식은 아니라 패치 후 오차가 생길 수 있어요.
+    <b>메인 체력</b>은 몹의 전체 처치 기준 체력, <b>메인 기여율%</b>은 치명(★) 아닌 부위를 맞혔을 때 이 체력이 깎이는 비율입니다.
+    표의 회색 입력칸은 모두 <b>직접 수정 가능</b>하고 브라우저에 자동 저장됩니다.
+    총알 수 계산은 <b>BTK(Bullets To Kill)</b>, 시간 계산은 <b>TTK(Time To Kill)</b> 기준입니다.
+  </div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="panel" id="sidebar">
+      <div class="panel-head">적 세력 색인</div>
+      <div id="sidebar-body"></div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-col">
+      <div class="panel dossier" id="dossier"></div>
+      <div class="panel weapon-panel" id="weapon-panel"></div>
+    </div>
+  </div>
+
+  <footer>
+    데이터 출처: 커뮤니티 관찰치 기반 근사값 (검증 필요) · 로컬 브라우저에만 저장되며 서버로 전송되지 않습니다.<br>
+    For Super Earth. For Managed Democracy.
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ constants ============ */
+var CAT_LABEL = {primary:"주무기", secondary:"보조무기", support:"지원화기"};
+
+var FACTIONS = {
+  terminid:  {name:"터미니드", color:"var(--terminid)", mark:"bug"},
+  automaton: {name:"오토마톤", color:"var(--automaton)", mark:"bot"},
+  illuminate:{name:"일루미네이트", color:"var(--illuminate)", mark:"eye"}
+};
+
+function avLabel(n){ return "AV" + n; }
+
+/* ============ default data ============ */
+/* Source: DiversDex community spreadsheet (cross-checked + in-game tested, shared 2026-09-06) for
+   enemy HP/armor/durability/main-pool-contribution and weapon damage/durable/capacity/RPM/reload/AP,
+   plus every extra column (per-hit-angle AP, falloff, ExDR/BaDR, stagger thresholds, etc.) captured
+   for the Breakpoint Calculator tab below. Everything stays editable and saved to localStorage. */
+function DEFAULT_ENEMIES(){ return [
+  {id:"trooper", faction:"automaton", name:"Trooper", mainHp:125,
+    parts:[{name:"Head",hp:40,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/dVdL0brZ/Front-head.jpg",altImg:"https://i.postimg.cc/mktrWJTD/Side-head.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Arm (each)",hp:65,armor:0,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/wjKjnwZq/Front-arms.jpg",altImg:"https://i.postimg.cc/vB8B3Dj5/Side-arms.jpg",exdr:1,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Torso",hp:100,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/QMJCQc6X/Front-torso.jpg",altImg:"https://i.postimg.cc/y6bdy1TS/Side-torso.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Leg (each)",hp:90,armor:0,durability:0,toMain:0.65,lethal:true,img:"https://i.postimg.cc/MGSXf9mP/Front-legs.jpg",altImg:"https://i.postimg.cc/kXR5j0jY/Side-legs.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."}],
+    tips:["전신 무장갑 — 아무 화기로나 원킬급.","원거리 소총 사격을 하므로 엄폐 없이 다수와 교전 시 위험.","헤드샷 필요 없이 몸통 사격만으로도 충분히 빠르게 처리."]},
+  {id:"commissar", faction:"automaton", name:"Commissar", mainHp:125,
+    parts:[{name:"Head",hp:40,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/dVdL0brZ/Front-head.jpg",altImg:"https://i.postimg.cc/mktrWJTD/Side-head.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Arm (each)",hp:65,armor:0,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/wjKjnwZq/Front-arms.jpg",altImg:"https://i.postimg.cc/vB8B3Dj5/Side-arms.jpg",exdr:1,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Torso",hp:100,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/QMJCQc6X/Front-torso.jpg",altImg:"https://i.postimg.cc/y6bdy1TS/Side-torso.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Leg (each)",hp:90,armor:0,durability:0,toMain:0.65,lethal:true,img:"https://i.postimg.cc/MGSXf9mP/Front-legs.jpg",altImg:"https://i.postimg.cc/kXR5j0jY/Side-legs.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."}],
+    tips:["메인 체력 125 · 치명 부위: Head, Torso, Leg (each).","최대 장갑 등급 AV0.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"rocket_raider", faction:"automaton", name:"Rocket Raider", mainHp:125,
+    parts:[{name:"Head",hp:40,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/dVdL0brZ/Front-head.jpg",altImg:"https://i.postimg.cc/mktrWJTD/Side-head.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Arm (each)",hp:65,armor:0,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/wjKjnwZq/Front-arms.jpg",altImg:"https://i.postimg.cc/vB8B3Dj5/Side-arms.jpg",exdr:1,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Torso",hp:100,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/QMJCQc6X/Front-torso.jpg",altImg:"https://i.postimg.cc/y6bdy1TS/Side-torso.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Leg (each)",hp:90,armor:0,durability:0,toMain:0.65,lethal:true,img:"https://i.postimg.cc/MGSXf9mP/Front-legs.jpg",altImg:"https://i.postimg.cc/kXR5j0jY/Side-legs.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."}],
+    tips:["메인 체력 125 · 치명 부위: Head, Torso, Leg (each).","최대 장갑 등급 AV0.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"marauder", faction:"automaton", name:"Marauder", mainHp:125,
+    parts:[{name:"Head",hp:40,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/dVdL0brZ/Front-head.jpg",altImg:"https://i.postimg.cc/mktrWJTD/Side-head.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Arm (each)",hp:65,armor:0,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/wjKjnwZq/Front-arms.jpg",altImg:"https://i.postimg.cc/vB8B3Dj5/Side-arms.jpg",exdr:1,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Torso",hp:100,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/15gzC8RZ/Front-mg-raider-torso.jpg",altImg:"https://i.postimg.cc/SRnmvPhG/Side-MG-raider-torso.jpg",exdr:1,mainCap:true,notes:"Only applicable to the MG raider (laser machine gun + fusion backpack)."},{name:"Leg (each)",hp:90,armor:0,durability:0,toMain:0.65,lethal:true,img:"https://i.postimg.cc/MGSXf9mP/Front-legs.jpg",altImg:"https://i.postimg.cc/kXR5j0jY/Side-legs.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."}],
+    tips:["머리는 무장갑 약점, 경장갑 관통이면 몸통도 효율적.","트루퍼보다 방어가 두꺼워 물량전에서 탄약 소모 유의.","측면 우회로 다수를 한번에 노출시켜 처리하면 효율적."]},
+  {id:"mg_raider", faction:"automaton", name:"MG Raider", mainHp:125,
+    parts:[{name:"Head",hp:40,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/dVdL0brZ/Front-head.jpg",altImg:"https://i.postimg.cc/mktrWJTD/Side-head.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Arm (each)",hp:65,armor:0,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/wjKjnwZq/Front-arms.jpg",altImg:"https://i.postimg.cc/vB8B3Dj5/Side-arms.jpg",exdr:1,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Torso",hp:100,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/QMJCQc6X/Front-torso.jpg",altImg:"https://i.postimg.cc/y6bdy1TS/Side-torso.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Leg (each)",hp:90,armor:0,durability:0,toMain:0.65,lethal:true,img:"https://i.postimg.cc/MGSXf9mP/Front-legs.jpg",altImg:"https://i.postimg.cc/kXR5j0jY/Side-legs.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Backpack",hp:90,armor:0,durability:0,toMain:0.65,lethal:true,img:"https://i.postimg.cc/DZzv1HJg/Front-backpack.jpg",altImg:"https://i.postimg.cc/T3qfFfn0/Side-backpack.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."}],
+    tips:["메인 체력 125 · 치명 부위: Head, Torso, Leg (each), Backpack.","최대 장갑 등급 AV0.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"brawler", faction:"automaton", name:"Brawler", mainHp:125,
+    parts:[{name:"Head",hp:40,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/dVdL0brZ/Front-head.jpg",altImg:"https://i.postimg.cc/mktrWJTD/Side-head.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Left arm",hp:85,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/wjKjnwZq/Front-arms.jpg",altImg:"https://i.postimg.cc/vB8B3Dj5/Side-arms.jpg",exdr:1,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Right arm",hp:65,armor:0,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/wjKjnwZq/Front-arms.jpg",altImg:"https://i.postimg.cc/vB8B3Dj5/Side-arms.jpg",exdr:1,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Torso",hp:100,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/QMJCQc6X/Front-torso.jpg",altImg:"https://i.postimg.cc/y6bdy1TS/Side-torso.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."},{name:"Leg (each)",hp:90,armor:0,durability:0,toMain:0.65,lethal:true,img:"https://i.postimg.cc/MGSXf9mP/Front-legs.jpg",altImg:"https://i.postimg.cc/kXR5j0jY/Side-legs.jpg",exdr:1,mainCap:true,notes:"There are 5 Trooper-type variants : Trooper (laser AR + 50% ExDR [MAIN]) / Brawler (double swords) / Assault Raider (jetpack) / Rocket Raider (rocket launcher) / Commissar (sword + pistol)."}],
+    tips:["메인 체력 125 · 치명 부위: Head, Left arm, Torso, Leg (each).","최대 장갑 등급 AV0.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"scout_strider", faction:"automaton", name:"Scout strider", mainHp:500,
+    parts:[{name:"Pilot head",hp:40,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/pd8Xr8ks/front-pilot.jpg",altImg:"https://i.postimg.cc/qqBk1FrF/Side-pilot.jpg",exdr:1,notes:"Pilot is an Automaton Trooper."},{name:"Pilot",hp:125,armor:0,durability:0,toMain:0,lethal:true,img:"https://i.postimg.cc/pd8Xr8ks/front-pilot.jpg",altImg:"https://i.postimg.cc/qqBk1FrF/Side-pilot.jpg",notes:"Pilot is an Automaton Trooper."},{name:"Cabin",hp:350,armor:4,durability:0,toMain:0,lethal:true,img:"https://i.postimg.cc/d3SK4t47/front-plate.jpg",altImg:"https://i.postimg.cc/4xHX2VCX/side-cabin.jpg",notes:"If the weapon inflicts an explosion, damage to [MAIN] will emulate damage to pilot. Depending on the weapon's blast radius, it is always preferable to target the point closest to the pilot."},{name:"Gun",hp:300,armor:4,durability:0,toMain:0,lethal:true,img:"https://i.postimg.cc/MTqxGLnG/front-cannon.jpg",altImg:"https://i.postimg.cc/1zxskXPw/side-cannon.jpg",exdr:1,notes:"If the weapon inflicts an explosion, damage to [MAIN] will emulate damage to pilot. Depending on the weapon's blast radius, it is always preferable to target the point closest to the pilot."},{name:"Controls",hp:300,armor:3,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/pL3LPkQ9/Front-pivot.jpg",altImg:"https://i.postimg.cc/wTZpNM1Z/back-controls.jpg",exdr:1,mainCap:true,notes:"If the weapon inflicts an explosion, damage to [MAIN] will emulate damage to pilot. Depending on the weapon's blast radius, it is always preferable to target the point closest to the pilot."},{name:"Waist",hp:300,armor:3,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/MTSZQTFq/front-waist.jpg",altImg:"https://i.postimg.cc/KvHZ5QH9/Side-waist.jpg",exdr:1,mainCap:true,notes:"If the weapon inflicts an explosion, damage to [MAIN] will emulate damage to pilot. Depending on the weapon's blast radius, it is always preferable to target the point closest to the pilot."},{name:"Leg (each)",hp:400,armor:2,durability:0.75,toMain:0.5,lethal:true,img:"https://i.postimg.cc/QxHDV1dc/front-legs.jpg",altImg:"https://i.postimg.cc/tRDRs9tG/Side-legs.jpg",mainCap:true,notes:"If the weapon inflicts an explosion, damage to [MAIN] will emulate damage to pilot. Depending on the weapon's blast radius, it is always preferable to target the point closest to the pilot."}],
+    tips:["메인 체력 500 · 치명 부위: Pilot head, Pilot, Cabin, Gun, Controls, Waist, Leg (each).","최대 장갑 등급 AV4 — 이 이상 관통하는 화기가 아니면 내구피해%만 들어감.","중간 위협 — 관통력 있는 화기를 권장."]},
+  {id:"rocket_strider", faction:"automaton", name:"Rocket strider", mainHp:500,
+    parts:[{name:"Cabin",hp:400,armor:4,durability:0,toMain:0,lethal:true,img:"https://i.postimg.cc/vZCfCrch/front-cabin.jpg",altImg:"https://i.postimg.cc/c44R31pR/Side-cabin.jpg",notes:"If you're using an AP3 explosive weapon, the explosion can potentially damage the strider's legs, depending on the location of the impact and the line of sight towards one of the legs. However, it will be more efficient to aim directly at the leg rather than the cabin, due to LoS incosistency."},{name:"Gun",hp:300,armor:4,durability:0,toMain:0,lethal:true,img:"https://i.postimg.cc/C1gDxwCf/front-turret.jpg",altImg:"https://i.postimg.cc/NMkXyZbC/side-gun.jpg",exdr:1,notes:"If you're using an AP3 explosive weapon, the explosion can potentially damage the strider's legs, depending on the location of the impact and the line of sight towards one of the legs. However, it will be more efficient to aim directly at the leg rather than the cabin, due to LoS incosistency."},{name:"Rail (each)",hp:200,armor:3,durability:0,toMain:0,lethal:true,img:"https://i.postimg.cc/QCjp0jHr/front-rail.jpg",altImg:"https://i.postimg.cc/vBrrr48z/side-rail.jpg",exdr:0.8,notes:"Destroying the rail will detonate the rockets."},{name:"Rocket (each)",hp:100,armor:2,durability:0,toMain:0,lethal:true,img:"https://i.postimg.cc/hjW8QLnv/front-rockets.jpg",altImg:"https://i.postimg.cc/KjQtWCM3/side-missile.jpg",exdr:1},{name:"Controls",hp:300,armor:3,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/x1XLsxTq/front-pivot.jpg",altImg:"https://i.postimg.cc/ry9GzRPy/side-pivot.jpg",exdr:1,mainCap:true,notes:"If you're using an AP3 explosive weapon, the explosion can potentially damage the strider's legs, depending on the location of the impact and the line of sight towards one of the legs. However, it will be more efficient to aim directly at the leg rather than the cabin, due to LoS incosistency."},{name:"Waist",hp:300,armor:3,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/43tVGYcg/front-torso.jpg",altImg:"https://i.postimg.cc/c49QByWV/side-torso.jpg",exdr:1,mainCap:true,notes:"If you're using an AP3 explosive weapon, the explosion can potentially damage the strider's legs, depending on the location of the impact and the line of sight towards one of the legs. However, it will be more efficient to aim directly at the leg rather than the cabin, due to LoS incosistency."},{name:"Leg (each)",hp:400,armor:2,durability:0.75,toMain:0.5,lethal:true,img:"https://i.postimg.cc/2yHBGvs4/front-legs.jpg",altImg:"https://i.postimg.cc/wMxmDFGq/side-legs.jpg",mainCap:true}],
+    tips:["메인 체력 500 · 치명 부위: Cabin, Gun, Rail (each), Rocket (each), Controls, Waist, Leg (each).","최대 장갑 등급 AV4 — 이 이상 관통하는 화기가 아니면 내구피해%만 들어감.","중간 위협 — 관통력 있는 화기를 권장."]},
+  {id:"berserker", faction:"automaton", name:"Berserker", mainHp:750,
+    parts:[{name:"Head",hp:110,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/DybQ2pLs/front-head.jpg",altImg:"https://i.postimg.cc/MGwm30cB/side-head.jpg",exdr:1,mainCap:true},{name:"Shoulderplate (each)",hp:180,armor:0,durability:0,toMain:0,lethal:false,img:"https://i.postimg.cc/43XpQJMb/front-shoulders.jpg",altImg:"https://i.postimg.cc/NMJ80Wd8/side-shoulders.jpg",exdr:1},{name:"Arm (each)",hp:260,armor:0,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/2y1QL2ts/front-arms.jpg",altImg:"https://i.postimg.cc/7YC95Z85/side-arms.jpg",exdr:1,mainCap:true,notes:"Destroying a Berserker's arm will disarm it."},{name:"Torso",hp:425,armor:2,durability:0.4,toMain:1,lethal:true,img:"https://i.postimg.cc/fWPjQQtD/front-chest.jpg",altImg:"https://i.postimg.cc/4xV1123Z/side-chest.jpg",exdr:1,mainCap:true},{name:"Boss",hp:350,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/fy1xcYnJ/front-boss.jpg",altImg:"https://i.postimg.cc/28PwhNr2/side-boss.jpg",exdr:1,mainCap:true},{name:"Hip",hp:600,armor:1,durability:0,toMain:0.65,lethal:true,img:"https://i.postimg.cc/2SRQ3d7t/front-pelvis.jpg",altImg:"https://i.postimg.cc/cH4M0sB4/side-pelvis.jpg",exdr:1,mainCap:true},{name:"Leg (each)",hp:-1,armor:1,durability:0,toMain:1,lethal:false,img:"https://i.postimg.cc/pLfDj90L/front-legs.jpg",altImg:"https://i.postimg.cc/vmvLJ19N/side-legs.jpg",exdr:1}],
+    tips:["원거리 무기가 없어 근접 전 최대한 원거리에서 처리.","가슴 장갑이 매우 두꺼우니 다리를 먼저 끊어 기동력 무력화.","돌진 속도가 빨라 조기 발견 시 후퇴 경로 확보 필수."]},
+  {id:"devastator", faction:"automaton", name:"Devastator", mainHp:750,
+    parts:[{name:"Head",hp:110,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/fW6RRjfV/front-head.jpg",altImg:"https://i.postimg.cc/NGVwxsKS/side-head.jpg",exdr:1,mainCap:true},{name:"Shoulderplate (each)",hp:150,armor:2,durability:0,toMain:0.25,lethal:false,img:"https://i.postimg.cc/N0gh0Ln9/front-shoulders.jpg",altImg:"https://i.postimg.cc/HxkC6j4D/side-shoulders.jpg",exdr:1,mainCap:true},{name:"Arm (each)",hp:260,armor:1,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/MpwZy64x/front-arms.jpg",altImg:"https://i.postimg.cc/rsR3H4Db/side-arms.jpg",exdr:1,notes:"Destroying a Devastator's arm will disarm it."},{name:"Torso",hp:425,armor:3,durability:0.3,toMain:1,lethal:true,img:"https://i.postimg.cc/2SdRmn0N/front-torso.jpg",altImg:"https://i.postimg.cc/NFyvwVzd/side-torso.jpg",exdr:1,mainCap:true},{name:"Boss",hp:350,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/3JmJ44tn/front-boss.jpg",altImg:"https://i.postimg.cc/bwfcKmHR/Side-boss.jpg",exdr:1,mainCap:true},{name:"Hip",hp:500,armor:2,durability:0,toMain:0.75,lethal:true,img:"https://i.postimg.cc/SQXK4tC0/front-hip-assembly.jpg",altImg:"https://i.postimg.cc/TwNvFGCy/side-pelvis.jpg",exdr:1,mainCap:true},{name:"Leg (each)",hp:500,armor:2,durability:0,toMain:0.6,lethal:true,img:"https://i.postimg.cc/mhxJWrMr/front-legs.jpg",altImg:"https://i.postimg.cc/nr6bV28p/side-legs.jpg",exdr:1,mainCap:true}],
+    tips:["정면 가슴 장갑판이 두꺼움 — 관통력 없으면 머리나 등을 노릴 것.","붉은 눈(머리)이 약점 — 원거리 조준사격 최우선.","후방 기동이 가능하면 등짝을 노려 손쉽게 처리."]},
+  {id:"rocket_devastator", faction:"automaton", name:"Rocket Devastator", mainHp:750,
+    parts:[{name:"Head",hp:110,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/pXZ46PrP/Front-head.jpg",altImg:"https://i.postimg.cc/wMKYgFYH/Side-head.jpg",exdr:1,mainCap:true},{name:"Shoulderplate (each)",hp:150,armor:2,durability:0,toMain:0.25,lethal:false,img:"https://i.postimg.cc/KvDhhnqS/Front-shoulders.jpg",altImg:"https://i.postimg.cc/T2WTF5vf/Side-shoulders.jpg",exdr:1,mainCap:true},{name:"Arm (each)",hp:260,armor:1,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/RZp8vGw8/Front-arms.jpg",altImg:"https://i.postimg.cc/wvmnfJyr/Side-boss.jpg",exdr:1,notes:"Destroying a Devastator's arm will disarm it."},{name:"Torso",hp:425,armor:3,durability:0.3,toMain:1,lethal:true,img:"https://i.postimg.cc/Wbvcy97w/Front-torso.jpg",altImg:"https://i.postimg.cc/hG5q3cCX/Side-torso.jpg",exdr:1,mainCap:true},{name:"Boss",hp:350,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/N0WzHMJk/Front-boss.jpg",altImg:"https://i.postimg.cc/wMKYgFYH/Side-head.jpg",exdr:1,mainCap:true},{name:"Hip",hp:500,armor:2,durability:0,toMain:0.75,lethal:true,img:"https://i.postimg.cc/g22Q91L8/Front-hip-assembly.jpg",altImg:"https://i.postimg.cc/05mqcg7N/Side-pelvis.jpg",exdr:1,mainCap:true},{name:"Leg (each)",hp:500,armor:2,durability:0,toMain:0.6,lethal:true,img:"https://i.postimg.cc/7LCRh7VL/Front-legs.jpg",altImg:"https://i.postimg.cc/Gp2CQHj0/Side-legs.jpg",exdr:1,mainCap:true},{name:"Rocket pods",hp:300,armor:1,durability:1,toMain:0.3,lethal:false,img:"https://i.postimg.cc/rwh6Kq2f/front-rocket-pod.jpg",altImg:"https://i.postimg.cc/cHtGp2jX/side-rocket-pod.jpg",exdr:1,mainCap:true,notes:"Destroying the Devastator's rockets pod will prevent it from firing its missile barrages."},{name:"Rockets",hp:200,armor:0,durability:0,toMain:1,lethal:false,img:"https://i.postimg.cc/Df1t1rKJ/front-rockets.jpg",altImg:"https://i.postimg.cc/SNFmhQm8/side-rockets.jpg",exdr:1,mainCap:true,notes:"Destroying the Devastator's rockets pod will prevent it from firing its missile barrages."}],
+    tips:["메인 체력 750 · 치명 부위: Head, Torso, Boss, Hip, Leg (each).","최대 장갑 등급 AV3.","중간 위협 — 관통력 있는 화기를 권장."]},
+  {id:"heavy_devastator", faction:"automaton", name:"Heavy Devastator", mainHp:750,
+    parts:[{name:"Head",hp:110,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/Vs4FyvqZ/front-head.jpg",altImg:"https://i.postimg.cc/d1P50f3W/Side-head.jpg",exdr:1,mainCap:true},{name:"Shoulderplate (each)",hp:150,armor:2,durability:0,toMain:0.25,lethal:false,img:"https://i.postimg.cc/7Z59n4Ts/front-shoulders.jpg",altImg:"https://i.postimg.cc/VNjjKksR/Side-shoulders.jpg",exdr:1,mainCap:true},{name:"Arm (each)",hp:260,armor:1,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/4xHvh1rj/front-arms.jpg",altImg:"https://i.postimg.cc/KjQfJvNV/Side-arms.jpg",exdr:1,notes:"Destroying a Devastator's arm will disarm it."},{name:"Torso",hp:425,armor:3,durability:0.3,toMain:1,lethal:true,img:"https://i.postimg.cc/tCSD6J7n/front-torso.jpg",altImg:"https://i.postimg.cc/BvWT5K3b/Side-torso.jpg",exdr:1,mainCap:true},{name:"Boss",hp:350,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/gkTqJ7Bv/front-boss.jpg",exdr:1,mainCap:true},{name:"Hip",hp:500,armor:2,durability:0,toMain:0.75,lethal:true,img:"https://i.postimg.cc/hv4bzRB0/front-hip-assembly.jpg",altImg:"https://i.postimg.cc/RFdwzpHJ/Side-Hips.jpg",exdr:1,mainCap:true},{name:"Leg (each)",hp:500,armor:2,durability:0,toMain:0.6,lethal:true,img:"https://i.postimg.cc/SshG4z13/front-legs.jpg",altImg:"https://i.postimg.cc/BbDr7Fy6/Side-legs.jpg",exdr:1,mainCap:true},{name:"Fusion powerpack",hp:600,armor:2,durability:0,toMain:0.4,lethal:true,img:"https://i.postimg.cc/Gh2xbRzL/front-gatling-pack.jpg",altImg:"https://i.postimg.cc/XJfQBgyn/side-gatling-pack.jpg",exdr:1,mainCap:true},{name:"Shield",hp:0,armor:5,durability:0,toMain:0,lethal:false,img:"https://i.postimg.cc/dVgBWf2q/front-shield.jpg",altImg:"https://i.postimg.cc/50b8TW6M/side-shield.jpg",notes:"Invulnerable."}],
+    tips:["정면 방패 장갑이 매우 두꺼움 — 정면 화력전은 비효율적.","기동으로 측면·후방을 잡아 무장갑 부위를 노릴 것.","머리 약점 노출 각이 나오면 마크스맨 소총으로 원킬 가능."]},
+  {id:"gunship", faction:"automaton", name:"Gunship", mainHp:950,
+    parts:[{name:"Chassis (front)",hp:-1,armor:3,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/nLt4DxN5/body-v2.jpg",altImg:"https://i.postimg.cc/wxtV4jf9/front-body.jpg",exdr:1,notes:"Chassis (front) and chassis (rear) are one and the same. The only reason for this division is to make the explosion cleave calculation more accurate, given the elongated shape of the chassis and the layout of the thruster."},{name:"Chassis (rear)",hp:-1,armor:3,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/nLt4DxN5/body-v2.jpg",altImg:"https://i.postimg.cc/wxtV4jf9/front-body.jpg",exdr:1,notes:"Chassis (front) and chassis (rear) are one and the same. The only reason for this division is to make the explosion cleave calculation more accurate, given the elongated shape of the chassis and the layout of the thruster."},{name:"Front thruster (each)",hp:400,armor:3,durability:0.85,toMain:0,lethal:true,img:"https://i.postimg.cc/pdXQfW5b/side-front-engines.jpg",altImg:"https://i.postimg.cc/wMs7XPkd/front-engines.jpg"},{name:"Rear thruster (each)",hp:400,armor:3,durability:0.8,toMain:0,lethal:true,img:"https://i.postimg.cc/TP7VQzny/side-rear-engines.jpg",altImg:"https://i.postimg.cc/FF2xMX83/front-rear-engines.jpg"}],
+    tips:["메인 체력 950 · 치명 부위: Front thruster (each), Rear thruster (each).","최대 장갑 등급 AV3.","특수 개체 — 패턴을 파악하고 상황에 맞게 대응할 것."]},
+  {id:"hulk", faction:"automaton", name:"Hulk", mainHp:1800,
+    parts:[{name:"Eye",hp:250,armor:4,durability:0.25,toMain:1,lethal:true,img:"https://i.postimg.cc/V6K6PwKw/front-eye.jpg",exdr:1,mainCap:true},{name:"Vent",hp:900,armor:1,durability:0.6,toMain:0.6,lethal:true,img:"https://i.postimg.cc/52z6YZ25/back-vent.jpg",constitution:650,mainCap:true,notes:"Reducing this part's HP to 0 triggers [650, -50/s] BleedsOut."},{name:"Arm (each)",hp:500,armor:4,durability:0.7,toMain:0.8,lethal:false,img:"https://i.postimg.cc/J0gztqwd/front-arms.jpg",altImg:"https://i.postimg.cc/K8t8vB0J/side-arms.jpg",exdr:1,notes:"Destroying a Hulk's arm will disarm it."},{name:"Leg (each)",hp:500,armor:4,durability:0.8,toMain:0.8,lethal:false,img:"https://i.postimg.cc/JnrnF0cK/front-legs.jpg",altImg:"https://i.postimg.cc/rpLzSQDB/side-legs.jpg",exdr:1,constitution:500,notes:"Reducing this part's HP to 0 triggers [500, -50/s] BleedsOut. Then puts the Hulk into Constitution [0, -0/s]. Considering that this part is not fatal, this will leave the Hulk with virtually 1 HP (0 constitution, 0 changerate) once the BleedsOut is consumed."}],
+    tips:["정면 안구, 후방 환기구 둘 다 치명 약점 — 둘 중 노출된 쪽을 노릴 것.","화염방사형 헐크는 근접 화염 범위가 넓으니 거리 유지 필수.","팔·다리는 장갑이 두꺼워 비효율적, 약점 위주로 공략."]},
+  {id:"tank", faction:"automaton", name:"Tank", mainHp:3000,
+    parts:[{name:"Front",hp:-1,armor:5,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/VkwdtKr3/front-chassis.jpg",exdr:0.35},{name:"Side (each)",hp:-1,armor:5,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/5t70Z17V/side-chassis.jpg",altImg:"https://i.postimg.cc/HnJpGyJ0/back-chassis-side.jpg",exdr:0.35},{name:"Track (each)",hp:750,armor:3,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/cLc6Bff6/side-tracks.jpg",altImg:"https://i.postimg.cc/pXzmywTf/front-tracks.jpg",exdr:1,mainCap:true},{name:"Engine",hp:750,armor:3,durability:1,toMain:1.5,lethal:true,img:"https://i.postimg.cc/3NP33xps/back-chassis.jpg",exdr:0.5,notes:"Puts the Tank into Constitution [0, -100/s]. From this point on, any damage inflicted on [MAIN] will kill the tank, or it will explode naturally on the first constitution tick (1s)."},{name:"Underneath (AT mines)",hp:-1,armor:5,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/VkwdtKr3/front-chassis.jpg",exdr:0.35,notes:"Use this entry to simulate how AT-mines behaves against the target."},{name:"Annihilator turret main",hp:2100,armor:5,durability:1,toMain:0,lethal:true,img:"https://i.postimg.cc/jSjYBfGD/side-annihilator-turret-main.jpg",altImg:"https://i.postimg.cc/RFKkwLnD/front-annihilator-turret-main.jpg",mainCap:true,notes:"Behaves as the turret [MAIN]. If you're using an AP3 or AP4 explosive weapon, the explosion can potentially damage the turret vent, depending on the location of the impact and the LoS check. However, it will be more efficient to aim directly at the weak point."},{name:"Annihilator turret vent",hp:750,armor:3,durability:1,toMain:2,lethal:true,img:"https://i.postimg.cc/NfDwNDPh/back-annihilator-turret-vent.jpg",altImg:"https://i.postimg.cc/yYsHXtjX/side-vent-annihilator.jpg",mainCap:true},{name:"Barrager turret main",hp:2100,armor:5,durability:1,toMain:0,lethal:true,img:"https://i.postimg.cc/4NpY4Cz7/side-main-barrager.jpg",altImg:"https://i.postimg.cc/NjY55N4N/front-Main-barrager.jpg",mainCap:true},{name:"Barrager turret tubes",hp:750,armor:3,durability:1,toMain:2,lethal:true,img:"https://i.postimg.cc/MTN3GjvZ/Barrager-front-tubes.jpg",altImg:"https://i.postimg.cc/25HXPtYZ/Barrager-rear-tubes.jpg",mainCap:true},{name:"Shredder turret main",hp:2100,armor:5,durability:1,toMain:0,lethal:true,img:"https://i.postimg.cc/Gtb5GwR4/side-shredder-turret-main.jpg",altImg:"https://i.postimg.cc/ZRDghymc/front-shredder-main.jpg",mainCap:true,notes:"Behaves as the turret [MAIN]. Behaves as the turret [MAIN]. If you're using an AP3 or AP4 explosive weapon, the explosion can potentially damage the turret vent, depending on the location of the impact and the LoS check. However, it will be more efficient to aim directly at the weak point."},{name:"Shredder turret vent",hp:750,armor:3,durability:1,toMain:2,lethal:true,img:"https://i.postimg.cc/50BrX9hc/side-shredder-turret-vent.jpg",altImg:"https://i.postimg.cc/K8WwVHPW/back-shredder-turret-vent.jpg",mainCap:true}],
+    tips:["정면 장갑은 사실상 뚫리지 않음 — 반드시 측후방으로 기동.","후방 환기구는 무장갑 — 대전차 화기 한 방이면 폭발 유도.","포신 조준선을 피해 엄폐하며 측면으로 접근."]},
+  {id:"dropship", faction:"automaton", name:"Dropship", mainHp:3500,
+    parts:[{name:"Chassis",hp:-1,armor:5,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/hP172FBS/side-chassis.jpg",altImg:"https://i.postimg.cc/bJnZbWgf/front-chassis.jpg",exdr:1},{name:"Thruster (each)",hp:1500,armor:5,durability:1,toMain:0,lethal:true,img:"https://i.postimg.cc/d0LkQLT1/side-engines.jpg",altImg:"https://i.postimg.cc/CMjZKydj/front-engines.jpg",exdr:1}],
+    tips:["메인 체력 3500 · 치명 부위: Thruster (each).","최대 장갑 등급 AV5 — 이 이상 관통하는 화기가 아니면 내구피해%만 들어감.","특수 개체 — 패턴을 파악하고 상황에 맞게 대응할 것."]},
+  {id:"factory_strider", faction:"automaton", name:"Factory Strider", mainHp:10000,
+    parts:[{name:"Cannon turret",hp:900,armor:5,durability:1,toMain:0,lethal:false,img:"https://i.postimg.cc/Y90JsBVT/Turret.jpg",altImg:"https://i.postimg.cc/TPLsVJDX/Turret.jpg",exdr:0.5},{name:"Head armor",hp:1500,armor:5,durability:1,toMain:0.3,lethal:false,img:"https://i.postimg.cc/tgcjygh9/Head-armour.jpg",altImg:"https://i.postimg.cc/fRkqsf50/Head-armour.jpg",exdr:0.4,mainCap:true},{name:"Head",hp:2500,armor:4,durability:1,toMain:1,lethal:true,img:"https://i.postimg.cc/zfvr9hHd/Head.jpg",altImg:"https://i.postimg.cc/8C6yJk2p/Head.jpg",exdr:0.4},{name:"Damaged head",hp:2500,armor:4,durability:1,toMain:1,lethal:true,img:"https://i.postimg.cc/fL3M0dw3/Damaged-head.jpg",altImg:"https://i.postimg.cc/ZR6DgYH7/Damaged-head.jpg",exdr:0.4,notes:"It's the exact same part than \"Head\". Includes 750 damage to [MAIN] dealt by breaching Head armor."},{name:"Gatling (each)",hp:300,armor:3,durability:1,toMain:0,lethal:false,img:"https://i.postimg.cc/4d0rCFRy/Gatlings.jpg",altImg:"https://i.postimg.cc/8P4xN5Sx/Gatlings.jpg",exdr:1},{name:"Neck armor",hp:1500,armor:5,durability:1,toMain:0.3,lethal:false,img:"https://i.postimg.cc/FHDvWpzd/Neck-armor.jpg",altImg:"https://i.postimg.cc/tCBv8Mdj/Neck-armor.jpg",exdr:0.4,mainCap:true},{name:"Neck",hp:2500,armor:4,durability:1,toMain:1,lethal:true,img:"https://i.postimg.cc/k4td5dcK/Neck.jpg",altImg:"https://i.postimg.cc/1Rq9mDC2/Damaged-neck.jpg",exdr:0.4},{name:"Front top armor",hp:2200,armor:5,durability:1,toMain:0.3,lethal:false,img:"https://i.postimg.cc/Qxgh5hrq/Front-top-armor.jpg",altImg:"https://i.postimg.cc/yxPp1fw0/Front-top-armor-extended.jpg",exdr:0.4,mainCap:true},{name:"Front engine",hp:2000,armor:4,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/FHK8R4Fz/Front-engine.jpg",exdr:0.4,mainCap:true},{name:"Front armor",hp:2200,armor:5,durability:1,toMain:0.3,lethal:false,img:"https://i.postimg.cc/wjVxKHfB/Front-armour.jpg",altImg:"https://i.postimg.cc/fRgFSrkK/Front-armour.jpg",exdr:0.4,mainCap:true},{name:"Front circuits",hp:2400,armor:3,durability:1,toMain:0.5,lethal:true,img:"https://i.postimg.cc/L5LRxMg2/damaged-front-circuits.jpg",altImg:"https://i.postimg.cc/8C20tfRf/damaged-Front-circuits.jpg",exdr:0.4,notes:"Armor must be breached first. Includes 660 damage to [MAIN] dealt by breaching corresponding side armor."},{name:"Side armor (each)",hp:2200,armor:5,durability:1,toMain:0.3,lethal:false,img:"https://i.postimg.cc/qBPvy16p/Side-armour.jpg",exdr:0.4,mainCap:true},{name:"Side circuits",hp:2400,armor:3,durability:1,toMain:1,lethal:true,img:"https://i.postimg.cc/GpmLdNVx/damaged-Side-circuits.jpg",exdr:0.4,notes:"Armor must be breached first. Shares its HP with correspondig side underbelly door. Includes 660 damage to [MAIN] dealt by breaching corresponding side armor."},{name:"Rear armor",hp:2200,armor:5,durability:1,toMain:0.3,lethal:false,img:"https://i.postimg.cc/YqQq3QQY/Rear-armour.jpg",altImg:"https://i.postimg.cc/QM1bN47V/Rear-armour.jpg",exdr:0.4,mainCap:true},{name:"Rear engine",hp:2200,armor:5,durability:1,toMain:0.5,lethal:false,img:"https://i.postimg.cc/tJV89t95/Rear-engine.jpg",exdr:0.4,mainCap:true},{name:"Rear engine weakspot",hp:1500,armor:3,durability:0.75,toMain:1,lethal:false,img:"https://i.postimg.cc/Pq2gy56m/Rear-engine-weakspot.jpg",exdr:0.4,mainCap:true},{name:"Rear circuits",hp:2400,armor:3,durability:1,toMain:1,lethal:true,img:"https://i.postimg.cc/j5Gt6j5M/damaged-rear-circuits.jpg",altImg:"https://i.postimg.cc/Kz5DB1J2/Rear-circuits.jpg",exdr:0.4,notes:"Armor must be breached first. Constitution [1200, -0/s]. Includes 660 damage to [MAIN] dealt by breaching corresponding side armor."},{name:"Leg armor (each)",hp:1500,armor:5,durability:1,toMain:0.3,lethal:false,img:"https://i.postimg.cc/rwcyYz9b/Legs-armour.jpg",altImg:"https://i.postimg.cc/Y9NbRn2T/Legs-armour.jpg",exdr:0.4,mainCap:true,notes:"Each leg is covered by distinct upper and lower armour."},{name:"Knee armor (each)",hp:800,armor:5,durability:1,toMain:0.2,lethal:false,img:"https://i.postimg.cc/ZYBqWGRf/Knee-armour.jpg",altImg:"https://i.postimg.cc/Y97xv6NR/Knee-armour.jpg",exdr:0.4,mainCap:true},{name:"Leg assembly (each)",hp:3500,armor:4,durability:1,toMain:0.4,lethal:true,img:"https://i.postimg.cc/rzX3s0mL/Legs-assembly.jpg",altImg:"https://i.postimg.cc/RV42ktjc/Legs-assembly.jpg",exdr:0.4,mainCap:true},{name:"Damaged leg assembly",hp:3500,armor:4,durability:1,toMain:0.4,lethal:true,img:"https://i.postimg.cc/259z6GfR/Damaged-legs.jpg",altImg:"https://i.postimg.cc/VkTGk0HZ/Damaged-legs.jpg",exdr:0.4,mainCap:true,notes:"Leg armor must be breached first. It's the exact same part than \"Leg assembly\". Includes 750 damage to [MAIN] dealt by breaching corresponding leg armo section."},{name:"Underbelly door (each)",hp:2400,armor:3,durability:1,toMain:1,lethal:true,img:"https://i.postimg.cc/y8JjtYYm/Door.jpg",altImg:"https://i.postimg.cc/YSrcQWxr/Carrier.jpg",exdr:0.4,notes:"Shares its HP with correspondig side circuits. Each door is an independent part so it's best to concentrate on one door at a time. Includes 660 damage to [MAIN] dealt by breaching corresponding side armor."},{name:"Leg assembly (AT mines)",hp:3500,armor:4,durability:1,toMain:0.4,lethal:true,img:"https://i.postimg.cc/rzX3s0mL/Legs-assembly.jpg",altImg:"https://i.postimg.cc/RV42ktjc/Legs-assembly.jpg",exdr:0.4,mainCap:true},{name:"Floor (Eagle 500 kg)",hp:0,armor:0,durability:0,toMain:0,lethal:false,img:"https://i.postimg.cc/Y04R799C/Side-500kg.jpg",altImg:"https://i.postimg.cc/1t7Bb6yd/Front-500kg.jpg",mainCap:true,notes:"Use this input to simulate a 500kg bomb hitting the ground beneath the Factory Strider (ideally, centered beneath him). Considering the small damage margin required to ensure a kill, the target may stay alive or die depending on the exact location of the impact."}],
+    tips:["하단을 통과하며 노출되는 복부 약점이 최우선 목표.","안면 기관포를 먼저 침묵시키면 압박이 크게 줄어듦.","대형 스트라이크(오브/헬밤)로 복부를 직격하면 원콤 가능."]},
+  {id:"light_voteless", faction:"illuminate", name:"Light Voteless", mainHp:100,
+    parts:[{name:"Head",hp:40,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/y8rzFTLV/Head.jpg",exdr:1,mainCap:true},{name:"Shoulder (each)",hp:50,armor:0,durability:0,toMain:0.4,lethal:false,img:"https://i.postimg.cc/TY0xPxm5/Shoulders.jpg",exdr:1,constitution:1000,notes:"Constitution [1000, -40/s]. Enough overkill can immediately deplete the Constitution's pool."},{name:"Arm (each)",hp:50,armor:0,durability:0,toMain:0.3,lethal:false,img:"https://i.postimg.cc/FHK4d6gW/Arms.jpg",exdr:1,mainCap:true},{name:"Leg (each)",hp:80,armor:0,durability:0,toMain:0.3,lethal:false,img:"https://i.postimg.cc/XvG6xyP9/Legs.jpg",exdr:1,mainCap:true,notes:"Puts the Voteless [MAIN] into Constitution [100, -5/s]."}],
+    tips:["메인 체력 100 · 치명 부위: Head.","최대 장갑 등급 AV1.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"medium_voteless", faction:"illuminate", name:"Medium Voteless", mainHp:130,
+    parts:[{name:"Head",hp:50,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/x8Yr0p1P/Head.jpg",exdr:1,mainCap:true},{name:"Shoulder (each)",hp:65,armor:0,durability:0,toMain:0.4,lethal:false,img:"https://i.postimg.cc/vHYRkKjY/Shoulders.jpg",exdr:1,constitution:1000,notes:"Constitution [1000, -40/s]. Enough overkill can immediately deplete the Constitution's pool."},{name:"Arm (each)",hp:50,armor:0,durability:0,toMain:0.3,lethal:false,img:"https://i.postimg.cc/qR2VHH4R/Arms.jpg",exdr:1,mainCap:true},{name:"Leg (each)",hp:80,armor:0,durability:0,toMain:0.3,lethal:false,img:"https://i.postimg.cc/brR7d0Gf/Legs.jpg",exdr:1,mainCap:true,notes:"Puts the Voteless [MAIN] into Constitution [100, -5/s]."}],
+    tips:["메인 체력 130 · 치명 부위: Head.","최대 장갑 등급 AV1.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"heavy_voteless", faction:"illuminate", name:"Heavy Voteless", mainHp:160,
+    parts:[{name:"Head",hp:60,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/D05N72D2/Head.jpg",exdr:1,mainCap:true},{name:"Shoulder (each)",hp:80,armor:0,durability:0,toMain:0.4,lethal:false,img:"https://i.postimg.cc/FssqDLd1/Shoulders.jpg",exdr:1,constitution:1000,notes:"Constitution [1000, -40/s]. Enough overkill can immediately deplete the Constitution's pool."},{name:"Arm (each)",hp:65,armor:0,durability:0,toMain:0.3,lethal:false,img:"https://i.postimg.cc/W3GKfmwq/Arms.jpg",exdr:1,mainCap:true},{name:"Leg (each)",hp:80,armor:0,durability:0,toMain:0.3,lethal:false,img:"https://i.postimg.cc/fyMF4382/Legs.jpg",exdr:1,mainCap:true,notes:"Puts the Voteless [MAIN] into Constitution [100, -5/s]."}],
+    tips:["메인 체력 160 · 치명 부위: Head.","최대 장갑 등급 AV1.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"wretch", faction:"illuminate", name:"Wretch", mainHp:450,
+    parts:[{name:"Head",hp:100,armor:1,durability:0,toMain:1,lethal:false},{name:"Arms (4)",hp:50,armor:1,durability:0,toMain:0.5,lethal:false},{name:"Claws (2)",hp:200,armor:3,durability:0,toMain:1,lethal:false},{name:"Legs (2)",hp:450,armor:1,durability:0,toMain:1,lethal:false}],
+    tips:["머리는 즉사 약점이 아님 — 헤드샷 대신 발톱팔이나 다리를 노릴 것.","돌진 도약 공격의 추적 성능이 좋아 회피보다 선제 사격이 안전.","다수 등장 시 고연사·화염·가스 계열로 접근 자체를 늦추는 것이 효율적.","(위키 수동 확인 데이터 — DiversDex 시트에는 아직 없음, 부위 이미지·ExDR 등 세부 수치 없음)"]},
+  {id:"crusher", faction:"illuminate", name:"Crusher", mainHp:6000, fireMult:1.5,
+    regen:{rate:30, delay:0.5, exempt:["Helmet","Head"]},
+    parts:[{name:"Helmet",hp:300,armor:4,durability:0,toMain:0,lethal:false},{name:"Head",hp:300,armor:1,durability:0,toMain:1,lethal:true},{name:"Torso",hp:6000,armor:1,durability:0.7,toMain:1,lethal:false},{name:"Arms (2)",hp:2000,armor:1,durability:0.7,toMain:1,lethal:false},{name:"Pelvis",hp:4000,armor:1,durability:0.6,toMain:1,lethal:false},{name:"Legs (2)",hp:4000,armor:1,durability:0.6,toMain:1,lethal:true}],
+    tips:["헬멧(AV4)을 먼저 부순 뒤 드러나는 머리가 유일한 즉사 약점.","다리는 치명 표시가 있지만 몸통·팔·골반과 함께 초당 30 재생 대상 — 재생 없는 곳은 머리·헬멧뿐.","테르밋 수류탄이나 C4 한 개는 재생을 따돌리고 즉사시킬 수 있음 (순간 폭딜이라 재생이 못 따라옴).","화염(fire_mult 150%)은 피해 보너스+둔화 효과가 있어 지속전에 유리.","전투 중 회피·재장전으로 사격이 끊기는 시간에도 재생이 계속되므로, 이론상 BTK보다 실전 체감 난이도가 훨씬 높음.","(위키 수동 확인 데이터 — DiversDex 시트에는 아직 없음, 부위 이미지·ExDR 등 세부 수치 없음)"]},
+  {id:"watcher", faction:"illuminate", name:"Watcher", mainHp:600,
+    parts:[{name:"Vertical fin (each)",hp:200,armor:0,durability:0,toMain:1,lethal:false,img:"https://i.postimg.cc/sgK5KMWf/front-vertical-fins.jpg",altImg:"https://i.postimg.cc/mDKYMKHQ/side-vertical-fins.jpg",exdr:1,mainCap:true},{name:"Lateral fin (each)",hp:150,armor:2,durability:0,toMain:1,lethal:false,img:"https://i.postimg.cc/NjxkVN3c/front-Side-fins.jpg",altImg:"https://i.postimg.cc/tC33ZSCx/Side-side-fins.jpg",exdr:1,mainCap:true},{name:"Body",hp:400,armor:2,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/N0zmqZbW/Front-body.jpg",altImg:"https://i.postimg.cc/brbQRLx4/Side-body.jpg",exdr:1},{name:"Eye",hp:300,armor:0,durability:0,toMain:1,lethal:false,img:"https://i.postimg.cc/Hx85p3hj/Front-eye.jpg",altImg:"https://i.postimg.cc/QNWksN2S/Side-eye.jpg",exdr:1,mainCap:true}],
+    tips:["정찰용 소형 비행체 — 발각 시 증원 호출 전에 신속 격추.","경장갑 관통이면 대부분의 주무기로 1~2발에 처리.","조용히 처리해야 대규모 어그로를 피할 수 있음."]},
+  {id:"overseer", faction:"illuminate", name:"Overseer", mainHp:600,
+    parts:[{name:"Head",hp:150,armor:3,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/bYtD6F2q/Front-Head.jpg",altImg:"https://i.postimg.cc/GhR2X3Cj/Side-head.jpg",exdr:1,mainCap:true},{name:"Chest armor",hp:150,armor:2,durability:0,toMain:0.2,lethal:false,img:"https://i.postimg.cc/MK0cwMD4/Front-Chest-armor.jpg",altImg:"https://i.postimg.cc/RZsZCcnP/Side-chest-armor.jpg",exdr:1},{name:"Crotch armor",hp:200,armor:2,durability:0,toMain:0.2,lethal:false,img:"https://i.postimg.cc/jdYWBQzP/Front-Crotch-armor.jpg",altImg:"https://i.postimg.cc/02CNFg51/Side-crotch-armor.jpg",exdr:1},{name:"Limbs armor (each)",hp:100,armor:2,durability:0,toMain:0.2,lethal:false,img:"https://i.postimg.cc/B6d8S2RW/Front-Limbs-armor.jpg",altImg:"https://i.postimg.cc/x8DCDnbn/Side-Limbs-armor.jpg",exdr:1},{name:"Torso",hp:600,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/N0ZGmBDm/Front-Torso.jpg",altImg:"https://i.postimg.cc/JzPGyfS5/Side-torso.jpg",exdr:1,mainCap:true,notes:"Includes 30 damage to [MAIN] dealt by breaching Chest armor."},{name:"Arm (each)",hp:300,armor:1,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/nhHXhFSL/Front-Arms.jpg",altImg:"https://i.postimg.cc/bwNvj6dD/Side-arms.jpg",exdr:1,mainCap:true,notes:"Includes 20 damage to [MAIN] dealt by breaching Arms armor."},{name:"Leg (each)",hp:-1,armor:0,durability:0,toMain:0.7,lethal:true,img:"https://i.postimg.cc/ydJgCLQX/Front-Legs.jpg",altImg:"https://i.postimg.cc/wMXB9ZhJ/Side-legs.jpg",exdr:1,mainCap:true,notes:"Includes 20 damage to [MAIN] dealt by breaching Legs armor."},{name:"Energy shield",hp:1500,armor:2,durability:0.3,toMain:0,lethal:false,img:"https://i.postimg.cc/NG7LHDGd/Shield.jpg",exdr:1}],
+    tips:["부유 이동 + 원거리 무기 보유 — 엄폐 없이 교전 시 위험.","머리를 노리면 약한 관통력으로도 빠르게 처리 가능.","고도가 높아지면 대공 사격각이 나오는 위치 선점이 중요."]},
+  {id:"elevated_overseer", faction:"illuminate", name:"Elevated Overseer", mainHp:600,
+    parts:[{name:"Head",hp:150,armor:3,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/q7KHfnc6/Front-Head.jpg",altImg:"https://i.postimg.cc/vZNGwbpk/Side-head.jpg",exdr:1,mainCap:true},{name:"Chest armor",hp:150,armor:2,durability:0,toMain:0.2,lethal:false,img:"https://i.postimg.cc/3wxDzWXG/Front-Chest-armor.jpg",altImg:"https://i.postimg.cc/1z7NSPBj/Side-chest-armor.jpg",exdr:1},{name:"Crotch armor",hp:200,armor:2,durability:0,toMain:0.2,lethal:false,img:"https://i.postimg.cc/QtBKxPnx/Front-Crocth-armor.jpg",altImg:"https://i.postimg.cc/63D270DV/Side-crotch-armor.jpg",exdr:1},{name:"Limbs armor (each)",hp:100,armor:2,durability:0,toMain:0.2,lethal:false,img:"https://i.postimg.cc/5ynZ5mJT/Front-Limbs-armor.jpg",altImg:"https://i.postimg.cc/sxsr4XhQ/Side-Limbs-armor.jpg",exdr:1},{name:"Torso",hp:600,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/X7njw2fH/Front-Torso.jpg",altImg:"https://i.postimg.cc/KvcbK1bC/Side-torso.jpg",exdr:1,mainCap:true,notes:"Includes 30 damage to [MAIN] dealt by breaching Chest armor."},{name:"Arm (each)",hp:300,armor:1,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/JzGWqSGq/Front-Arms.jpg",altImg:"https://i.postimg.cc/fWcWS49S/Side-arms.jpg",exdr:1,mainCap:true,notes:"Includes 20 damage to [MAIN] dealt by breaching Arms armor."},{name:"Leg (each)",hp:-1,armor:0,durability:0,toMain:0.7,lethal:true,img:"https://i.postimg.cc/XqVRyzR9/Front-Legs.jpg",altImg:"https://i.postimg.cc/4dzGctmR/Side-legs.jpg",exdr:1,notes:"Includes 20 damage to [MAIN] dealt by breaching Legs armor."},{name:"Jetpack",hp:300,armor:2,durability:0,toMain:0.5,lethal:true,img:"https://i.postimg.cc/50cQBZSY/Back-jetpack.jpg",altImg:"https://i.postimg.cc/43HsJjGd/Side-Jetpack.jpg",exdr:1,mainCap:true}],
+    tips:["메인 체력 600 · 치명 부위: Head, Torso, Leg (each), Jetpack.","최대 장갑 등급 AV3.","중간 위협 — 관통력 있는 화기를 권장."]},
+  {id:"stingray", faction:"illuminate", name:"Stingray", mainHp:800,
+    parts:[{name:"Chassis",hp:-1,armor:3,durability:0.7,toMain:1,lethal:true,img:"https://i.postimg.cc/bvqcYBcC/Side-Main-1.jpg",altImg:"https://i.postimg.cc/13h12zWZ/Front.jpg",exdr:1}],
+    tips:["메인 체력 800 · 치명 부위: Chassis.","최대 장갑 등급 AV3.","특수 개체 — 패턴을 파악하고 상황에 맞게 대응할 것."]},
+  {id:"fleshmob", faction:"illuminate", name:"Fleshmob", mainHp:6000,
+    parts:[{name:"Arm (each)",hp:200,armor:0,durability:0.25,toMain:0.25,lethal:false,img:"https://i.postimg.cc/C5K71bmf/Front-Arms.jpg",altImg:"https://i.postimg.cc/BvxMwSjt/Back-Arms.jpg",exdr:1},{name:"Meat chunck (each)",hp:400,armor:0,durability:0.25,toMain:1,lethal:false,img:"https://i.postimg.cc/sxsKJWv4/Front-Grouped-chunks-v2.jpg",altImg:"https://i.postimg.cc/L5DDQsPK/Back-Grouped-chunks-v2.jpg",exdr:0.25,notes:"If you use an explosive weapon, the simulated results will represent the case where the central mass is targeted and may be innacurate if the inner radius of the explosion is too small and/or if you hit the top chunk. If Inner radius ≤1.5m, it is preferable to vary the firing angles to destroy all the chunks. Otherwise, it's best to aim for the centre of the fleshmob's body."}],
+    tips:["메인 체력 6000 · 치명 부위: 없음 (전체 체력 소모로만 처치).","최대 장갑 등급 AV0.","중간 위협 — 관통력 있는 화기를 권장."]},
+  {id:"scavenger", faction:"terminid", name:"Scavenger", mainHp:60,
+    parts:[{name:"Head",hp:20,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/k4MbrfF0/front-head.jpg",altImg:"https://i.postimg.cc/Sx0YQyf7/side-head.jpg",exdr:1,mainCap:true},{name:"Limb (each)",hp:30,armor:0,durability:0,toMain:0.3,lethal:true,img:"https://i.postimg.cc/brsSrr5L/side-limbs.jpg",altImg:"https://i.postimg.cc/7hdG2D84/front-limbs.jpg",exdr:1,mainCap:true}],
+    tips:["무장갑 소형 개체. 어떤 화기로도 1~2발이면 처치.","다수가 무리지어 접근 — 산탄총·범위 화기로 몰아 처리.","개별 위협도는 낮지만 신호탄 역할(증원 유발)에 주의."]},
+  {id:"spore_burst_scavenger", faction:"terminid", name:"Spore burst Scavenger", mainHp:60,
+    parts:[{name:"Head",hp:20,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/mrVZcKYL/Side-head.jpg",altImg:"https://i.postimg.cc/MGzKpzj3/front-head.jpg",exdr:1,mainCap:true},{name:"Limb (each)",hp:30,armor:0,durability:0,toMain:0.3,lethal:true,img:"https://i.postimg.cc/C1QF7Dr9/side-limbs.jpg",altImg:"https://i.postimg.cc/3xXxhkWD/front-limbs.jpg",exdr:1,mainCap:true}],
+    tips:["메인 체력 60 · 치명 부위: Head, Limb (each).","최대 장갑 등급 AV0.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"pouncer", faction:"terminid", name:"Pouncer", mainHp:60,
+    parts:[{name:"Head",hp:20,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/nLyt7HnF/side-head.jpg",altImg:"https://i.postimg.cc/5y1d7nHD/front-head.jpg",exdr:1,mainCap:true},{name:"Limb (each)",hp:30,armor:0,durability:0,toMain:0.3,lethal:true,img:"https://i.postimg.cc/3xbh8X6D/side-limbs.jpg",altImg:"https://i.postimg.cc/j2XVGPP2/front-limbs.jpg",exdr:1,mainCap:true}],
+    tips:["메인 체력 60 · 치명 부위: Head, Limb (each).","최대 장갑 등급 AV0.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"bile_spitter", faction:"terminid", name:"Bile spitter", mainHp:60,
+    parts:[{name:"Head",hp:20,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/76XSbpZP/front-head.jpg",altImg:"https://i.postimg.cc/281n89Rm/side-head.jpg",exdr:1,mainCap:true},{name:"Limb (each)",hp:30,armor:0,durability:0,toMain:0.3,lethal:true,img:"https://i.postimg.cc/vmsnhQ1H/side-limbs.jpg",altImg:"https://i.postimg.cc/nVRvxbW0/front-limbs.jpg",exdr:1,mainCap:true}],
+    tips:["등에 노출된 산낭이 약점 — 터뜨리면 즉시 무력화.","원거리 산 투사체 공격이 광역 피해 — 근접보다 사격 우선.","산낭 파괴 후에도 남은 체력은 낮은 편이라 마무리 쉬움."]},
+  {id:"shrieker", faction:"terminid", name:"Shrieker", mainHp:80,
+    parts:[{name:"Head",hp:20,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/KjMp6Pby/side-head.jpg",altImg:"https://i.postimg.cc/JzmYFHd9/front-head.jpg",exdr:1,mainCap:true},{name:"Wing (each)",hp:20,armor:0,durability:1,toMain:0.3,lethal:true,img:"https://i.postimg.cc/KY8qGSbf/side-wings.jpg",altImg:"https://i.postimg.cc/rmbYZhvJ/front-wings.jpg",exdr:1,mainCap:true},{name:"Limb (each)",hp:30,armor:0,durability:0,toMain:0.4,lethal:false,img:"https://i.postimg.cc/h4zYQBd3/side-limbs.jpg",altImg:"https://i.postimg.cc/N0CNLJfc/front-limbs.jpg",exdr:1}],
+    tips:["메인 체력 80 · 치명 부위: Head, Wing (each).","최대 장갑 등급 AV0.","특수 개체 — 패턴을 파악하고 상황에 맞게 대응할 것."]},
+  {id:"hunter", faction:"terminid", name:"Hunter", mainHp:160,
+    parts:[{name:"Head",hp:40,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/kMzBwnz3/front-head.jpg",altImg:"https://i.postimg.cc/t4hZYLr0/side-head.jpg",exdr:1,mainCap:true},{name:"Wing (each)",hp:20,armor:0,durability:0,toMain:0.3,lethal:false,img:"https://i.postimg.cc/wjcM6Dvg/front-wings.jpg",exdr:1},{name:"Claw (each)",hp:60,armor:0,durability:0,toMain:0.4,lethal:false,img:"https://i.postimg.cc/63QybTBw/side-arms.jpg",altImg:"https://i.postimg.cc/MHCHGDVK/front-arms.jpg",exdr:1},{name:"Leg (each)",hp:60,armor:0,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/zf8LW0My/side-legs.jpg",altImg:"https://i.postimg.cc/9F9zn6H4/front-legs.jpg",exdr:1}],
+    tips:["장갑 없음, 이동 속도와 점프 돌진이 유일한 위협.","점프 공격은 슬로우 효과 — 근접 시 우선 처치 권장.","경장갑 관통 이상이면 무엇이든 효율적으로 처리 가능."]},
+  {id:"spore_burst_hunter", faction:"terminid", name:"Spore burst Hunter", mainHp:160,
+    parts:[{name:"Head",hp:40,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/Zqm0vrXc/front-head.jpg",altImg:"https://i.postimg.cc/Y2P9zcJj/side-head.jpg",exdr:1,mainCap:true},{name:"Wing (each)",hp:20,armor:0,durability:0,toMain:0.3,lethal:false,img:"https://i.postimg.cc/5yXtWpFx/front-wings.jpg",exdr:1},{name:"Claw (each)",hp:60,armor:0,durability:0,toMain:0.4,lethal:false,img:"https://i.postimg.cc/KjC8GLnt/side-arms.jpg",altImg:"https://i.postimg.cc/Pxrx2dXv/front-arms.jpg",exdr:1},{name:"Leg (each)",hp:60,armor:0,durability:0.25,toMain:0.5,lethal:false,img:"https://i.postimg.cc/BQ1vhY0p/side-legs.jpg",altImg:"https://i.postimg.cc/nL1r4XJt/front-legs.jpg",exdr:1}],
+    tips:["메인 체력 160 · 치명 부위: Head.","최대 장갑 등급 AV0.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"predator_hunter", faction:"terminid", name:"Predator Hunter", mainHp:175,
+    parts:[{name:"Head",hp:40,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/tgkzx9Rm/front-head.jpg",altImg:"https://i.postimg.cc/YqL8sc8h/side-head.jpg",exdr:1,mainCap:true},{name:"Wing (each)",hp:20,armor:0,durability:0,toMain:0.3,lethal:false,img:"https://i.postimg.cc/nzdT6p6Q/front-wings.jpg",exdr:1},{name:"Claw (each)",hp:60,armor:0,durability:0,toMain:0.4,lethal:false,img:"https://i.postimg.cc/vTcXyCs2/side-arms.jpg",altImg:"https://i.postimg.cc/vZWhGWJy/Front-arms.jpg",exdr:1},{name:"Leg (each)",hp:60,armor:0,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/W4TnzdVk/side-legs.jpg",altImg:"https://i.postimg.cc/Kjwf8QcG/front-legs.jpg",exdr:1}],
+    tips:["메인 체력 175 · 치명 부위: Head.","최대 장갑 등급 AV0.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"warrior", faction:"terminid", name:"Warrior", mainHp:325,
+    parts:[{name:"Head",hp:150,armor:1,durability:0,toMain:0.5,lethal:true,img:"https://i.postimg.cc/ydW8X5T8/front-head.jpg",altImg:"https://i.postimg.cc/3WQrhwQk/side-head.jpg",exdr:1,constitution:200,notes:"Reducing this part's HP to 0 triggers [200, -70/s] BleedsOut."},{name:"Claw (each)",hp:100,armor:1,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/RCNRpLC3/side-arms.jpg",altImg:"https://i.postimg.cc/QCTNvTwL/front-arms.jpg",exdr:1},{name:"Leg (each)",hp:100,armor:1,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/tRwzKn7B/side-legs.jpg",altImg:"https://i.postimg.cc/wvPTWVWc/front-legs.jpg",exdr:1}],
+    tips:["머리가 무장갑 약점 — 헤드샷 원킬 노리기 가장 효율적.","정면 돌진 판정이 있어 측면·후방에서 사격 권장.","다리를 노리면 기동력을 죽여 후속 대응이 쉬워짐."]},
+  {id:"bile_warrior", faction:"terminid", name:"Bile warrior", mainHp:325,
+    parts:[{name:"Head",hp:150,armor:1,durability:0,toMain:0.5,lethal:true,img:"https://i.postimg.cc/ZYGr7kDg/side-head.jpg",altImg:"https://i.postimg.cc/26J4Ngj1/front-head.jpg",exdr:1,constitution:200,notes:"Reducing this part's HP to 0 triggers [200, -70/s] BleedsOut."},{name:"Claw (each)",hp:100,armor:1,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/59YBS9pL/side-arms.jpg",altImg:"https://i.postimg.cc/Zqw8VC1F/front-arms.jpg",exdr:1},{name:"Leg (each)",hp:100,armor:1,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/jdyyB8pj/side-legs.jpg",altImg:"https://i.postimg.cc/CKhCGj6x/front-legs.jpg",exdr:1}],
+    tips:["메인 체력 325 · 치명 부위: Head.","최대 장갑 등급 AV1.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"spore_burst_warrior", faction:"terminid", name:"Spore burst Warrior", mainHp:325,
+    parts:[{name:"Head",hp:150,armor:1,durability:0.4,toMain:1,lethal:true,img:"https://i.postimg.cc/J4ysf7bb/side-head.jpg",altImg:"https://i.postimg.cc/KY7k09tw/Front-head.jpg",exdr:1,constitution:200,notes:"Reducing this part's HP to 0 triggers [200, -65/s] BleedsOut."},{name:"Claw (each)",hp:100,armor:1,durability:0.25,toMain:0.5,lethal:false,img:"https://i.postimg.cc/kMYVYRtJ/side-arms.jpg",altImg:"https://i.postimg.cc/G2qBCH7j/Front-arms.jpg",exdr:1},{name:"Leg (each)",hp:100,armor:1,durability:0.35,toMain:0.5,lethal:false,img:"https://i.postimg.cc/mrW1Nx17/side-legs.jpg",altImg:"https://i.postimg.cc/j21LDBrw/Front-legs.jpg",exdr:1}],
+    tips:["메인 체력 325 · 치명 부위: Head.","최대 장갑 등급 AV1.","경량 개체 — 대부분의 화기로 손쉽게 처리 가능."]},
+  {id:"hive_guard", faction:"terminid", name:"Hive guard", mainHp:500,
+    parts:[{name:"Head",hp:250,armor:3,durability:0,toMain:0.75,lethal:true,img:"https://i.postimg.cc/Px8CYJhq/front-head.jpg",altImg:"https://i.postimg.cc/bNft0xZf/side-head.jpg",exdr:1,constitution:200,notes:"Reducing this part's HP to 0 triggers [200, -75/s] BleedsOut."},{name:"Claw (each)",hp:100,armor:2,durability:0,toMain:0.25,lethal:false,img:"https://i.postimg.cc/tCbsn9cX/side-arms.jpg",altImg:"https://i.postimg.cc/mgb1JT3d/front-arms.jpg",exdr:1},{name:"Front leg (each)",hp:125,armor:3,durability:0,toMain:0.45,lethal:false,img:"https://i.postimg.cc/bNRsQKX1/side-frontleg.jpg",altImg:"https://i.postimg.cc/q7FtNnPY/front-frontleg.jpg",exdr:1},{name:"Rear leg (each)",hp:125,armor:1,durability:0,toMain:0.35,lethal:false,img:"https://i.postimg.cc/1Rwgz8JC/side-backleg.jpg",altImg:"https://i.postimg.cc/mrkzZV5C/front-backleg.jpg",exdr:1}],
+    tips:["메인 체력 500 · 치명 부위: Head.","최대 장갑 등급 AV3.","중간 위협 — 관통력 있는 화기를 권장."]},
+  {id:"predator_stalker", faction:"terminid", name:"Predator Stalker", mainHp:650,
+    parts:[{name:"Head",hp:175,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/43bF8FtH/Front-head.jpg",altImg:"https://i.postimg.cc/0jH4YMSt/Side-head.jpg",exdr:1,mainCap:true},{name:"Claw (each)",hp:200,armor:1,durability:0.5,toMain:0.7,lethal:false,img:"https://i.postimg.cc/k4qLqd9y/Side-arms.jpg",altImg:"https://i.postimg.cc/DzKMPKWK/Front-claws.jpg",exdr:1,mainCap:true},{name:"Wing (each)",hp:125,armor:0,durability:0.5,toMain:0.3,lethal:false,img:"https://i.postimg.cc/gj5MX99Q/Front-wings.jpg",altImg:"https://i.postimg.cc/tCwf76pJ/Side-wings.jpg",exdr:1,mainCap:true},{name:"Body armour",hp:-1,armor:2,durability:0.5,toMain:1,lethal:false,img:"https://i.postimg.cc/2jX9XWqG/Side-armor.jpg",altImg:"https://i.postimg.cc/8zvYvCzH/Front-body-armor.jpg",exdr:1},{name:"Leg (each)",hp:200,armor:1,durability:0.5,toMain:1,lethal:false,img:"https://i.postimg.cc/Tw0FPH3v/Side-legs.jpg",altImg:"https://i.postimg.cc/3J4fMwmT/Front-legs.jpg",exdr:1,mainCap:true}],
+    tips:["메인 체력 650 · 치명 부위: Head.","최대 장갑 등급 AV2.","특수 개체 — 패턴을 파악하고 상황에 맞게 대응할 것."]},
+  {id:"nursing_spewer", faction:"terminid", name:"Nursing spewer", mainHp:750,
+    parts:[{name:"Head",hp:300,armor:2,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/s2r6tQ6k/front-head.jpg",altImg:"https://i.postimg.cc/8PxnmnhP/side-head.jpg",exdr:1,mainCap:true},{name:"Mouth",hp:300,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/s2r6tQ6k/front-head.jpg",exdr:1,mainCap:true},{name:"Leg (each)",hp:200,armor:2,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/y6QGkNxR/side-legs.jpg",altImg:"https://i.postimg.cc/zGW2tSjw/front-legs.jpg",exdr:1},{name:"Butt plates",hp:500,armor:2,durability:0.8,toMain:0.2,lethal:true,img:"https://i.postimg.cc/SRstDBTj/side-plates.jpg",altImg:"https://i.postimg.cc/hj4CGFqM/front-plates.jpg",mainCap:true},{name:"Butt",hp:750,armor:0,durability:0.9,toMain:0.6,lethal:true,img:"https://i.postimg.cc/kGpYZTzs/side-belly.jpg",altImg:"https://i.postimg.cc/rpNncV7K/front-belly.jpg",mainCap:true}],
+    tips:["메인 체력 750 · 치명 부위: Head, Mouth, Butt plates, Butt.","최대 장갑 등급 AV2.","중간 위협 — 관통력 있는 화기를 권장."]},
+  {id:"bile_spewer", faction:"terminid", name:"Bile spewer", mainHp:750,
+    parts:[{name:"Head",hp:300,armor:3,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/c12VFHWS/front-head.jpg",altImg:"https://i.postimg.cc/t4hDtRq2/side-head.jpg",exdr:1,mainCap:true},{name:"Mouth",hp:300,armor:0,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/CxV9VQdr/front-mouth.jpg",exdr:1,mainCap:true},{name:"Front leg (each)",hp:200,armor:3,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/8z8t6fS7/side-frontlegs.jpg",altImg:"https://i.postimg.cc/RCNk1tjd/front-front-Legs.jpg",exdr:1},{name:"Rear leg (each)",hp:200,armor:2,durability:0,toMain:0.5,lethal:false,img:"https://i.postimg.cc/59RPfkKq/side-backlegs.jpg",altImg:"https://i.postimg.cc/cCgBK0k7/front-backlegs.jpg",exdr:1},{name:"Butt plates",hp:500,armor:3,durability:0.8,toMain:0.2,lethal:true,img:"https://i.postimg.cc/4d35gzzS/side-plates.jpg",altImg:"https://i.postimg.cc/bwHWY9ty/front-plates.jpg",mainCap:true},{name:"Butt",hp:750,armor:0,durability:0.9,toMain:0.6,lethal:true,img:"https://i.postimg.cc/J4Hp0c9w/side-belly.jpg",altImg:"https://i.postimg.cc/tJKtWw8K/front-belly.jpg",mainCap:true}],
+    tips:["메인 체력 750 · 치명 부위: Head, Mouth, Butt plates, Butt.","최대 장갑 등급 AV3.","중간 위협 — 관통력 있는 화기를 권장."]},
+  {id:"brood_commander", faction:"terminid", name:"Brood commander", mainHp:800,
+    parts:[{name:"Head",hp:200,armor:2,durability:0.6,toMain:0.5,lethal:true,img:"https://i.postimg.cc/GtCmDjqM/side-head.jpg",altImg:"https://i.postimg.cc/Xvrq6qrg/front-head.jpg",exdr:1,constitution:300,notes:"Reducing this part's HP to 0 triggers [300, -75/s] BleedsOut."},{name:"Claw (each)",hp:200,armor:2,durability:0.5,toMain:0.5,lethal:false,img:"https://i.postimg.cc/WzwbwJys/side-arms.jpg",altImg:"https://i.postimg.cc/Vk6LXvWc/front-arms.jpg",exdr:1},{name:"Leg (each)",hp:170,armor:1,durability:0.4,toMain:0.6,lethal:false,img:"https://i.postimg.cc/qBsRT9vW/side-legs.jpg",altImg:"https://i.postimg.cc/KzLY4Wrk/front-legs.jpg",exdr:1}],
+    tips:["머리는 무장갑이지만 체력이 높아 고화력 필요.","증원 신호(포효) 전에 헤드샷으로 빠르게 제거하는 게 이상적.","중장갑 관통 화기가 없다면 몸통 대신 계속 머리를 노릴 것."]},
+  {id:"stalker", faction:"terminid", name:"Stalker", mainHp:800,
+    parts:[{name:"Head",hp:175,armor:1,durability:0,toMain:1,lethal:true,img:"https://i.postimg.cc/xTV6kbYc/front-head.jpg",altImg:"https://i.postimg.cc/C5GHCmYd/side-head.jpg",exdr:1,mainCap:true,notes:"Stalker regenerates 50 HP per second after a short time without suffering any damage."},{name:"Wing (each)",hp:125,armor:0,durability:0.5,toMain:0.3,lethal:false,img:"https://i.postimg.cc/qvjwZbK3/front-wings.jpg",altImg:"https://i.postimg.cc/xTP3cxt4/side-wings.jpg",exdr:1,mainCap:true,notes:"Stalker regenerates 50 HP per second after a short time without suffering any damage."},{name:"Claw (each)",hp:-1,armor:1,durability:0.5,toMain:1,lethal:false,img:"https://i.postimg.cc/yx4yS2Mw/side-arms.jpg",altImg:"https://i.postimg.cc/Pfw6rQgg/front-arms.jpg",exdr:1,notes:"Stalker regenerates 50 HP per second after a short time without suffering any damage."},{name:"Body armour",hp:-1,armor:2,durability:0.5,toMain:1,lethal:false,img:"https://i.postimg.cc/d1T93Jx2/side-armor.jpg",exdr:1,notes:"Stalker regenerates 50 HP per second after a short time without suffering any damage."},{name:"Leg (each)",hp:-1,armor:1,durability:0.5,toMain:1,lethal:false,img:"https://i.postimg.cc/59L3MNv1/side-legs.jpg",altImg:"https://i.postimg.cc/m238722V/front-legs.jpg",exdr:1,notes:"Stalker regenerates 50 HP per second after a short time without suffering any damage."}],
+    tips:["메인 체력 800 · 치명 부위: Head.","최대 장갑 등급 AV2.","특수 개체 — 패턴을 파악하고 상황에 맞게 대응할 것."]},
+  {id:"alpha_commander", faction:"terminid", name:"Alpha commander", mainHp:1000,
+    parts:[{name:"Head",hp:250,armor:2,durability:0.7,toMain:1,lethal:true,img:"https://i.postimg.cc/d3HgFsk8/side-head.jpg",altImg:"https://i.postimg.cc/8CL8vg9S/front-head.jpg",exdr:1,constitution:300,notes:"Reducing this part's HP to 0 triggers [300, -100/s] BleedsOut."},{name:"Claw (each)",hp:200,armor:2,durability:0.5,toMain:0.5,lethal:false,img:"https://i.postimg.cc/T1YBBLwd/side-arms.jpg",altImg:"https://i.postimg.cc/GhtZQyVz/front-arms.jpg",exdr:1},{name:"Leg (each)",hp:200,armor:1,durability:0.5,toMain:0.6,lethal:false,img:"https://i.postimg.cc/jd1BkjrT/side-legs.jpg",altImg:"https://i.postimg.cc/QtqR6kjY/front-legs.jpg",exdr:1}],
+    tips:["메인 체력 1000 · 치명 부위: Head.","최대 장갑 등급 AV2.","중간 위협 — 관통력 있는 화기를 권장."]},
+  {id:"charger", faction:"terminid", name:"Charger", mainHp:2400,
+    parts:[{name:"Head",hp:1200,armor:4,durability:0.75,toMain:0.7,lethal:true,img:"https://i.postimg.cc/VNtSb5zk/side-clean-head.jpg",altImg:"https://i.postimg.cc/VL4XYSNy/front-head.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Claw (each)",hp:500,armor:4,durability:0.7,toMain:0.7,lethal:false,img:"https://i.postimg.cc/Dw84nBDs/side-clean-arms.jpg",altImg:"https://i.postimg.cc/R02cjjZN/front-arms.jpg",exdr:1,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Side armor (each)",hp:800,armor:4,durability:0.85,toMain:1,lethal:false,img:"https://i.postimg.cc/PJXNc4YC/side-clean-torso.jpg",altImg:"https://i.postimg.cc/2y3cbWcz/back-torso.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Spine",hp:2200,armor:4,durability:0.75,toMain:0.75,lethal:true,img:"https://i.postimg.cc/rwBscc5X/side-rear-plate.jpg",altImg:"https://i.postimg.cc/FzqPjK80/back-rear-plate.jpg",exdr:1,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Inner flesh",hp:-1,armor:1,durability:0.3,toMain:3,lethal:false,img:"https://i.postimg.cc/43yhXcK3/side-exposed-torso.jpg",altImg:"https://i.postimg.cc/X76F9XP2/Back-inner-flesh.jpg",exdr:1,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution. Includes 800 damage to [MAIN] dealt by breaching torso armor."},{name:"Underbelly",hp:-1,armor:2,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/gjgrPZHN/side-clean-underbelly.jpg",altImg:"https://i.postimg.cc/DfPXgWLW/front-underbelly.jpg",exdr:1,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Butt",hp:950,armor:0,durability:0.8,toMain:1.5,lethal:true,img:"https://i.postimg.cc/MpNMT12L/side-clean-belly.jpg",altImg:"https://i.postimg.cc/1XNgHLSV/Back-butt.jpg",notes:"Puts the Charger into Constitution [750, -100/s]. Technically, this part is not lethal as such, but it does result in the Charger's death due to Constitution."},{name:"Front leg armor (each)",hp:800,armor:4,durability:0.7,toMain:0.6,lethal:false,img:"https://i.postimg.cc/Qdt1VXBF/front-leg.jpg",altImg:"https://i.postimg.cc/65BdJVtL/front-frontleg.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Rear leg armor (each)",hp:800,armor:4,durability:0.7,toMain:0.5,lethal:false,img:"https://i.postimg.cc/xTZPfB6y/rear-leg.jpg",altImg:"https://i.postimg.cc/rsMtTcXF/Front-rearleg.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Leg flesh (each)",hp:800,armor:2,durability:0.7,toMain:0.5,lethal:true,img:"https://i.postimg.cc/rpHRspWN/side-exposed-legs.jpg",altImg:"https://i.postimg.cc/FzV3kzgL/front-exposed-legs.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution. Includes 480 damage to [MAIN] dealt by breaching front leg armor."},{name:"Leg armor (AT mines)",hp:800,armor:4,durability:0.7,toMain:0.6,lethal:false,img:"https://i.postimg.cc/Qdt1VXBF/front-leg.jpg",altImg:"https://i.postimg.cc/65BdJVtL/front-frontleg.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution. Use this entry to simulate how AT-mines behaves against the target."}],
+    tips:["정면 다리는 대전차급 관통이 아니면 사실상 무적.","돌진을 유도해 지나간 뒤 노출되는 뒷부분을 집중 사격.","대전차 화기(무반동포/EAT/쿼사) 한 방으로 다리 파괴 후 마무리 추천."]},
+  {id:"spore_charger", faction:"terminid", name:"Spore charger", mainHp:2400,
+    parts:[{name:"Head",hp:1200,armor:4,durability:0.75,toMain:0.7,lethal:true,img:"https://i.postimg.cc/BZr5NmjB/Front-head.jpg",altImg:"https://i.postimg.cc/CKhdKg9x/Side-head.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Claw (each)",hp:500,armor:4,durability:0.7,toMain:0.7,lethal:false,img:"https://i.postimg.cc/X75rHxw4/Side-claws.jpg",altImg:"https://i.postimg.cc/QCTQhTy7/Front-claws.jpg",exdr:1,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Side armor (each)",hp:800,armor:4,durability:0.85,toMain:1,lethal:false,img:"https://i.postimg.cc/4y9x0NHB/Side-side-armor.jpg",altImg:"https://i.postimg.cc/sXb6WXt7/Back-side-armor.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Spine",hp:2200,armor:4,durability:0.75,toMain:0.75,lethal:true,img:"https://i.postimg.cc/3WQxQ5g7/Side-spine.jpg",altImg:"https://i.postimg.cc/BbDhB30y/Back-spine.jpg",exdr:1,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Inner flesh",hp:-1,armor:1,durability:0.3,toMain:3,lethal:false,img:"https://i.postimg.cc/Dzx0JNKd/side-inner-flesh.jpg",altImg:"https://i.postimg.cc/DZmQpDQB/Back-inner-flesh.jpg",exdr:1,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution. Includes 800 damage to [MAIN] dealt by breaching torso armor."},{name:"Underbelly",hp:-1,armor:2,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/MZN5NWFR/Side-underbelly.jpg",exdr:1,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Butt",hp:950,armor:0,durability:0.8,toMain:1.5,lethal:true,img:"https://i.postimg.cc/gJhXyCmX/Side-butt.jpg",altImg:"https://i.postimg.cc/ydDhMpBs/Back-butt-with-spores.jpg",notes:"Puts the Charger into Constitution [750, -100/s]. Technically, this part is not lethal as such, but it does result in the Charger's death due to Constitution."},{name:"Front leg armor (each)",hp:800,armor:4,durability:0.7,toMain:0.6,lethal:false,img:"https://i.postimg.cc/dVmLv1Hf/Side-front-leg-armor.jpg",altImg:"https://i.postimg.cc/662LdkpQ/Front-Front-leg-armor.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Rear leg armor (each)",hp:800,armor:4,durability:0.7,toMain:0.5,lethal:false,img:"https://i.postimg.cc/j59jvJ2D/Side-rear-leg-armor.jpg",altImg:"https://i.postimg.cc/T3GVvhqy/Front-rear-leg-armor.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution."},{name:"Leg flesh (each)",hp:800,armor:2,durability:0.7,toMain:0.5,lethal:true,img:"https://i.postimg.cc/rmzmS9V6/side-leg-flesh.jpg",altImg:"https://i.postimg.cc/L6jtWjfK/Front-leg-flesh.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution. Includes 480 damage to [MAIN] dealt by breaching front leg armor."},{name:"Leg armor (AT mines)",hp:800,armor:4,durability:0.7,toMain:0.6,lethal:false,img:"https://i.postimg.cc/dVmLv1Hf/Side-front-leg-armor.jpg",altImg:"https://i.postimg.cc/662LdkpQ/Front-Front-leg-armor.jpg",exdr:0.25,notes:"Reducing a Charger's [MAIN] HP to 0 without destroying a lethal part triggers [750, -100/s] Constitution. Use this entry to simulate how AT-mines behaves against the target."},{name:"Spores (each)",hp:500,armor:1,durability:1,toMain:0.2,lethal:false,img:"https://i.postimg.cc/ryKgfdQM/Side-spores.jpg",altImg:"https://i.postimg.cc/MTg0q0KR/Back-spores.jpg",exdr:1,mainCap:true,notes:"The spores are spread across various hitboxes. You first have to destroy spores to fully reveal certain parts."}],
+    tips:["메인 체력 2400 · 치명 부위: Head, Spine, Butt, Leg flesh (each).","최대 장갑 등급 AV4 — 이 이상 관통하는 화기가 아니면 내구피해%만 들어감.","고위협 개체 — 대전차급 화기 또는 정확한 약점 사격이 필요."]},
+  {id:"behemoth", faction:"terminid", name:"Behemoth", mainHp:3000,
+    parts:[{name:"Head",hp:1600,armor:4,durability:1,toMain:0.7,lethal:true,img:"https://i.postimg.cc/W1Lc14Yn/Front-head.jpg",altImg:"https://i.postimg.cc/2yyrhXn7/Side-head.jpg",exdr:0.25,notes:"Reducing a Behemoth's [MAIN] HP to 0 without destroying a lethal part triggers [1000, -100/s] Constitution."},{name:"Claw (each)",hp:500,armor:4,durability:0.7,toMain:0.7,lethal:false,img:"https://i.postimg.cc/DZ22yzZD/Side-claws.jpg",altImg:"https://i.postimg.cc/2jtfgG4g/Front-claws.jpg",exdr:1,notes:"Reducing a Behemoth's [MAIN] HP to 0 without destroying a lethal part triggers [1000, -100/s] Constitution."},{name:"Side armor (each)",hp:1000,armor:4,durability:0.85,toMain:1,lethal:false,img:"https://i.postimg.cc/K8Mc0Vw9/Side-armor.jpg",altImg:"https://i.postimg.cc/7YnGGRzZ/Back-rear-armor.jpg",exdr:0.25,notes:"Reducing a Behemoth's [MAIN] HP to 0 without destroying a lethal part triggers [1000, -100/s] Constitution."},{name:"Spine",hp:2200,armor:4,durability:0.75,toMain:0.75,lethal:true,img:"https://i.postimg.cc/wTt9BZq6/Side-rear-armor.jpg",altImg:"https://i.postimg.cc/XYNZwgKc/Back-armor.jpg",exdr:1,notes:"Reducing a Behemoth's [MAIN] HP to 0 without destroying a lethal part triggers [1000, -100/s] Constitution."},{name:"Inner flesh",hp:-1,armor:1,durability:0.3,toMain:3,lethal:false,img:"https://i.postimg.cc/90YfdX4S/Side-inner-flesh.jpg",altImg:"https://i.postimg.cc/SxNnG9fG/Back-inner-flesh.jpg",exdr:1,notes:"Reducing a Behemoth's [MAIN] HP to 0 without destroying a lethal part triggers [1000, -100/s] Constitution. Includes 1000 damage to [MAIN] dealt by breaching torso armor."},{name:"Underbelly",hp:-1,armor:2,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/KYbbJYnz/side-belly.jpg",altImg:"https://i.postimg.cc/QCFZHKr6/Front-belly.jpg",exdr:1,notes:"Reducing a Behemoth's [MAIN] HP to 0 without destroying a lethal part triggers [1000, -100/s] Constitution."},{name:"Butt",hp:950,armor:0,durability:1,toMain:0.5,lethal:true,img:"https://i.postimg.cc/43RfqPTX/Side-butt.jpg",altImg:"https://i.postimg.cc/DwccLbBk/Back-Butt.jpg",notes:"Puts the Behemoth's [MAIN] into Constitution [1000, -100/s]. Technically, this part is not lethal as such, but it does result in the Charger's death due to Constitution."},{name:"Front leg armor (each)",hp:1000,armor:4,durability:0.8,toMain:0.6,lethal:false,img:"https://i.postimg.cc/DZB7WK4z/Side-front-leg.jpg",altImg:"https://i.postimg.cc/NfrwtXDF/Front-front-legs.jpg",exdr:0.25,notes:"Reducing a Behemoth's [MAIN] HP to 0 without destroying a lethal part triggers [1000, -100/s] Constitution."},{name:"Rear leg armor (each)",hp:1000,armor:4,durability:0.8,toMain:0.5,lethal:false,img:"https://i.postimg.cc/28PrLGyn/Side-rear-leg.jpg",altImg:"https://i.postimg.cc/KYmXtH23/Front-rear-legs.jpg",exdr:0.25,notes:"Reducing a Behemoth's [MAIN] HP to 0 without destroying a lethal part triggers [1000, -100/s] Constitution."},{name:"Leg flesh (each)",hp:800,armor:2,durability:0.7,toMain:0.5,lethal:true,img:"https://i.postimg.cc/JhstfWgD/Side-leg-flesh.jpg",altImg:"https://i.postimg.cc/2SQRbfPf/Front-leg-flesh.jpg",exdr:0.25,notes:"Reducing a Behemoth's [MAIN] HP to 0 without destroying a lethal part triggers [1000, -100/s] Constitution. Includes 600 damage to [MAIN] dealt by breaching front leg armor."},{name:"Leg armor (AT mines)",hp:1000,armor:4,durability:0.8,toMain:0.6,lethal:false,img:"https://i.postimg.cc/DZB7WK4z/Side-front-leg.jpg",altImg:"https://i.postimg.cc/NfrwtXDF/Front-front-legs.jpg",exdr:0.25,notes:"Reducing a Behemoth's [MAIN] HP to 0 without destroying a lethal part triggers [1000, -100/s] Constitution. Use this entry to simulate how AT-mines behaves against the target."}],
+    tips:["메인 체력 3000 · 치명 부위: Head, Spine, Butt, Leg flesh (each).","최대 장갑 등급 AV4 — 이 이상 관통하는 화기가 아니면 내구피해%만 들어감.","고위협 개체 — 대전차급 화기 또는 정확한 약점 사격이 필요."]},
+  {id:"impaler", faction:"terminid", name:"Impaler", mainHp:4000,
+    parts:[{name:"Head",hp:1250,armor:1,durability:0.75,toMain:1.5,lethal:true,img:"https://i.postimg.cc/zfTjWPb1/front-head.jpg",altImg:"https://i.postimg.cc/Qtp0SXJX/side-head.jpg"},{name:"Tentacle (each)",hp:500,armor:1,durability:0.7,toMain:0.5,lethal:false,img:"https://i.postimg.cc/C1Y44Hkn/front-tentacle.jpg",altImg:"https://i.postimg.cc/vHGSq6KC/front-tentacle.jpg"},{name:"Head armor (each)",hp:-1,armor:4,durability:0.75,toMain:1,lethal:false,img:"https://i.postimg.cc/R0WY15YF/front-head-armor.jpg",altImg:"https://i.postimg.cc/1t9WnTbC/side-head-armor.jpg"},{name:"Crest armor",hp:1000,armor:4,durability:0.8,toMain:0.75,lethal:false,img:"https://i.postimg.cc/QxN0kZ93/side-crest-armor.jpg",altImg:"https://i.postimg.cc/FKwBDCtx/front-crest-armor-B.jpg",mainCap:true},{name:"Side armor (each)",hp:1000,armor:4,durability:0.75,toMain:0.75,lethal:false,img:"https://i.postimg.cc/gk4tf2Fj/side-armor.jpg",mainCap:true},{name:"Spine",hp:1000,armor:4,durability:0.75,toMain:0.75,lethal:false,img:"https://i.postimg.cc/SKYZ2LXY/side-butt-armor.jpg",mainCap:true},{name:"Inner flesh",hp:-1,armor:0,durability:0.9,toMain:1.5,lethal:false,img:"https://i.postimg.cc/Bb4NVdm2/side-inner-flesh.jpg",exdr:1,notes:"Includes 1000 damage to [MAIN] dealt by breaching side armor."},{name:"Underbelly",hp:-1,armor:2,durability:1,toMain:1.5,lethal:false,img:"https://i.postimg.cc/zGctG2f1/side-belly.jpg",exdr:1},{name:"Butt",hp:1100,armor:3,durability:0.85,toMain:1.4,lethal:false,img:"https://i.postimg.cc/C1ycjZDP/side-butt.jpg"},{name:"Leg armor (each)",hp:1000,armor:4,durability:0.7,toMain:0.5,lethal:false,img:"https://i.postimg.cc/NFDbqpnS/side-leg-armor.jpg",altImg:"https://i.postimg.cc/gcVTHKgv/front-legs-armor.jpg"},{name:"Leg flesh (each)",hp:1000,armor:0,durability:0.7,toMain:0.5,lethal:true,img:"https://i.postimg.cc/9Fx1LgZq/side-leg-flesh.jpg",altImg:"https://i.postimg.cc/vB9Sj7bw/front-leg-flesh.jpg",notes:"Includes 500 damage to [MAIN] dealt by breaching front leg armor."},{name:"Leg armor (AT mines)",hp:1000,armor:4,durability:0.7,toMain:0.5,lethal:false,img:"https://i.postimg.cc/NFDbqpnS/side-leg-armor.jpg",altImg:"https://i.postimg.cc/gcVTHKgv/front-legs-armor.jpg",notes:"Use this entry to simulate how AT-mines behaves against the target."}],
+    tips:["고정형 개체 — 촉수 뿌리를 원거리에서 집중 공략.","촉수 자체를 끊으면 일시 무력화되므로 관통력 있는 화기 우선.","이동하지 않으므로 대전차 화기 조준 사격에 유리."]},
+  {id:"bile_titan", faction:"terminid", name:"Bile titan", mainHp:6500,
+    parts:[{name:"Head",hp:1500,armor:4,durability:0.95,toMain:1,lethal:true,img:"https://i.postimg.cc/JzfNFfnt/front-head.jpg",altImg:"https://i.postimg.cc/6qP2vZ4T/side-head.jpg",exdr:0.5},{name:"Arms (each)",hp:1000,armor:4,durability:0,toMain:1,lethal:false,img:"https://i.postimg.cc/6QxZcCjv/side-arms.jpg",altImg:"https://i.postimg.cc/4yWvFn7T/front-arms.jpg",exdr:0.5},{name:"Side armor (each)",hp:1500,armor:4,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/507jhz3p/side-torso.jpg",altImg:"https://i.postimg.cc/TPCWYVQ1/back-torso.jpg",exdr:0.5,notes:"If a 500kg bomb is dropped directly into this area, some favourable angles may allow a kill. However, it's also quite easy to lose a few lines of sight towards the legs, which could leave the Titan's [HAND] with a few hundred HP if it wasn't damaged."},{name:"Inner flesh",hp:-1,armor:0,durability:0.7,toMain:1,lethal:false,img:"https://i.postimg.cc/GttTtK2Z/side-exposed-torso.jpg",exdr:0.5,notes:"Includes 1500 damage to [MAIN] dealt by breaching torso armor."},{name:"Belly bile sac",hp:750,armor:0,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/ydVZ4sz6/side-belly2.jpg",exdr:0.5,mainCap:true,notes:"Destroying both sacs will reveal the Titan's guts and prevent him from spewing its bile."},{name:"Butt bile sac",hp:750,armor:0,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/R01HDqyb/side-belly1.jpg",exdr:0.5,mainCap:true,notes:"Destroying both sacs will reveal the Titan's guts and prevent him from spewing its bile."},{name:"Guts",hp:4000,armor:2,durability:0.8,toMain:0.6,lethal:true,img:"https://i.postimg.cc/J7YBgfYm/side-exposed-belly.jpg",altImg:"https://i.postimg.cc/zfTCYxb7/front-exposed-belly.jpg",notes:"Includes 1500 damage to [MAIN] dealt by breaching both sacs."},{name:"Butt",hp:3500,armor:4,durability:1,toMain:1,lethal:true,img:"https://i.postimg.cc/V6LdZgjd/side-rear.jpg",altImg:"https://i.postimg.cc/8Pd1NVpx/back-butt.jpg",exdr:0.5,mainCap:true},{name:"Front leg joint (each)",hp:1000,armor:4,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/tCLnRhHM/side-leg-joint.jpg",altImg:"https://i.postimg.cc/wvVD73ks/front-leg-joint.jpg",exdr:0.5,notes:"Front and rear legs shares the same stats. Both are separated for the sole purpose of calculating explosion cleave."},{name:"Front leg upper armor (each)",hp:1000,armor:4,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/mrSPSJ1v/side-leg-upper.jpg",altImg:"https://i.postimg.cc/mZmQ4zDv/front-leg-upper.jpg",exdr:0.5,notes:"Front and rear legs shares the same stats. Both are separated for the sole purpose of calculating explosion cleave."},{name:"Front leg lower armor (each)",hp:1000,armor:4,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/nhBjXCFc/side-leg-lower.jpg",altImg:"https://i.postimg.cc/prLz8x0c/front-leg-lower.jpg",exdr:0.5,notes:"Front and rear legs shares the same stats. Both are separated for the sole purpose of calculating explosion cleave."},{name:"Front leg flesh (each)",hp:3000,armor:4,durability:1,toMain:1,lethal:true,img:"https://i.postimg.cc/L6qZMxGP/side-leg-flesh.jpg",altImg:"https://i.postimg.cc/3R7g822T/front-leg-flesh.jpg",exdr:0.5,notes:"Leg armor must be breached first. Front and rear legs shares the same stats. Both are separated for the sole purpose of calculating explosion cleave."},{name:"Rear leg joint (each)",hp:1000,armor:4,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/tCLnRhHM/side-leg-joint.jpg",altImg:"https://i.postimg.cc/wvVD73ks/front-leg-joint.jpg",exdr:0.5,notes:"Front and rear legs shares the same stats. Both are separated for the sole purpose of calculating explosion cleave."},{name:"Rear leg upper armor (each)",hp:1000,armor:4,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/mrSPSJ1v/side-leg-upper.jpg",altImg:"https://i.postimg.cc/mZmQ4zDv/front-leg-upper.jpg",exdr:0.5,notes:"Front and rear legs shares the same stats. Both are separated for the sole purpose of calculating explosion cleave."},{name:"Rear leg lower armor (each)",hp:1000,armor:4,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/nhBjXCFc/side-leg-lower.jpg",altImg:"https://i.postimg.cc/prLz8x0c/front-leg-lower.jpg",exdr:0.5,notes:"Front and rear legs shares the same stats. Both are separated for the sole purpose of calculating explosion cleave."},{name:"Rear leg flesh (each)",hp:3000,armor:4,durability:1,toMain:1,lethal:true,img:"https://i.postimg.cc/L6qZMxGP/side-leg-flesh.jpg",altImg:"https://i.postimg.cc/3R7g822T/front-leg-flesh.jpg",exdr:0.5,notes:"Leg armor must be breached first. Front and rear legs shares the same stats. Both are separated for the sole purpose of calculating explosion cleave."},{name:"Leg lower armor (AT mines)",hp:1000,armor:4,durability:1,toMain:1,lethal:false,img:"https://i.postimg.cc/nhBjXCFc/side-leg-lower.jpg",altImg:"https://i.postimg.cc/prLz8x0c/front-leg-lower.jpg",exdr:0.5,notes:"Use this entry to simulate how AT-mines behaves against the target."},{name:"Floor (Eagle 500 kg)",hp:0,armor:0,durability:0,toMain:0,lethal:false,img:"https://i.postimg.cc/DwQgnR2L/Side-500kg.jpg",altImg:"https://i.postimg.cc/RVHdbNyP/Front-500-kg.jpg",mainCap:true,notes:"Use this input to simulate a 500kg bomb hitting the ground beneath the titan (ideally, centered beneath him). Given the explosion's radius, the lethal zone remains relatively generous."}],
+    tips:["배 밑 산낭이 최우선 약점 — 정면 포복 후 사격 가능.","산을 토할 때 벌어지는 입도 관통 없이 큰 피해 가능.","오브 스트라이크/헬밤 등 대형 스트라이크로 원콤 처리가 가장 효율적."]}
+];}
+
+function DEFAULT_WEAPONS(){ return [
+  {id:"ar_2_coyote", name:"AR-2 Coyote", cat:"primary", pen:3, dmg:75, durable:0.13, rpm:600, mag:45, reload:3.3,tacReload:2.15,ergonomics:50,spreadX:4,spreadY:4,caliber:7,speed:650,mass:8,notes:"Sets enemies on fire. Falloff values are unknown.",img:"https://i.postimg.cc/0yBtLQ0m/Coyote.jpg",
+    hits:[{type:"Projectile",dmg:75,durable:0.13,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:12,pushForce:12,falloff25m:0.03,falloff50m:0.06,falloff100m:0.11},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0}]},
+  {id:"ar_23_liberator", name:"AR-23 Liberator", cat:"primary", pen:2, dmg:80, durable:0.19, rpm:640, mag:60, reload:3.5,tacReload:2.3,ergonomics:42,spreadX:2,spreadY:2,caliber:5.5,speed:900,mass:4.5,notes:"Equipped with drum magazine.",img:"https://i.postimg.cc/nL4mvNKw/Liberator.jpg",
+    hits:[{type:"Projectile",dmg:80,durable:0.19,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13},{type:"Projectile",dmg:80,durable:0.19,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13},{type:"Projectile",dmg:80,durable:0.19,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13}]},
+  {id:"ar_23a_liberator_carbine", name:"AR-23A Liberator Carbine", cat:"primary", pen:2, dmg:80, durable:0.19, rpm:920, mag:60, reload:3,tacReload:1.9,ergonomics:50,spreadX:3,spreadY:3,caliber:5.5,speed:900,mass:4.5,notes:"Equipped with drum magazine.",img:"https://i.postimg.cc/HWBQvGqq/Liberator-carbine.jpg",
+    hits:[{type:"Projectile",dmg:80,durable:0.19,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13},{type:"Projectile",dmg:80,durable:0.19,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13},{type:"Projectile",dmg:80,durable:0.19,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13}]},
+  {id:"ar_23c_liberator_concussive", name:"AR-23C Liberator Concussive", cat:"primary", pen:2, dmg:65, durable:0.46, rpm:400, mag:60, reload:3.5,tacReload:2.3,ergonomics:45,spreadX:4,spreadY:4,caliber:5.5,speed:800,mass:4.5,img:"https://i.postimg.cc/15dDPG5M/Liberator-Conc.jpg",
+    hits:[{type:"Projectile",dmg:65,durable:0.46,apDirect:2,apSlight:2,apLarge:2,apExtreme:2,demolition:10,stagger:35,pushForce:60,falloff25m:0.04,falloff50m:0.07,falloff100m:0.14},{type:"Projectile",dmg:65,durable:0.46,apDirect:2,apSlight:2,apLarge:2,apExtreme:2,demolition:10,stagger:35,pushForce:60,falloff25m:0.04,falloff50m:0.07,falloff100m:0.14},{type:"Projectile",dmg:65,durable:0.46,apDirect:2,apSlight:2,apLarge:2,apExtreme:2,demolition:10,stagger:35,pushForce:60,falloff25m:0.04,falloff50m:0.07,falloff100m:0.14}]},
+  {id:"ar_23p_liberator_penetrator", name:"AR-23P Liberator Penetrator", cat:"primary", pen:3, dmg:60, durable:0.25, rpm:640, mag:60, reload:3.5,tacReload:2.3,ergonomics:28,spreadX:1,spreadY:1,caliber:5.5,speed:1000,mass:4.5,notes:"Equipped with drum magazine.",img:"https://i.postimg.cc/7ZT0L554/Liberator-Pen.jpg",
+    hits:[{type:"Projectile",dmg:60,durable:0.25,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:10,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13},{type:"Projectile",dmg:60,durable:0.25,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:10,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13},{type:"Projectile",dmg:60,durable:0.25,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:10,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13}]},
+  {id:"ar_32_pacifier", name:"AR-32 Pacifier", cat:"primary", pen:3, dmg:50, durable:0.2, rpm:700, mag:40, reload:2.8,tacReload:2,ergonomics:60,spreadX:4,spreadY:4,caliber:5.5,speed:900,mass:4.5,notes:"Applies medium stun (3s).",img:"https://i.postimg.cc/d1Jynn4Q/Pacifier.jpg",
+    hits:[{type:"Projectile",dmg:50,durable:0.2,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13}]},
+  {id:"ar_61_tenderizer", name:"AR-61 Tenderizer", cat:"primary", pen:2, dmg:105, durable:0.21, rpm:600, mag:35, reload:3.3,tacReload:2.1,ergonomics:65,spreadX:1,spreadY:1,caliber:8,speed:820,mass:11,img:"https://i.postimg.cc/XqJy6JRT/Tenderizer.jpg",
+    hits:[{type:"Projectile",dmg:105,durable:0.21,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.03,falloff50m:0.06,falloff100m:0.11},{type:"Projectile",dmg:105,durable:0.21,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.03,falloff50m:0.06,falloff100m:0.11}]},
+  {id:"arc_12_blitzer", name:"ARC-12 Blitzer", cat:"primary", pen:3, dmg:50, durable:0.7, rpm:45, mag:1, reload:0,ergonomics:65,spreadX:1350,spreadY:350,mass:35,notes:"Applies small stun (1.5s). You can change the number of simulated arcs (pellets) by modifying the override parameter (default = 5 pellets). It is not possible to precisely control what the arcs will aim at. Electric damage is doubled against Fleshmobs.",img:"https://i.postimg.cc/Y0ZjcxfW/blitzer.jpg",
+    hits:[{type:"Projectile",dmg:50,durable:0.7,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:30,pushForce:25,falloff50m:1,falloff100m:1}]},
+  {id:"br_14_adjudicator", name:"BR-14 Adjudicator", cat:"primary", pen:3, dmg:95, durable:0.24, rpm:550, mag:30, reload:3,tacReload:1.8,ergonomics:40,spreadX:1,spreadY:1,caliber:8,speed:820,mass:11,img:"https://i.postimg.cc/Dy01tjF8/BR14.jpg",
+    hits:[{type:"Projectile",dmg:95,durable:0.24,apDirect:3,apSlight:3,apLarge:3,apExtreme:1,demolition:10,stagger:15,pushForce:12,falloff25m:0.03,falloff50m:0.06,falloff100m:0.11}]},
+  {id:"cb_9_exploding_crossbow", name:"CB-9 Exploding Crossbow", cat:"primary", pen:3, dmg:270, durable:0.19, rpm:50, mag:5, reload:3.3,tacReload:3.3,ergonomics:45,spreadX:0.5,spreadY:0.5,caliber:15,speed:100,mass:100,img:"https://i.postimg.cc/qBS7vjyt/Crossbow.jpg",
+    hits:[{type:"Projectile",dmg:270,durable:0.19,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:30,stagger:30,pushForce:10,falloff25m:0.04,falloff50m:0.08,falloff100m:0.14},{type:"Explosion",dmg:350,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:3,outerRadius:6,staggerRadius:7,demolition:20,stagger:25,pushForce:30}]},
+  {id:"flam_66_torcher", name:"FLAM-66 Torcher", cat:"primary", pen:4, dmg:240, durable:1, rpm:60, mag:1, reload:0,
+    hits:[{type:"Projectile",dmg:240,durable:1,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:10,stagger:5,pushForce:5},{type:"Projectile",dmg:130,durable:1,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:10,stagger:5,pushForce:5},{type:"Projectile",dmg:150,durable:1,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:10,stagger:5,pushForce:5},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0}]},
+  {id:"jar_5_dominator", name:"JAR-5 Dominator", cat:"primary", pen:3, dmg:275, durable:0.33, rpm:250, mag:15, reload:3.8,tacReload:2.6,ergonomics:30,spreadX:10,spreadY:10,caliber:15,speed:180,mass:100,notes:"Falloff values are unknown.",img:"https://i.postimg.cc/Qdtsg7QL/Dominator.jpg",
+    hits:[{type:"Projectile",dmg:275,durable:0.33,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:35,pushForce:15}]},
+  {id:"las_16_sickle", name:"LAS-16 Sickle", cat:"primary", pen:2, dmg:55, durable:0.09, rpm:750, mag:87, reload:2.8,tacReload:1.9,ergonomics:65,spreadX:20,spreadY:20,caliber:10,speed:1300,mass:12,notes:"Cools [12% cold / 8% normal / 6% hot] per second. You need to reload if you overheat the coil. The fire effect simulation does not take into account the accumulation time of the status (generally 0.75-2s). The TTK value displayed may be slightly shorter than the one observed in game.",img:"https://i.postimg.cc/FKpRFvVm/Sickle.jpg",
+    hits:[{type:"Projectile",dmg:55,durable:0.09,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:10}]},
+  {id:"las_17_double_edge_sickle_0_25", name:"LAS-17 Double-Edge Sickle (0-25%)", cat:"primary", pen:2, dmg:55, durable:0.09, rpm:700, mag:164, reload:2.8,tacReload:2.8,ergonomics:65,spreadX:20,spreadY:20,caliber:10,speed:1300,mass:12,notes:"Cools [6% cold / 4% normal / 3% hot] per second. 25% heat is equivalent to 41 shots.",img:"https://i.postimg.cc/nVPXQHbh/Chad-Sickle.jpg",
+    hits:[{type:"Projectile",dmg:55,durable:0.09,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:10}]},
+  {id:"las_17_double_edge_sickle_26_50", name:"LAS-17 Double-Edge Sickle (26-50%)", cat:"primary", pen:3, dmg:55, durable:0.09, rpm:700, mag:164, reload:2.8,tacReload:2.8,ergonomics:65,spreadX:20,spreadY:20,caliber:10,speed:1300,mass:12,notes:"Cools [6% cold / 4% normal / 3% hot] per second. 50% heat is equivalent to 82 shots. Deals 10 HP/s to players (negated by vitality bonus + inflammable armor passive).",img:"https://i.postimg.cc/nVPXQHbh/Chad-Sickle.jpg",
+    hits:[{type:"Projectile",dmg:55,durable:0.09,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:10,pushForce:10}]},
+  {id:"las_17_double_edge_sickle_51_90", name:"LAS-17 Double-Edge Sickle (51-90%)", cat:"primary", pen:3, dmg:70, durable:0.1, rpm:700, mag:164, reload:2.8,tacReload:2.8,ergonomics:65,spreadX:20,spreadY:20,caliber:10,speed:1300,mass:12,notes:"Cools [6% cold / 4% normal / 3% hot] per second. 90% heat is equivalent to 148 shots. Deals 20 HP/s to players (mitigated by vitality bonus + inflammable armor passive).",img:"https://i.postimg.cc/nVPXQHbh/Chad-Sickle.jpg",
+    hits:[{type:"Projectile",dmg:70,durable:0.1,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:10,pushForce:10}]},
+  {id:"las_17_double_edge_sickle_91_100", name:"LAS-17 Double-Edge Sickle (91-100%)", cat:"primary", pen:4, dmg:70, durable:0.1, rpm:700, mag:164, reload:2.8,tacReload:2.8,ergonomics:65,spreadX:20,spreadY:20,caliber:10,speed:1300,mass:12,notes:"Cools [6% cold / 4% normal / 3% hot] per second. 100% heat is equivalent to 164+ shots. Deals 50 HP/s to players + burns (slowed by vitality bonus + inflammable armor passive). Does not need to be reloaded once overheated.",img:"https://i.postimg.cc/nVPXQHbh/Chad-Sickle.jpg",
+    hits:[{type:"Projectile",dmg:70,durable:0.1,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:10,stagger:10,pushForce:10}]},
+  {id:"las_5_scythe", name:"LAS-5 Scythe", cat:"primary", pen:2, dmg:350, durable:0.2, rpm:60, mag:8, reload:1.8,tacReload:3,ergonomics:65,notes:"Sets enemies on fire. Mag size is how long you can fire before overheating. Cools [12.75% cold / 8.5% normal / 6.37% hot] per second.",img:"https://i.postimg.cc/SxWR5CXn/Scythe.jpg",
+    hits:[{type:"Projectile",dmg:350,durable:0.2,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0}]},
+  {id:"m7s_smg", name:"M7S SMG", cat:"primary", pen:2, dmg:70, durable:0.1, rpm:872, mag:48, reload:3,tacReload:2,ergonomics:90,spreadX:5,spreadY:5,caliber:9,speed:320,mass:7,notes:"Falloff values are outdated. Reload speed values are temporary. The M7S SMG is the only primary weapon to have access to a suppressor.",img:"https://i.postimg.cc/9QFXxKjn/M7S.jpg",
+    hits:[{type:"Projectile",dmg:70,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:5,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21}]},
+  {id:"m90a_shotgun", name:"M90A Shotgun", cat:"primary", pen:2, dmg:55, durable:0.27, rpm:80, mag:6, reload:4.3,ergonomics:65,spreadX:120,spreadY:100,caliber:8,speed:385,mass:6,notes:"You can change the number of simulated pellets by modifying the override parameter (default = 11 pellets). Reload speed values are temporary.",img:"https://i.postimg.cc/nLSXYZj2/M90A.jpg",
+    hits:[{type:"Projectile",dmg:55,durable:0.27,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:35,pushForce:30,falloff25m:0.09,falloff50m:0.17,falloff100m:0.3}]},
+  {id:"ma5c_assault_rifle", name:"MA5C Assault Rifle", cat:"primary", pen:3, dmg:80, durable:0.2, rpm:640, mag:32, reload:3.4,tacReload:2.15,ergonomics:60,spreadX:2,spreadY:2,caliber:8,speed:820,mass:11,img:"https://i.postimg.cc/QMG5Kj7T/ma5c.jpg",
+    hits:[{type:"Projectile",dmg:80,durable:0.2,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.03,falloff50m:0.06,falloff100m:0.11}]},
+  {id:"mp_98_knight", name:"MP-98 Knight", cat:"primary", pen:2, dmg:70, durable:0.1, rpm:1380, mag:70, reload:3,tacReload:2,ergonomics:70,spreadX:5,spreadY:5,caliber:9,speed:375,mass:7,notes:"Equipped with extended magazine. Falloff values are outdated : 1.003.000 increased Drag factor from 30% to 60%.",img:"https://i.postimg.cc/VNJfwtv9/Knight.jpg",
+    hits:[{type:"Projectile",dmg:70,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:5,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21},{type:"Projectile",dmg:70,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:5,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21}]},
+  {id:"plas_1_scorcher", name:"PLAS-1 Scorcher", cat:"primary", pen:2, dmg:100, durable:0.5, rpm:350, mag:20, reload:2.5,tacReload:2.5,ergonomics:65,spreadX:10,spreadY:10,caliber:20,speed:550,mass:25,notes:"The explosion can penetrate medium armor but the plasma projectile has only light armor penetration.",img:"https://i.postimg.cc/6psTYYQs/Scorcher.jpg",
+    hits:[{type:"Projectile",dmg:100,durable:0.5,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:20,pushForce:10,falloff25m:0.34,falloff50m:0.52,falloff100m:0.68},{type:"Explosion",dmg:100,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:1,outerRadius:2,staggerRadius:2,demolition:10,stagger:10,pushForce:7}]},
+  {id:"plas_101_purifier_charged", name:"PLAS-101 Purifier (charged)", cat:"primary", pen:3, dmg:200, durable:0.5, rpm:60, mag:15, reload:2.5,tacReload:2.5,ergonomics:65,spreadX:10,spreadY:10,caliber:20,speed:350,mass:25,notes:"Maximum charge of 1 sec gives a 100% damage multiplier. The explosion doesn’t scale but a fully charged shot has a bigger blast radius and higher damage.",img:"https://i.postimg.cc/X7BpfT4c/Purifier.jpg",
+    hits:[{type:"Projectile",dmg:200,durable:0.5,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:10,falloff25m:0.32,falloff50m:0.48,falloff100m:0.64},{type:"Explosion",dmg:300,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:2.9,outerRadius:3,staggerRadius:4,demolition:10,stagger:35,pushForce:30}]},
+  {id:"plas_101_purifier_uncharged", name:"PLAS-101 Purifier (uncharged)", cat:"primary", pen:3, dmg:100, durable:0.5, rpm:1000, mag:15, reload:2.5,tacReload:2.5,ergonomics:65,spreadX:10,spreadY:10,caliber:20,speed:550,mass:25,notes:"Minimum charge of 0.1 sec gives a 50% damage multiplier. The explosion doesn’t scale but a fully charged shot has a bigger blast radius and higher damage.",img:"https://i.postimg.cc/X7BpfT4c/Purifier.jpg",
+    hits:[{type:"Projectile",dmg:100,durable:0.5,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:10,falloff25m:0.35,falloff50m:0.52,falloff100m:0.68},{type:"Explosion",dmg:75,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:1,outerRadius:2,staggerRadius:2,demolition:10,stagger:35,pushForce:30}]},
+  {id:"plas_39_accelerator_rifle", name:"PLAS-39 Accelerator Rifle", cat:"primary", pen:3, dmg:250, durable:0.5, rpm:133, mag:3, reload:3.3,tacReload:3.3,ergonomics:40,spreadX:0.5,spreadY:0.5,caliber:20,speed:1000,mass:25,notes:"Each burst fires 3 shots. The BTK result refers to the number of projectiles that must hit the target, not the number of bursts. Falloff values are unkown.",img:"https://i.postimg.cc/C1KKz2c8/Accelerator.jpg",
+    hits:[{type:"Projectile",dmg:250,durable:0.5,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:10,falloff25m:0,falloff50m:0.03,falloff100m:0.05},{type:"Explosion",dmg:100,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:1,outerRadius:2,staggerRadius:2,demolition:10,stagger:10,pushForce:7}]},
+  {id:"r_2_amendment", name:"R-2 Amendment", cat:"primary", pen:2, dmg:200, durable:0.25, rpm:480, mag:20, reload:3.45,tacReload:2.75,ergonomics:50,spreadX:0.1,spreadY:0.1,caliber:9,speed:850,mass:20,notes:"Falloff values are temporary.",img:"https://i.postimg.cc/fTY046pW/Amendement.jpg",
+    hits:[{type:"Projectile",dmg:200,durable:0.25,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:20,pushForce:14,falloff25m:0.02,falloff50m:0.04,falloff100m:0.07}]},
+  {id:"r_2_amendment_bayonet", name:"R-2 Amendment bayonet", cat:"primary", pen:3, dmg:110, durable:0.5, rpm:117, mag:1, reload:0,img:"https://i.postimg.cc/fTY046pW/Amendement.jpg",
+    hits:[{type:"Projectile",dmg:110,durable:0.5,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,demolition:10,stagger:25,pushForce:30}]},
+  {id:"r_2124_constitution", name:"R-2124 Constitution", cat:"primary", pen:3, dmg:180, durable:0.28, rpm:60, mag:5, reload:3.3,ergonomics:65,spreadX:0.1,spreadY:0.1,caliber:8,speed:850,mass:20,img:"https://i.postimg.cc/V5P1BZWD/Constitution.jpg",
+    hits:[{type:"Projectile",dmg:180,durable:0.28,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:14,falloff25m:0.02,falloff50m:0.04,falloff100m:0.07}]},
+  {id:"r_2124_constitution_bayonet", name:"R-2124 Constitution bayonet", cat:"primary", pen:3, dmg:110, durable:0.5, rpm:117, mag:1, reload:0,img:"https://i.postimg.cc/V5P1BZWD/Constitution.jpg",
+    hits:[{type:"Projectile",dmg:110,durable:0.5,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,demolition:10,stagger:25,pushForce:30}]},
+  {id:"r_36_eruptor", name:"R-36 Eruptor", cat:"primary", pen:4, dmg:230, durable:0.5, rpm:32, mag:5, reload:4.7,tacReload:2.8,ergonomics:25,spreadX:5,spreadY:5,caliber:15,speed:180,mass:100,notes:"Maximum range 180m. Each shot scatters 30 shrapnel in all directions. The number of shrapnel that will hit the targeted area can vary greatly depending on the size of the enemy. You can choose how much shrapnel is simulated via the override parameter (default = 0 shrapnel).",img:"https://i.postimg.cc/X75YGdks/Eruptor.jpg",
+    hits:[{type:"Projectile",dmg:230,durable:0.5,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:30,stagger:35,pushForce:20},{type:"Shrapnel",dmg:109,durable:0.31,apDirect:3,apSlight:3,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:20,falloff25m:0,falloff50m:0.01,falloff100m:0.03},{type:"Explosion",dmg:225,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:4,outerRadius:7,staggerRadius:8,demolition:20,stagger:35,pushForce:40}]},
+  {id:"r_6_deadeye", name:"R-6 Deadeye", cat:"primary", pen:3, dmg:300, durable:0.33, rpm:100, mag:8, reload:5.5,ergonomics:65,spreadX:0.1,spreadY:0.1,caliber:8,speed:850,mass:20,img:"https://i.postimg.cc/RC6Hd3TH/Deadeye.jpg",
+    hits:[{type:"Projectile",dmg:300,durable:0.33,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:30,pushForce:35,falloff25m:0.02,falloff50m:0.04,falloff100m:0.07}]},
+  {id:"r_63_diligence", name:"R-63 Diligence", cat:"primary", pen:2, dmg:165, durable:0.27, rpm:350, mag:25, reload:3,tacReload:1.9,ergonomics:65,spreadX:0.5,spreadY:0.5,caliber:9,speed:850,mass:20,img:"https://i.postimg.cc/XNRyzV2D/Diligence.jpg",
+    hits:[{type:"Projectile",dmg:165,durable:0.27,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:14,falloff25m:0.02,falloff50m:0.04,falloff100m:0.09}]},
+  {id:"r_63cs_diligence_counter_sniper", name:"R-63CS Diligence Counter Sniper", cat:"primary", pen:3, dmg:200, durable:0.25, rpm:350, mag:15, reload:3,tacReload:1.9,ergonomics:35,spreadX:0.5,spreadY:0.5,caliber:9,speed:940,mass:20,img:"https://i.postimg.cc/fy9DdQmV/Diligence-CS.jpg",
+    hits:[{type:"Projectile",dmg:200,durable:0.25,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:14,falloff25m:0.02,falloff50m:0.04,falloff100m:0.08}]},
+  {id:"sg_20_halt_flechette", name:"SG-20 Halt (flechette)", cat:"primary", pen:3, dmg:35, durable:0.29, rpm:80, mag:8, reload:3.3,ergonomics:65,spreadX:300,spreadY:200,caliber:8,speed:385,mass:6,notes:"You can change the number of simulated pellets by modifying the override parameter (default = 11 pellets).",img:"https://i.postimg.cc/TP3yDhwh/Halt.jpg",
+    hits:[{type:"Projectile",dmg:35,durable:0.29,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:20,falloff25m:0.06,falloff50m:0.11,falloff100m:0.2}]},
+  {id:"sg_20_halt_stun", name:"SG-20 Halt (stun)", cat:"primary", pen:2, dmg:6, durable:0.33, rpm:80, mag:8, reload:3.3,ergonomics:65,spreadX:300,spreadY:200,caliber:5.5,speed:800,mass:4.5,notes:"Applies large stun (5s). You can change the number of simulated pellets by modifying the override parameter (default = 20 pellets).",img:"https://i.postimg.cc/TP3yDhwh/Halt.jpg",
+    hits:[{type:"Projectile",dmg:6,durable:0.33,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.14}]},
+  {id:"sg_225_breaker", name:"SG-225 Breaker", cat:"primary", pen:2, dmg:30, durable:0.2, rpm:300, mag:26, reload:3,tacReload:2.1,ergonomics:45,spreadX:100,spreadY:100,caliber:8,speed:360,mass:4,notes:"Equipped with drum magazine. You can change the number of simulated pellets by modifying the override parameter (default = 11 pellets).",img:"https://i.postimg.cc/XJTXm8gy/Breaker.jpg",
+    hits:[{type:"Projectile",dmg:30,durable:0.2,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.13,falloff50m:0.24,falloff100m:0.4},{type:"Projectile",dmg:30,durable:0.2,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.13,falloff50m:0.24,falloff100m:0.4},{type:"Projectile",dmg:30,durable:0.2,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.13,falloff50m:0.24,falloff100m:0.4}]},
+  {id:"sg_225ie_breaker_incendiary", name:"SG-225IE Breaker Incendiary", cat:"primary", pen:2, dmg:20, durable:0.5, rpm:60, mag:3, reload:0,
+    hits:[{type:"Projectile",dmg:20,durable:0.5,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:10,falloff25m:0.34,falloff50m:0.53,falloff100m:0.68},{type:"Projectile",dmg:20,durable:0.5,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:10,falloff25m:0.34,falloff50m:0.53,falloff100m:0.68},{type:"Projectile",dmg:20,durable:0.5,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:10,falloff25m:0.34,falloff50m:0.53,falloff100m:0.68},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0}]},
+  {id:"sg_225sp_breaker_spray_pray", name:"SG-225SP Breaker Spray & Pray", cat:"primary", pen:2, dmg:15, durable:0.27, rpm:330, mag:26, reload:3,tacReload:2.1,ergonomics:50,spreadX:320,spreadY:60,caliber:3,speed:250,mass:1,notes:"You can change the number of simulated pellets by modifying the override parameter (default = 16 pellets).",img:"https://i.postimg.cc/X7KX19Bp/Breaker-SP.jpg",
+    hits:[{type:"Projectile",dmg:15,durable:0.27,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:3,pushForce:1,falloff25m:0.07,falloff50m:0.15,falloff100m:0.26},{type:"Projectile",dmg:15,durable:0.27,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:3,pushForce:1,falloff25m:0.07,falloff50m:0.15,falloff100m:0.26},{type:"Projectile",dmg:15,durable:0.27,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:3,pushForce:1,falloff25m:0.07,falloff50m:0.15,falloff100m:0.26}]},
+  {id:"sg_451_cookout", name:"SG-451 Cookout", cat:"primary", pen:2, dmg:16, durable:0.19, rpm:80, mag:16, reload:6.4,ergonomics:65,spreadX:180,spreadY:140,caliber:8,speed:385,mass:6,notes:"You can change the number of simulated pellets and activate/deactivate DoT fire simulation by modifying the override parameters (default = 20 pellets).",img:"https://i.postimg.cc/B68Xmy20/Cookout.jpg",
+    hits:[{type:"Projectile",dmg:16,durable:0.19,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:35,pushForce:30,falloff25m:0.34,falloff50m:0.53,falloff100m:0.68},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0}]},
+  {id:"sg_8_punisher", name:"SG-8 Punisher", cat:"primary", pen:2, dmg:45, durable:0.27, rpm:80, mag:16, reload:6.4,ergonomics:65,spreadX:150,spreadY:120,caliber:8,speed:385,mass:6,notes:"You can change the number of simulated pellets by modifying the override parameter (default = 9 pellets).",img:"https://i.postimg.cc/nrBMJDdS/Punisher.jpg",
+    hits:[{type:"Projectile",dmg:45,durable:0.27,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:35,pushForce:30,falloff25m:0.09,falloff50m:0.17,falloff100m:0.3}]},
+  {id:"sg_8p_punisher_plasma", name:"SG-8P Punisher Plasma", cat:"primary", pen:2, dmg:100, durable:0.5, rpm:80, mag:10, reload:2.5,tacReload:2.5,ergonomics:65,spreadX:8,spreadY:8,caliber:20,speed:90,mass:100,notes:"The explosion can penetrate medium armor but the plasma projectile has only light armor penetration.",img:"https://i.postimg.cc/25ryfyv2/Plasma-punisher.jpg",
+    hits:[{type:"Projectile",dmg:100,durable:0.5,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:20,pushForce:10,falloff25m:0.23,falloff50m:0.39,falloff100m:0.54},{type:"Explosion",dmg:150,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:2.3,outerRadius:3,staggerRadius:4,demolition:10,stagger:35,pushForce:30}]},
+  {id:"sg_8s_slugger", name:"SG-8S Slugger", cat:"primary", pen:3, dmg:280, durable:0.27, rpm:80, mag:16, reload:6.4,ergonomics:65,spreadX:6,spreadY:6,caliber:18,speed:390,mass:50,img:"https://i.postimg.cc/nVDX7yHK/Slugger.jpg",
+    hits:[{type:"Projectile",dmg:280,durable:0.27,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:35,falloff25m:0.22,falloff50m:0.35,falloff100m:0.54}]},
+  {id:"smg_32_reprimand", name:"SMG-32 Reprimand", cat:"primary", pen:3, dmg:125, durable:0.26, rpm:490, mag:25, reload:3.4,tacReload:2.1,ergonomics:55,spreadX:5,spreadY:5,caliber:12,speed:285,mass:15,notes:"Falloff values are outdated : 1.003.000 increased Drag factor from 30% to 60%.",img:"https://i.postimg.cc/HngdbP23/Reprimand.jpg",
+    hits:[{type:"Projectile",dmg:125,durable:0.26,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.05,falloff50m:0.1,falloff100m:0.18}]},
+  {id:"smg_37_defender", name:"SMG-37 Defender", cat:"primary", pen:2, dmg:80, durable:0.1, rpm:520, mag:75, reload:3.3,tacReload:2.3,ergonomics:70,spreadX:5,spreadY:5,caliber:12,speed:285,mass:15,notes:"Falloff values are outdated : 1.003.000 increased Drag factor from 30% to 60%.",img:"https://i.postimg.cc/ZqXT5qvG/Defender.jpg",
+    hits:[{type:"Projectile",dmg:80,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:5,falloff25m:0.05,falloff50m:0.1,falloff100m:0.18},{type:"Projectile",dmg:80,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:5,falloff25m:0.05,falloff50m:0.1,falloff100m:0.18},{type:"Projectile",dmg:80,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:5,falloff25m:0.05,falloff50m:0.1,falloff100m:0.18}]},
+  {id:"smg_72_pummeler", name:"SMG-72 Pummeler", cat:"primary", pen:2, dmg:70, durable:0.1, rpm:475, mag:75, reload:3,tacReload:2,ergonomics:70,spreadX:5,spreadY:5,caliber:12,speed:210,mass:15,notes:"Applies medium stun (3s). Falloff values are outdated : 1.003.000 increased Drag factor from 30% to 60%.",img:"https://i.postimg.cc/zGtz47zX/Pummeler.jpg",
+    hits:[{type:"Projectile",dmg:70,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:5,falloff25m:0.05,falloff50m:0.09,falloff100m:0.18},{type:"Projectile",dmg:70,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:5,falloff25m:0.05,falloff50m:0.09,falloff100m:0.18},{type:"Projectile",dmg:70,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:5,falloff25m:0.05,falloff50m:0.09,falloff100m:0.18}]},
+  {id:"sta_11_smg", name:"StA-11 SMG", cat:"primary", pen:2, dmg:70, durable:0.1, rpm:1050, mag:48, reload:2.6,tacReload:1.7,ergonomics:80,spreadX:5,spreadY:5,caliber:9,speed:375,mass:7,notes:"Falloff values are outdated : 1.003.000 increased Drag factor from 30% to 60%.",img:"https://i.postimg.cc/9MTcRjGr/STA11.jpg",
+    hits:[{type:"Projectile",dmg:70,durable:0.1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:5,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21}]},
+  {id:"sta_52_assault_rifle", name:"StA-52 Assault Rifle", cat:"primary", pen:2, dmg:80, durable:0.19, rpm:790, mag:56, reload:4.15,tacReload:2.45,ergonomics:55,spreadX:2,spreadY:2,caliber:5.5,speed:900,mass:4.5,img:"https://i.postimg.cc/DZ5bNsMr/STA52.jpg",
+    hits:[{type:"Projectile",dmg:80,durable:0.19,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13}]},
+  {id:"vg_70_variable", name:"VG-70 Variable", cat:"primary", pen:2, dmg:85, durable:0.24, rpm:300, mag:49, reload:3.95,tacReload:3.95,ergonomics:25,spreadX:5,spreadY:5,caliber:9,speed:320,mass:7,notes:"Falloff values are unknown.",img:"https://i.postimg.cc/m2VBFjFN/Variable.jpg",
+    hits:[{type:"Projectile",dmg:85,durable:0.24,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:4,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21},{type:"Projectile",dmg:85,durable:0.24,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:4,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21},{type:"Projectile",dmg:85,durable:0.24,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:4,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21}]},
+  {id:"vg_70_variable_total", name:"VG-70 Variable (total)", cat:"primary", pen:2, dmg:85, durable:0.24, rpm:550, mag:1, reload:3.95,tacReload:3.95,ergonomics:25,spreadX:5,spreadY:5,caliber:9,speed:320,mass:7,notes:"Using this mode will deal 15 damage to the Helldiver's right arm and ragdoll them if not prone and when firing more than 22 rounds at once. Falloff values are unknown.",img:"https://i.postimg.cc/m2VBFjFN/Variable.jpg",
+    hits:[{type:"Projectile",dmg:85,durable:0.24,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:4,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21}]},
+  {id:"vg_70_variable_volley", name:"VG-70 Variable (volley)", cat:"primary", pen:2, dmg:85, durable:0.24, rpm:550, mag:7, reload:3.95,tacReload:3.95,ergonomics:25,spreadX:5,spreadY:5,caliber:9,speed:320,mass:7,notes:"This firing mode is semi-automatic, but is affected by the selected rpm. Produces significant recoil. Falloff values are unknown.",img:"https://i.postimg.cc/m2VBFjFN/Variable.jpg",
+    hits:[{type:"Projectile",dmg:85,durable:0.24,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:4,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21}]},
+  {id:"gp_31_grenade_pistol", name:"GP-31 Grenade Pistol", cat:"secondary", pen:3, dmg:250, durable:1, rpm:35, mag:1, reload:1.7,tacReload:1.7,ergonomics:95,spreadX:30,spreadY:30,caliber:40,speed:100,mass:50,notes:"The fuse has a range safety that prevents it from detonating too close to the wielder.",img:"https://i.postimg.cc/4xrMKHwQ/Grenade-pistol.jpg",
+    hits:[{type:"Projectile",dmg:250,durable:1,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:30,stagger:40,pushForce:10,falloff25m:0.44,falloff50m:0.63,falloff100m:0.73},{type:"Explosion",dmg:400,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:2.25,outerRadius:6.5,staggerRadius:8,demolition:30,stagger:25,pushForce:30}]},
+  {id:"gp_31_ultimatum", name:"GP-31 Ultimatum", cat:"secondary", pen:8, dmg:1000, durable:1, rpm:20, mag:1, reload:3,tacReload:3,ergonomics:35,spreadX:50,spreadY:50,caliber:80,speed:20,mass:500,notes:"DAKKA DAKKA BOOM BOOM ! Falloff values are unknown.",img:"https://i.postimg.cc/wBLrDxG8/Da-bomb.jpg",
+    hits:[{type:"Projectile",dmg:1000,durable:1,apDirect:8,apSlight:7,apLarge:6,apExtreme:0,demolition:40,stagger:50,pushForce:20,falloff25m:0,falloff50m:0,falloff100m:0},{type:"Explosion",dmg:2000,durable:1,apDirect:6,apSlight:0,apLarge:0,apExtreme:0,innerRadius:2,outerRadius:12,staggerRadius:20,demolition:40,stagger:70,pushForce:60}]},
+  {id:"las_58_talon", name:"LAS-58 Talon", cat:"secondary", pen:3, dmg:200, durable:0.1, rpm:750, mag:7, reload:2.2,tacReload:4.2,ergonomics:95,spreadX:10,spreadY:10,caliber:10,speed:1300,mass:12,img:"https://i.postimg.cc/ZnKDk8K4/Talon.jpg",
+    hits:[{type:"Projectile",dmg:200,durable:0.1,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:10,pushForce:10}]},
+  {id:"las_7_dagger", name:"LAS-7 Dagger", cat:"secondary", pen:2, dmg:250, durable:0.2, rpm:60, mag:1, reload:0,
+    hits:[{type:"Projectile",dmg:250,durable:0.2,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0}]},
+  {id:"m6c_socom_pistol", name:"M6C-SOCOM Pistol", cat:"secondary", pen:2, dmg:100, durable:0.25, rpm:900, mag:12, reload:1.5,tacReload:1.15,ergonomics:100,spreadX:10,spreadY:10,caliber:12,speed:285,mass:15,notes:"The M6C/SOCOM Pistol is the only secondary weapon to have access to a suppressor.",img:"https://i.postimg.cc/C5F9hyJy/Socom.jpg",
+    hits:[{type:"Projectile",dmg:100,durable:0.25,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.05,falloff50m:0.1,falloff100m:0.18}]},
+  {id:"p_113_verdict", name:"P-113 Verdict", cat:"secondary", pen:3, dmg:125, durable:0.26, rpm:450, mag:10, reload:2,tacReload:1.3,ergonomics:100,spreadX:8,spreadY:8,caliber:12,speed:285,mass:15,notes:"Falloff values are outdated : 1.003.101 increased Drag factor from 30% to 60%.",img:"https://i.postimg.cc/Kz7dhcPr/Verdict.jpg",
+    hits:[{type:"Projectile",dmg:125,durable:0.26,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.05,falloff50m:0.1,falloff100m:0.18}]},
+  {id:"p_19_redeemer", name:"P-19 Redeemer", cat:"secondary", pen:2, dmg:60, durable:0.08, rpm:1100, mag:31, reload:2.1,tacReload:1.4,ergonomics:95,spreadX:10,spreadY:10,caliber:9,speed:375,mass:7,notes:"Falloff values are outdated : 1.003.101 increased Drag factor from 30% to 60%.",img:"https://i.postimg.cc/HW2fSxsT/Redeemer.jpg",
+    hits:[{type:"Projectile",dmg:60,durable:0.08,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:4,falloff25m:0.06,falloff50m:0.12,falloff100m:0.21}]},
+  {id:"p_2_peacemaker", name:"P-2 Peacemaker", cat:"secondary", pen:2, dmg:85, durable:0.29, rpm:900, mag:15, reload:1.8,tacReload:1.4,ergonomics:100,spreadX:10,spreadY:10,caliber:9,speed:320,mass:7,notes:"Falloff values are outdated : 1.003.101 increased Drag factor from 30% to 60%.",img:"https://i.postimg.cc/vH2CsNVj/Peacemaker.jpg",
+    hits:[{type:"Projectile",dmg:85,durable:0.29,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:4,falloff25m:0.13,falloff50m:0.24,falloff100m:0.4}]},
+  {id:"p_4_senator", name:"P-4 Senator", cat:"secondary", pen:4, dmg:200, durable:0.35, rpm:200, mag:6, reload:2.8,ergonomics:75,spreadX:8,spreadY:8,caliber:12,speed:550,mass:15,img:"https://i.postimg.cc/sxwq1n0M/Senator.jpg",
+    hits:[{type:"Projectile",dmg:200,durable:0.35,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:10,stagger:20,pushForce:10,falloff25m:0.05,falloff50m:0.1,falloff100m:0.18}]},
+  {id:"p_72_crisper", name:"P-72 Crisper", cat:"secondary", pen:4, dmg:240, durable:1, rpm:60, mag:4, reload:2.35,tacReload:2.35,notes:"Average value of 5m spray damage. Peaks at about 240/s, goes as low as 130/s. Damage will be lower if the target is further away. Enemies have damage multipliers that change this value (not displayed but taken into account in calculations). Sourced by Exhillious.",img:"https://i.postimg.cc/15XYJrjK/Crisper.jpg",
+    hits:[{type:"Projectile",dmg:240,durable:1,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:10,stagger:5,pushForce:5},{type:"Projectile",dmg:130,durable:1,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:10,stagger:5,pushForce:5},{type:"Projectile",dmg:150,durable:1,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:10,stagger:5,pushForce:5},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0}]},
+  {id:"p_92_warrant", name:"P-92 Warrant", cat:"secondary", pen:3, dmg:80, durable:0.25, rpm:450, mag:13, reload:1.75,tacReload:1.15,ergonomics:100,spreadX:8,spreadY:8,caliber:12,speed:285,mass:15,notes:"Toggleable guided mode. Can lock targets up to ~50m. Falloff values are temporary.",img:"https://i.postimg.cc/hPtNNBfT/Warrant.jpg",
+    hits:[{type:"Projectile",dmg:80,durable:0.25,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.05,falloff50m:0.1,falloff100m:0.18}]},
+  {id:"plas_15_loyalist_charged", name:"PLAS-15 Loyalist (charged)", cat:"secondary", pen:3, dmg:150, durable:0.5, rpm:60, mag:7, reload:1.85,tacReload:1.85,ergonomics:95,spreadX:10,spreadY:10,caliber:20,speed:350,mass:25,notes:"Maximum charge of 1 sec gives a 100% damage multiplier. The explosion doesn’t scale but a fully charged shot has a bigger blast radius and higher damage.",img:"https://i.postimg.cc/qRGZZbr1/Loyalist.jpg",
+    hits:[{type:"Projectile",dmg:150,durable:0.5,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:10,falloff25m:0.32,falloff50m:0.48,falloff100m:0.64},{type:"Explosion",dmg:225,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:2.9,outerRadius:3,staggerRadius:4,demolition:10,stagger:35,pushForce:30}]},
+  {id:"plas_15_loyalist_uncharged", name:"PLAS-15 Loyalist (uncharged)", cat:"secondary", pen:2, dmg:75, durable:0.49, rpm:1000, mag:7, reload:1.85,tacReload:1.85,ergonomics:95,spreadX:10,spreadY:10,caliber:20,speed:550,mass:25,notes:"Minimum charge of 0.1 sec gives a 50% damage multiplier. The explosion doesn’t scale but a fully charged shot has a bigger blast radius and higher damage.",img:"https://i.postimg.cc/qRGZZbr1/Loyalist.jpg",
+    hits:[{type:"Projectile",dmg:75,durable:0.49,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:20,pushForce:10,falloff25m:0.35,falloff50m:0.52,falloff100m:0.68},{type:"Explosion",dmg:75,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:1,outerRadius:2,staggerRadius:2,demolition:10,stagger:10,pushForce:7}]},
+  {id:"sg_22_bushwhacker", name:"SG-22 Bushwhacker", cat:"secondary", pen:2, dmg:45, durable:0.27, rpm:650, mag:3, reload:1.75,tacReload:1,ergonomics:65,spreadX:200,spreadY:150,caliber:8,speed:385,mass:6,notes:"You can change the number of simulated pellets by modifying the override parameter (default = 9 pellets).",img:"https://i.postimg.cc/xjt4v4tC/Bushwhacker.jpg",
+    hits:[{type:"Projectile",dmg:45,durable:0.27,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:35,pushForce:30,falloff25m:0.09,falloff50m:0.17,falloff100m:0.3}]},
+  {id:"sg_22_bushwhacker_triple_shot", name:"SG-22 Bushwhacker (triple shot)", cat:"secondary", pen:2, dmg:45, durable:0.27, rpm:650, mag:1, reload:1.75,ergonomics:65,spreadX:200,spreadY:150,caliber:8,speed:385,mass:6,notes:"You can change the number of simulated pellets by modifying the override parameter (default = 27 pellets).",img:"https://i.postimg.cc/xjt4v4tC/Bushwhacker.jpg",
+    hits:[{type:"Projectile",dmg:45,durable:0.27,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:35,pushForce:30,falloff25m:0.09,falloff50m:0.17,falloff100m:0.3}]},
+  {id:"ac_8_autocannon_aphet", name:"AC-8 Autocannon APHET", cat:"support", pen:4, dmg:260, durable:1, rpm:190, mag:10, reload:4.7,tacReload:1.55,ergonomics:17,spreadX:2,spreadY:2,caliber:20,speed:820,mass:120,img:"https://i.postimg.cc/FFWTdJHk/autocannon.jpg",
+    hits:[{type:"Projectile",dmg:260,durable:1,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:30,stagger:30,pushForce:20,falloff25m:0.02,falloff50m:0.04,falloff100m:0.07},{type:"Explosion",dmg:150,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:2,outerRadius:4,staggerRadius:5.5,demolition:30,stagger:40,pushForce:40}]},
+  {id:"ac_8_autocannon_flak", name:"AC-8 Autocannon FLAK", cat:"support", pen:2, dmg:150, durable:1, rpm:190, mag:10, reload:4.7,tacReload:1.55,ergonomics:17,spreadX:2,spreadY:2,caliber:40,speed:820,mass:130,notes:"Flak shells are proximity-triggered. Most of the time, the projectile will denotate before hitting the target. Each shot scatters 30 shrapnel. The number of shards that will hit the targeted area can vary depending on the size of the enemy. You can choose how much shrapnel is simulated via the override parameter (default = 0 shrapnel).",img:"https://i.postimg.cc/FFWTdJHk/autocannon.jpg",
+    hits:[{type:"Projectile",dmg:150,durable:1,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:30,stagger:30,pushForce:20,falloff25m:0.08,falloff50m:0.13,falloff100m:0.23},{type:"Shrapnel",dmg:109,durable:0.31,apDirect:3,apSlight:3,apLarge:2,apExtreme:0,demolition:10,stagger:10,pushForce:20,falloff25m:0,falloff50m:0.01,falloff100m:0.03},{type:"Explosion",dmg:190,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:2,outerRadius:7,staggerRadius:8,demolition:20,stagger:25,pushForce:30}]},
+  {id:"apw_1_anti_materiel_rifle", name:"APW-1 Anti-Materiel Rifle", cat:"support", pen:4, dmg:450, durable:0.4, rpm:400, mag:7, reload:2.4,tacReload:1.2,ergonomics:35,spreadX:0.1,spreadY:0.1,caliber:12.5,speed:880,mass:52,img:"https://i.postimg.cc/X7rQw7rH/AMR.jpg",
+    hits:[{type:"Projectile",dmg:450,durable:0.4,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:20,stagger:20,pushForce:25,falloff25m:0.02,falloff50m:0.03,falloff100m:0.06}]},
+  {id:"arc_3_arc_thrower", name:"ARC-3 Arc Thrower", cat:"support", pen:7, dmg:250, durable:0.4, rpm:60, mag:1, reload:0,ergonomics:50,spreadX:10,spreadY:10,notes:"Applies small stun (1.5s). Electric damage is doubled against Fleshmobs.",img:"https://i.postimg.cc/MKgtt2RW/arc-thrower.jpg",
+    hits:[{type:"Projectile",dmg:250,durable:0.4,apDirect:7,apSlight:7,apLarge:7,apExtreme:0,demolition:20,stagger:35,pushForce:10,falloff100m:1}]},
+  {id:"eat_17_expendable_anti_tank", name:"EAT-17 Expendable Anti-Tank", cat:"support", pen:6, dmg:2000, durable:1, rpm:1, mag:2, reload:60,tacReload:60,ergonomics:15,spreadX:4,spreadY:4,caliber:75,speed:200,mass:2500,img:"https://i.postimg.cc/Sx8dvT7c/EAT17.jpg",
+    hits:[{type:"Projectile",dmg:2000,durable:1,apDirect:6,apSlight:6,apLarge:6,apExtreme:3,demolition:30,stagger:50,pushForce:25},{type:"Explosion",dmg:150,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:1.5,outerRadius:3,staggerRadius:6,demolition:30,stagger:60,pushForce:40}]},
+  {id:"eat_700_expendable_napalm_wip", name:"EAT-700 Expendable Napalm (WIP)", cat:"support", pen:5, dmg:650, durable:0.42, rpm:1, mag:1, reload:120,tacReload:120,ergonomics:35,spreadX:4,spreadY:4,caliber:75,speed:200,mass:2500,notes:"WIP.",img:"https://i.postimg.cc/85sCKZwN/EAT700.jpg",
+    hits:[{type:"Projectile",dmg:650,durable:0.42,apDirect:5,apSlight:5,apLarge:5,apExtreme:5,demolition:30,stagger:80,pushForce:35}]},
+  {id:"faf_14_spear", name:"FAF-14 Spear", cat:"support", pen:7, dmg:4000, durable:1, rpm:17, mag:1, reload:3.55,tacReload:3.55,ergonomics:10,caliber:66,speed:70,mass:350,notes:"Each shot behaves as a Stun grenade (medium stun) and creates 10 arcs (small stun). You can change the number of simulated arcs by modifying the override parameter (default = 0 arcs). It is not possible to precisely control what the arcs will aim at.",img:"https://i.postimg.cc/c12QG7Jh/spear.jpg",
+    hits:[{type:"Projectile",dmg:4000,durable:1,apDirect:7,apSlight:7,apLarge:7,apExtreme:0,demolition:40,stagger:50,pushForce:25},{type:"Explosion",dmg:200,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:1.5,outerRadius:3,staggerRadius:6,demolition:30,stagger:60,pushForce:70}]},
+  {id:"flam_40_flamethrower", name:"FLAM-40 Flamethrower", cat:"support", pen:4, dmg:240, durable:1, rpm:60, mag:1, reload:0,
+    hits:[{type:"Projectile",dmg:240,durable:1,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:10,stagger:5,pushForce:5},{type:"Projectile",dmg:130,durable:1,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:10,stagger:5,pushForce:5},{type:"Projectile",dmg:150,durable:1,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:10,stagger:5,pushForce:5},{type:"Fire",dmg:125,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0},{type:"Fire",dmg:125,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0},{type:"Fire",dmg:125,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0}]},
+  {id:"gl_21_grenade_launcher", name:"GL-21 Grenade Launcher", cat:"support", pen:0, dmg:20, durable:0.1, rpm:185, mag:10, reload:3.15,tacReload:2.7,ergonomics:25,spreadX:20,spreadY:20,caliber:40,speed:100,mass:50,notes:"The fuse has a range safety that prevents it from detonating too close to the wielder.",img:"https://i.postimg.cc/NGzxfqd1/grenade-launcher.jpg",
+    hits:[{type:"Projectile",dmg:20,durable:0.1,apDirect:0,apSlight:0,apLarge:0,apExtreme:0,demolition:30,stagger:40,pushForce:10,falloff25m:0.44,falloff50m:0.63,falloff100m:0.72},{type:"Explosion",dmg:400,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:3.5,outerRadius:7.5,staggerRadius:7,demolition:30,stagger:25,pushForce:30}]},
+  {id:"gl_52_de_escalator", name:"GL-52 De-Escalator", cat:"support", pen:0, dmg:20, durable:0.1, rpm:160, mag:6, reload:6.6,ergonomics:25,spreadX:15,spreadY:15,caliber:40,speed:100,mass:50,notes:"Each shot behaves as a Stun grenade (large stun, 5s) and creates 10 arcs (small stun, 1.5s). You can change the number of simulated arcs by modifying the override parameter (default = 0 arcs). It is not possible to precisely control what the arcs will aim at. Electric damage is doubled against Fleshmobs.",img:"https://i.postimg.cc/5y6qqn2Y/GLarc.jpg",
+    hits:[{type:"Projectile",dmg:20,durable:0.1,apDirect:0,apSlight:0,apLarge:0,apExtreme:0,demolition:10,stagger:40,pushForce:10,falloff25m:0.44,falloff50m:0.63,falloff100m:0.72}]},
+  {id:"gr_8_recoilless_rifle_at", name:"GR-8 Recoilless Rifle AT", cat:"support", pen:6, dmg:3200, durable:1, rpm:17, mag:1, reload:3.55,tacReload:3.55,ergonomics:10,spreadX:4,spreadY:4,caliber:85,speed:250,mass:3300,notes:"The weapon is considered fully reloaded when its icon in the HUD changes from red to white. Timing the animation cancel can be tricky but rewarding.",img:"https://i.postimg.cc/Fz8bP3YP/GR8.jpg",
+    hits:[{type:"Projectile",dmg:3200,durable:1,apDirect:6,apSlight:6,apLarge:6,apExtreme:3,demolition:30,stagger:50,pushForce:25,falloff25m:0.01,falloff50m:0.02,falloff100m:0.04},{type:"Explosion",dmg:150,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:1.5,outerRadius:3,staggerRadius:6,demolition:30,stagger:50,pushForce:40}]},
+  {id:"gr_8_recoilless_rifle_he", name:"GR-8 Recoilless Rifle HE", cat:"support", pen:5, dmg:750, durable:1, rpm:17, mag:1, reload:3.55,tacReload:3.55,ergonomics:10,spreadX:4,spreadY:4,caliber:85,speed:250,mass:3300,notes:"The weapon is considered fully reloaded when its icon in the HUD changes from red to white. Timing the animation cancel can be tricky but rewarding.",img:"https://i.postimg.cc/Fz8bP3YP/GR8.jpg",
+    hits:[{type:"Projectile",dmg:750,durable:1,apDirect:5,apSlight:5,apLarge:5,apExtreme:0,demolition:30,stagger:50,pushForce:25},{type:"Explosion",dmg:800,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0,innerRadius:3,outerRadius:7.5,staggerRadius:12,demolition:30,stagger:60,pushForce:40}]},
+  {id:"las_98_laser_cannon", name:"LAS-98 Laser Cannon", cat:"support", pen:4, dmg:350, durable:0.57, rpm:60, mag:1, reload:0,
+    hits:[{type:"Projectile",dmg:350,durable:0.57,apDirect:4,apSlight:4,apLarge:4,apExtreme:4,demolition:20},{type:"Fire",dmg:100,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0}]},
+  {id:"las_99_quasar_cannon", name:"LAS-99 Quasar Cannon", cat:"support", pen:6, dmg:2000, durable:1, rpm:20, mag:1, reload:15,tacReload:15,ergonomics:35,spreadX:4,spreadY:4,caliber:10,speed:1300,mass:12,notes:"Cools in [12.5 cold / 15 normal / 17.5 hot] seconds.",img:"https://i.postimg.cc/6QcdkD74/quasar.jpg",
+    hits:[{type:"Projectile",dmg:2000,durable:1,apDirect:6,apSlight:6,apLarge:6,apExtreme:3,demolition:30,stagger:50,pushForce:40},{type:"Explosion",dmg:150,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:1.5,outerRadius:3,staggerRadius:6,demolition:30,stagger:50,pushForce:40}]},
+  {id:"m_105_stalwart", name:"M-105 Stalwart", cat:"support", pen:2, dmg:80, durable:0.19, rpm:1150, mag:250, reload:5.2,tacReload:4,ergonomics:40,spreadX:6,spreadY:6,caliber:5.5,speed:900,mass:4.5,img:"https://i.postimg.cc/6pdV07t0/LMG.jpg",
+    hits:[{type:"Projectile",dmg:80,durable:0.19,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13},{type:"Projectile",dmg:80,durable:0.19,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13},{type:"Projectile",dmg:80,durable:0.19,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:15,pushForce:10,falloff25m:0.04,falloff50m:0.07,falloff100m:0.13}]},
+  {id:"mg_206_heavy_machine_gun", name:"MG-206 Heavy Machine Gun", cat:"support", pen:4, dmg:150, durable:0.23, rpm:450, mag:100, reload:4.95,tacReload:3.55,spreadX:4,spreadY:4,caliber:12.5,speed:980,mass:52,img:"https://i.postimg.cc/vZRLf7FT/HMG.jpg",
+    hits:[{type:"Projectile",dmg:150,durable:0.23,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:15,stagger:25,pushForce:20,falloff25m:0.02,falloff50m:0.04,falloff100m:0.06},{type:"Projectile",dmg:150,durable:0.23,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:15,stagger:25,pushForce:20,falloff25m:0.02,falloff50m:0.04,falloff100m:0.06},{type:"Projectile",dmg:150,durable:0.23,apDirect:4,apSlight:4,apLarge:4,apExtreme:0,demolition:15,stagger:25,pushForce:20,falloff25m:0.02,falloff50m:0.04,falloff100m:0.06}]},
+  {id:"mg_43_machine_gun", name:"MG-43 Machine Gun", cat:"support", pen:3, dmg:90, durable:0.26, rpm:630, mag:175, reload:4.1,tacReload:3.4,ergonomics:15,spreadX:5,spreadY:5,caliber:8,speed:820,mass:11,img:"https://i.postimg.cc/tgp3mXgH/MG.jpg",
+    hits:[{type:"Projectile",dmg:90,durable:0.26,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:12,falloff25m:0.03,falloff50m:0.06,falloff100m:0.12},{type:"Projectile",dmg:90,durable:0.26,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:12,falloff25m:0.03,falloff50m:0.06,falloff100m:0.12},{type:"Projectile",dmg:90,durable:0.26,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:10,stagger:20,pushForce:12,falloff25m:0.03,falloff50m:0.06,falloff100m:0.12}]},
+  {id:"mls_4x_commando", name:"MLS-4X Commando", cat:"support", pen:6, dmg:1100, durable:1, rpm:240, mag:4, reload:103,tacReload:103,ergonomics:10,caliber:66,speed:70,mass:350,img:"https://i.postimg.cc/bvhgcx3W/Commando.jpg",
+    hits:[{type:"Projectile",dmg:1100,durable:1,apDirect:6,apSlight:6,apLarge:6,apExtreme:3,demolition:30,stagger:40,pushForce:25},{type:"Explosion",dmg:150,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:1,outerRadius:3,staggerRadius:4,demolition:30,stagger:40,pushForce:40}]},
+  {id:"plas_45_epoch_charged", name:"PLAS-45 Epoch (charged)", cat:"support", pen:5, dmg:800, durable:0.5, rpm:14, mag:3, reload:4.2,tacReload:4.2,ergonomics:25,spreadX:30,spreadY:30,caliber:20,speed:250,mass:100,notes:"Falloff values are unknown.",img:"https://i.postimg.cc/RFCTqMrT/Epoch.jpg",
+    hits:[{type:"Projectile",dmg:800,durable:0.5,apDirect:5,apSlight:5,apLarge:5,apExtreme:5,demolition:10,stagger:30,pushForce:15,falloff25m:0,falloff50m:0,falloff100m:0},{type:"Explosion",dmg:800,durable:1,apDirect:5,apSlight:0,apLarge:0,apExtreme:0,innerRadius:3,outerRadius:4,staggerRadius:5,demolition:10,stagger:35,pushForce:30}]},
+  {id:"plas_45_epoch_uncharged", name:"PLAS-45 Epoch (uncharged)", cat:"support", pen:4, dmg:400, durable:0.5, rpm:14, mag:3, reload:4.2,tacReload:4.2,ergonomics:25,spreadX:30,spreadY:30,caliber:20,speed:250,mass:100,notes:"Falloff values are unknown.",img:"https://i.postimg.cc/RFCTqMrT/Epoch.jpg",
+    hits:[{type:"Projectile",dmg:400,durable:0.5,apDirect:4,apSlight:4,apLarge:4,apExtreme:4,demolition:10,stagger:30,pushForce:15,falloff25m:0,falloff50m:0,falloff100m:0},{type:"Explosion",dmg:400,durable:1,apDirect:4,apSlight:0,apLarge:0,apExtreme:0,innerRadius:2.3,outerRadius:3,staggerRadius:4,demolition:10,stagger:20,pushForce:7}]},
+  {id:"rl_77_airburst_rocket_launcher_bomblet", name:"RL-77 Airburst Rocket Launcher (bomblet)", cat:"support", pen:3, dmg:150, durable:1, rpm:16, mag:25, reload:3.7,tacReload:3.7,notes:"Each rocket is proximity-detonated and spreads 25 bombs over a wide radius. It is impossible to target a specific enemy part with this weapon. The values shown here are optimal and do not necessarily represent the results obtained in game.",img:"https://i.postimg.cc/2yKGPgK7/Airburst.jpg",
+    hits:[{type:"Projectile",dmg:150,durable:1,apDirect:3,apSlight:3,apLarge:3,apExtreme:0,demolition:25,stagger:25,pushForce:40},{type:"Explosion",dmg:500,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:4,outerRadius:6,staggerRadius:8,demolition:20,stagger:25,pushForce:40}]},
+  {id:"rs_422_railgun", name:"RS-422 Railgun", cat:"support", pen:5, dmg:600, durable:0.38, rpm:50, mag:1, reload:1.2,tacReload:1.2,ergonomics:35,spreadX:0.1,spreadY:0.1,caliber:10,speed:2000,mass:50,notes:"Charging the weapon in unsafe (0.5 to 3s) mode linearily increases the damage dealt by up to 150%. Explodes if a charge is held for more than 3s.",img:"https://i.postimg.cc/T1LgW1tn/railgun.jpg",
+    hits:[{type:"Projectile",dmg:600,durable:0.38,apDirect:5,apSlight:5,apLarge:5,apExtreme:5,demolition:10,stagger:35,pushForce:15,falloff25m:0.02,falloff50m:0.03,falloff100m:0.05}]},
+  {id:"s_11_speargun", name:"S-11 Speargun", cat:"support", pen:5, dmg:650, durable:0.42, rpm:24, mag:1, reload:2.5,tacReload:2.5,ergonomics:35,caliber:10,speed:300,mass:100,notes:"These projectiles release a cloud of gas on impact (r2/5/7m). Maximum range of 510m. Falloff values are unknown.",img:"https://i.postimg.cc/Zn4jryJk/Speargun.jpg",
+    hits:[{type:"Projectile",dmg:650,durable:0.42,apDirect:5,apSlight:5,apLarge:5,apExtreme:5,demolition:30,stagger:80,pushForce:35,falloff25m:0,falloff50m:0,falloff100m:0}]},
+  {id:"sg_88_break_action_shotgun", name:"SG-88 Break-Action Shotgun", cat:"support", pen:2, dmg:65, durable:0.14, rpm:600, mag:2, reload:2.3,tacReload:2.3,ergonomics:65,spreadX:60,spreadY:60,caliber:8,speed:385,mass:6,notes:"You can change the number of simulated pellets by modifying the override parameter (default = 9 pellets).",img:"https://i.postimg.cc/KYFRRFCG/Break-ction.jpg",
+    hits:[{type:"Projectile",dmg:65,durable:0.14,apDirect:2,apSlight:2,apLarge:2,apExtreme:0,demolition:10,stagger:20,pushForce:20,falloff25m:0.09,falloff50m:0.17,falloff100m:0.3}]},
+  {id:"sta_x3_wasp_launcher", name:"StA-X3 WASP Launcher", cat:"support", pen:6, dmg:200, durable:1, rpm:700, mag:7, reload:4.3,tacReload:4.3,ergonomics:10,caliber:1,speed:500,mass:11,notes:"The W.A.S.P can lock onto targets up to 300m away. It is impossible to target a specific enemy part with this weapon. The values shown here are optimal and do not necessarily represent the results obtained in game.",img:"https://i.postimg.cc/XY0dpVdy/WASP.jpg",
+    hits:[{type:"Projectile",dmg:200,durable:1,apDirect:6,apSlight:6,apLarge:6,apExtreme:6,demolition:30,stagger:35,pushForce:25},{type:"Explosion",dmg:600,durable:1,apDirect:3,apSlight:0,apLarge:0,apExtreme:0,innerRadius:2.5,outerRadius:5,staggerRadius:7,demolition:30,stagger:25,pushForce:50}]},
+  {id:"tx_41_sterilizer", name:"TX-41 Sterilizer", cat:"support", pen:5, dmg:30, durable:1, rpm:60, mag:1, reload:0,
+    hits:[{type:"Projectile",dmg:30,durable:1,apDirect:5,apSlight:5,apLarge:5,apExtreme:0,demolition:5,stagger:10,pushForce:5}]}
+];}
+
+/* ============ state / persistence ============ */
+var STORE_KEY = "se-ballistics-v4"; // bump whenever DEFAULT_WEAPONS()/DEFAULT_ENEMIES() gains fields - stale localStorage silently shadows new data otherwise
+var state = load();
+function load(){
+  try{
+    var raw = localStorage.getItem(STORE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return {enemies:DEFAULT_ENEMIES(), weapons:DEFAULT_WEAPONS()};
+}
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+function resetAll(){
+  state = {enemies:DEFAULT_ENEMIES(), weapons:DEFAULT_WEAPONS()};
+  save();
+  selectedEnemy = state.enemies[0].id;
+  selectedPart = 0;
+  renderAll();
+}
+
+var selectedEnemy = state.enemies[0].id;
+var selectedPart = 0;
+var selectedWeapon = state.weapons[0].id;
+var catFilter = "all";
+var sortKey = "btk";
+var sortDir = 1;
+var viewMode = "compare"; // "compare" | "breakpoint"
+
+/* ============ helpers ============ */
+function findEnemy(id){ for(var i=0;i<state.enemies.length;i++) if(state.enemies[i].id===id) return state.enemies[i]; return state.enemies[0]; }
+function findWeapon(id){ for(var i=0;i<state.weapons.length;i++) if(state.weapons[i].id===id) return state.weapons[i]; return state.weapons[0]; }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function fmt(n, d){ d = d===undefined?0:d; return Number(n).toLocaleString("ko-KR", {minimumFractionDigits:d, maximumFractionDigits:d}); }
+function fmtNum(n, d){ return isFinite(n) ? fmt(n, d) : "∞"; }
+function fmtPct(n, d){ return isFinite(n) ? fmt(n*100, d===undefined?0:d)+"%" : "∞"; }
+
+function markSVG(kind, color){
+  if(kind==="bug"){
+    return '<svg viewBox="0 0 64 64" class="mark"><ellipse cx="32" cy="34" rx="14" ry="20" fill="none" stroke="'+color+'" stroke-width="3"/><circle cx="32" cy="14" r="7" fill="none" stroke="'+color+'" stroke-width="3"/><path d="M20 24 L6 16 M20 34 L4 34 M20 44 L6 52 M44 24 L58 16 M44 34 L60 34 M44 44 L58 52" stroke="'+color+'" stroke-width="2.5" fill="none"/></svg>';
+  }
+  if(kind==="bot"){
+    return '<svg viewBox="0 0 64 64" class="mark"><rect x="16" y="14" width="32" height="26" rx="2" fill="none" stroke="'+color+'" stroke-width="3"/><circle cx="26" cy="27" r="3.5" fill="'+color+'"/><circle cx="38" cy="27" r="3.5" fill="'+color+'"/><path d="M32 40 L32 52 M20 52 L44 52 M22 40 L14 50 M42 40 L50 50" stroke="'+color+'" stroke-width="3" fill="none"/></svg>';
+  }
+  return '<svg viewBox="0 0 64 64" class="mark"><path d="M6 32 C 18 14, 46 14, 58 32 C 46 50, 18 50, 6 32 Z" fill="none" stroke="'+color+'" stroke-width="3"/><circle cx="32" cy="32" r="9" fill="none" stroke="'+color+'" stroke-width="3"/><circle cx="32" cy="32" r="2.5" fill="'+color+'"/></svg>';
+}
+
+function weaponHits(w){
+  return (w.hits && w.hits.length) ? w.hits : [{type:"Projectile", dmg:w.dmg, durable:w.durable, apDirect:w.pen}];
+}
+/** Effective damage of ONE hit component against a given armor value. */
+function hitEffDamage(h, armor){ return (h.apDirect >= armor) ? h.dmg : h.dmg * h.durable; }
+/**
+ * BTK/TTK use ONLY the primary (direct-hit) component's damage - verified against the
+ * source spreadsheet's own worked example (PLAS-101 Purifier vs Bile Spewer Head: using
+ * just the 200-damage Projectile component gives BTK 2, matching the sheet exactly; summing
+ * in the 300-damage Explosion component would wrongly give BTK 1). A projectile's splash
+ * damage doesn't reliably land on the same collider the direct hit struck - the sheet itself
+ * flags that geometry (which parts a given explosion's line-of-sight actually reaches) as
+ * "experimental" and unresolved, so it's shown for reference in the Breakpoint tab but not
+ * folded into the headline BTK.
+ */
+function totalEffDamage(w, armor){
+  return hitEffDamage(weaponHits(w)[0], armor);
+}
+function penStatus(w, armor){
+  var h = weaponHits(w)[0];
+  if(h.apDirect >= armor) return "full";
+  return h.durable > 0 ? "partial" : "blocked";
+}
+
+/* ============ sidebar ============ */
+function renderSidebar(){
+  var byFaction = {};
+  state.enemies.forEach(function(e){ (byFaction[e.faction]=byFaction[e.faction]||[]).push(e); });
+  var html = "";
+  Object.keys(FACTIONS).forEach(function(fid){
+    var f = FACTIONS[fid];
+    var list = byFaction[fid]||[];
+    if(!list.length) return;
+    html += '<div class="faction-group">';
+    html += '<div class="faction-title" style="color:'+f.color+'"><span class="dot" style="background:'+f.color+'"></span>'+f.name+'</div>';
+    html += '<ul class="enemy-list">';
+    list.forEach(function(e){
+      html += '<li><button class="enemy-btn'+(e.id===selectedEnemy?' active':'')+'" data-id="'+e.id+'">'+
+        '<span>'+esc(e.name)+'</span><span class="hp">'+fmt(e.mainHp)+'HP</span></button></li>';
+    });
+    html += '</ul></div>';
+  });
+  document.getElementById("sidebar-body").innerHTML = html;
+  Array.prototype.forEach.call(document.querySelectorAll(".enemy-btn"), function(btn){
+    btn.addEventListener("click", function(){
+      selectedEnemy = btn.getAttribute("data-id");
+      selectedPart = 0;
+      renderAll();
+    });
+  });
+}
+
+/* ============ dossier ============ */
+function renderDossier(){
+  var e = findEnemy(selectedEnemy);
+  var f = FACTIONS[e.faction];
+  var html = '';
+  html += '<div class="dossier-top">';
+  html += '<div>';
+  html += '<div class="dossier-meta" style="margin-bottom:6px;"><span class="chip" style="color:'+f.color+';border-color:'+f.color+'">'+f.name+'</span></div>';
+  html += '<h2 class="dossier-name">'+esc(e.name)+'</h2>';
+  html += '</div>';
+  html += markSVG(f.mark, f.color);
+  html += '</div>';
+
+  html += '<div class="section-label">메인 체력 (전체 처치 기준)</div>';
+  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">'+
+    '<input class="num-in mono" id="main-hp-in" type="number" min="1" value="'+e.mainHp+'">'+
+    '<span style="color:var(--text-faint);font-size:12px;">치명(★) 표시가 없는 부위를 맞히면 이 체력을 "메인 기여율%"만큼만 깎습니다.</span></div>';
+
+  html += '<div class="section-label">부위별 장갑 · 체력 · 메인 기여율 (직접 수정 가능)</div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>부위</th><th>장갑(AV)</th><th>체력(HP)</th><th>메인 기여율%</th><th>치명(★)</th></tr></thead><tbody>';
+  e.parts.forEach(function(p, i){
+    html += '<tr class="'+(p.lethal?'weak-row':'')+'">';
+    html += '<td>'+esc(p.name)+'</td>';
+    html += '<td><input class="num-in mono" type="number" min="0" max="10" value="'+p.armor+'" data-part="'+i+'" data-field="armor"></td>';
+    html += '<td><input class="num-in mono" type="number" min="1" value="'+p.hp+'" data-part="'+i+'" data-field="hp"></td>';
+    html += '<td><input class="num-in mono" type="number" min="0" max="500" step="5" value="'+Math.round(p.toMain*100)+'" data-part="'+i+'" data-field="toMainPct"></td>';
+    html += '<td><button class="starbtn'+(p.lethal?' on':'')+'" data-part="'+i+'" data-field="lethal">'+(p.lethal?'★':'☆')+'</button></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  html += '<div class="section-label">교전 지침</div>';
+  html += '<div class="intel"><ul>'+e.tips.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul></div>';
+
+  document.getElementById("dossier").innerHTML = html;
+
+  document.getElementById('main-hp-in').addEventListener('change', function(){
+    findEnemy(selectedEnemy).mainHp = Math.max(1, Math.round(+this.value || 1));
+    save(); renderSidebar(); renderWeaponPanel();
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#dossier input.num-in[data-field]'), function(inp){
+    inp.addEventListener('change', function(){
+      var i = +inp.getAttribute('data-part');
+      var field = inp.getAttribute('data-field');
+      var part = findEnemy(selectedEnemy).parts[i];
+      var v = +inp.value;
+      if(field==='toMainPct'){ part.toMain = Math.max(0, Math.min(100, v)) / 100; }
+      else if(field==='armor'){ part.armor = Math.max(0, Math.round(v)); }
+      else if(field==='hp'){ part.hp = Math.max(1, Math.round(v)); }
+      save(); renderWeaponPanel();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#dossier .starbtn'), function(btn){
+    btn.addEventListener('click', function(){
+      var i = +btn.getAttribute('data-part');
+      var parts = findEnemy(selectedEnemy).parts;
+      parts[i].lethal = !parts[i].lethal;
+      save(); renderDossier(); renderWeaponPanel();
+    });
+  });
+}
+
+/* ============ shared BTK/TTK math ============ */
+function computeRow(w, part, mainHp, regen){
+  var effDmg = Math.max(totalEffDamage(w, part.armor), 0.01);
+  var btk;
+  if(part.lethal){
+    var lethalHp = part.hp > 0 ? part.hp : mainHp;
+    btk = Math.ceil(lethalHp / effDmg);
+  } else if(part.toMain > 0){
+    btk = Math.ceil(mainHp / (effDmg * part.toMain));
+  } else {
+    btk = Infinity;
+  }
+  btk = isFinite(btk) ? Math.max(1, btk) : btk;
+  var sever = part.hp > 0 ? Math.max(1, Math.ceil(part.hp / effDmg)) : null;
+  var shotInterval = w.mag > 1 ? (w.rpm > 0 ? 60 / w.rpm : 0) : 0;
+  var reloadsNeeded = isFinite(btk) ? (w.mag > 1 ? Math.floor((btk - 1) / w.mag) : (btk - 1)) : Infinity;
+  var ttk = isFinite(btk) ? (btk - 1) * shotInterval + reloadsNeeded * w.reload : Infinity;
+  var killsPerMag = isFinite(btk) ? (Math.max(1, Math.floor(w.mag / btk)) || 0) : 0;
+  var poolUsed = part.lethal ? (part.hp > 0 ? part.hp : mainHp) : mainHp;
+  var dealt = isFinite(btk) ? btk * effDmg * (part.lethal ? 1 : part.toMain) : Infinity;
+  var overkill = isFinite(dealt) ? Math.max(0, dealt - poolUsed) : Infinity;
+
+  // Regenerating enemies (e.g. Crusher): sustained fire has to out-pace the regen rate on any
+  // part not in the exempt list, or the part effectively never runs out - this only ever flags
+  // slow/weak weapons since most primaries already clear a typical ~30 hp/s regen easily; a real
+  // fight's dodge/reload downtime (which regen keeps ticking through) isn't modeled here at all.
+  var regenWarning = false;
+  if(regen && regen.exempt.indexOf(part.name) === -1){
+    var interval = w.mag > 1 ? shotInterval : Math.max(w.reload, 0.1);
+    var sustainedDps = effDmg / Math.max(interval, 0.01);
+    if(sustainedDps <= regen.rate) regenWarning = true;
+  }
+
+  return {
+    eff: effDmg, btk: btk, sever: sever, ttk: ttk,
+    killsPerMag: killsPerMag, status: penStatus(w, part.armor),
+    reloads: reloadsNeeded, overkill: overkill, regenWarning: regenWarning,
+    magPct: isFinite(btk) ? btk / w.mag : Infinity
+  };
+}
+
+/* ============ weapon panel (comparison table + breakpoint calculator) ============ */
+function renderWeaponPanel(){
+  var e = findEnemy(selectedEnemy);
+  if(selectedPart >= e.parts.length) selectedPart = 0;
+  var part = e.parts[selectedPart];
+
+  var html = '';
+  html += '<div class="weapon-head">';
+  html += '<div class="tabs">'+
+    [["compare","비교표"],["breakpoint","브레이크포인트"]].map(function(v){
+      return '<button class="tab-btn'+(viewMode===v[0]?' active':'')+'" data-view="'+v[0]+'">'+v[1]+'</button>';
+    }).join('')+
+    '</div>';
+  html += '<button class="reset-btn" id="reset-btn">전체 데이터 초기화</button>';
+  html += '</div>';
+
+  html += '<div class="section-label">대상 부위 선택 — <span class="mono" style="color:var(--text-dim)">'+esc(e.name)+'</span></div>';
+  html += '<div class="chips-row">';
+  e.parts.forEach(function(p, i){
+    html += '<button class="part-chip'+(i===selectedPart?' active':'')+'" data-idx="'+i+'">'+(p.lethal?'<span class="w">★</span> ':'')+esc(p.name)+' <span class="mono">('+fmt(p.hp)+'HP · '+avLabel(p.armor)+')</span></button>';
+  });
+  html += '</div>';
+
+  if(part.img){
+    html += '<div class="part-images">';
+    html += '<figure><img src="'+esc(part.img)+'" alt="'+esc(part.name)+' 정면" onerror="this.closest(\'figure\').style.display=\'none\'"><figcaption>정면</figcaption></figure>';
+    if(part.altImg){
+      html += '<figure><img src="'+esc(part.altImg)+'" alt="'+esc(part.name)+' 측면" onerror="this.closest(\'figure\').style.display=\'none\'"><figcaption>측면</figcaption></figure>';
+    }
+    html += '<div class="img-credit">부위 다이어그램 출처: DiversDex (제작: Roy)</div>';
+    html += '</div>';
+  }
+
+  html += viewMode === "breakpoint" ? renderBreakpointHtml(e, part) : renderCompareHtml(e, part);
+
+  document.getElementById("weapon-panel").innerHTML = html;
+  wireWeaponPanelEvents();
+}
+
+function renderCompareHtml(e, part){
+  var html = '<div class="section-label" style="margin-top:16px;">무기별 BTK / TTK 비교 — 표 헤더 클릭 시 정렬, 회색 칸은 직접 수정 (1번째 피해 성분만 수정됨)</div>';
+
+  var rows = state.weapons.filter(function(w){ return catFilter==="all" || w.cat===catFilter; });
+  html += '<div class="chips-row" style="margin-bottom:10px;">'+
+    ['all','primary','secondary','support'].map(function(c){
+      return '<button class="tab-btn'+(catFilter===c?' active':'')+'" data-cat="'+c+'" style="border-radius:20px;">'+(c==='all'?'전체':CAT_LABEL[c])+'</button>';
+    }).join('')+'</div>';
+
+  var computed = rows.map(function(w){ return {w:w, c:computeRow(w, part, e.mainHp, e.regen)}; });
+  var minBtk = Math.min.apply(null, computed.map(function(r){return r.c.btk;}));
+  var minTtk = Math.min.apply(null, computed.map(function(r){return r.c.ttk;}));
+
+  computed.sort(function(a,b){
+    var va = sortKey==="ttk"? a.c.ttk : a.c.btk;
+    var vb = sortKey==="ttk"? b.c.ttk : b.c.btk;
+    return (va-vb)*sortDir;
+  });
+
+  html += '<div class="table-wrap"><table><thead><tr>';
+  html += '<th>무기</th><th>종류</th><th class="mono">관통(AV)</th><th class="mono">피해</th><th class="mono">내구%</th><th class="mono">발사속도(RPM)</th><th class="mono">탄창</th><th class="mono">재장전(초)</th><th>상태</th>';
+  html += '<th class="sortable" data-sort="btk">BTK(처치)<span class="arrow">'+(sortKey==="btk"?(sortDir>0?'▲':'▼'):'')+'</span></th>';
+  html += '<th class="sortable" data-sort="ttk">TTK(초)<span class="arrow">'+(sortKey==="ttk"?(sortDir>0?'▲':'▼'):'')+'</span></th>';
+  html += '<th class="mono">탄창당 처치</th>';
+  html += '<th class="mono">이 부위 파괴</th>';
+  html += '<th></th>';
+  html += '</tr></thead><tbody>';
+
+  computed.forEach(function(r){
+    var w = r.w, c = r.c, h0 = weaponHits(w)[0];
+    var statusHtml = c.status==="full" ? '<span class="status-pill status-full">완전관통</span>'
+      : c.status==="partial" ? '<span class="status-pill status-partial">부분감쇠</span>'
+      : '<span class="status-pill status-blocked">관통불가</span>';
+    var thumb = w.img ? '<img class="weapon-thumb" src="'+esc(w.img)+'" alt="" onerror="this.style.display=\'none\'">' : '';
+    html += '<tr>';
+    html += '<td><div class="weapon-name-cell">'+thumb+'<span>'+esc(w.name)+(c.btk===minBtk && isFinite(minBtk)?'<span class="best-badge">BEST BTK</span>':'')+(c.ttk===minTtk && isFinite(minTtk) ?'<span class="best-badge">BEST TTK</span>':'')+'</span></div></td>';
+    html += '<td>'+CAT_LABEL[w.cat]+'</td>';
+    html += '<td><input class="num-in mono" type="number" min="0" max="10" data-id="'+w.id+'" data-field="pen" value="'+h0.apDirect+'"></td>';
+    html += '<td><input class="num-in mono" type="number" data-id="'+w.id+'" data-field="dmg" value="'+h0.dmg+'"></td>';
+    html += '<td><input class="num-in mono" type="number" step="5" min="0" max="100" data-id="'+w.id+'" data-field="durablePct" value="'+Math.round(h0.durable*100)+'"></td>';
+    html += '<td><input class="num-in mono" type="number" data-id="'+w.id+'" data-field="rpm" value="'+w.rpm+'"></td>';
+    html += '<td><input class="num-in mono" type="number" data-id="'+w.id+'" data-field="mag" value="'+w.mag+'"></td>';
+    html += '<td><input class="num-in mono" type="number" step="0.1" data-id="'+w.id+'" data-field="reload" value="'+w.reload+'"></td>';
+    html += '<td>'+statusHtml+'</td>';
+    html += '<td class="mono">'+fmtNum(c.btk)+(c.regenWarning?' <span class="status-pill status-partial" title="지속 DPS가 이 몹의 재생 속도를 못 넘김">재생우세</span>':'')+'</td>';
+    html += '<td class="mono">'+fmtNum(c.ttk,2)+'</td>';
+    html += '<td class="mono">'+c.killsPerMag+'</td>';
+    html += '<td class="mono">'+(c.sever===null?'-':c.sever)+'</td>';
+    html += '<td><button class="reset-btn bp-jump" data-id="'+w.id+'" style="padding:3px 8px;font-size:11px;">상세</button></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function statRow(label, value){
+  return '<div class="bp-stat"><span>'+label+'</span><span class="mono">'+value+'</span></div>';
+}
+
+function renderBreakpointHtml(e, part){
+  var w = findWeapon(selectedWeapon);
+  var mainHp = e.mainHp;
+  var c = computeRow(w, part, mainHp, e.regen);
+  var hits = weaponHits(w);
+
+  var html = '<div class="section-label" style="margin-top:16px;">브레이크포인트 계산기 — 무기 하나 vs 부위 하나 상세 분석</div>';
+
+  html += '<div class="bp-weapon-select">무기 선택: <select id="bp-weapon-sel">';
+  ['primary','secondary','support'].forEach(function(cat){
+    html += '<optgroup label="'+CAT_LABEL[cat]+'">';
+    state.weapons.filter(function(x){return x.cat===cat;}).forEach(function(x){
+      html += '<option value="'+x.id+'"'+(x.id===w.id?' selected':'')+'>'+esc(x.name)+'</option>';
+    });
+    html += '</optgroup>';
+  });
+  html += '</select></div>';
+
+  html += '<div class="bp-grid">';
+
+  // ---- column 1: weapon ----
+  html += '<div class="bp-col"><div class="bp-col-title">무기</div>';
+  if(w.img){
+    html += '<div class="bp-weapon-img"><img src="'+esc(w.img)+'" alt="'+esc(w.name)+'" onerror="this.parentElement.style.display=\'none\'"></div>';
+  }
+  html += statRow('분류', CAT_LABEL[w.cat]);
+  html += statRow('탄창', fmt(w.mag));
+  html += statRow('발사속도(RPM)', fmt(w.rpm));
+  html += statRow('재장전(초)', fmt(w.reload,2));
+  if(w.tacReload) html += statRow('전술 재장전(초)', fmt(w.tacReload,2));
+  if(w.ergonomics) html += statRow('인체공학', fmt(w.ergonomics));
+  html += '<div class="bp-subhead">피해 성분 ('+hits.length+'개)</div>';
+  hits.forEach(function(h){
+    html += '<div class="bp-hit">';
+    html += '<div class="bp-hit-type">'+esc(h.type)+'</div>';
+    html += statRow('피해량', fmt(h.dmg));
+    html += statRow('내구%', fmtPct(h.durable));
+    html += statRow('관통 (직격/경사/대경사/극단)', h.apDirect+' / '+h.apSlight+' / '+h.apLarge+' / '+h.apExtreme);
+    if(h.outerRadius) html += statRow('폭발 반경(내/외)', fmt(h.innerRadius,1)+'m / '+fmt(h.outerRadius,1)+'m');
+    if(h.falloff50m) html += statRow('50m 낙하 감쇠', fmtPct(h.falloff50m));
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // ---- column 2: target ----
+  html += '<div class="bp-col"><div class="bp-col-title">타겟 — '+esc(e.name)+' / '+esc(part.name)+'</div>';
+  html += statRow('부위 체력', part.hp > 0 ? fmt(part.hp) : '해당없음(메인만)');
+  html += statRow('메인 체력', fmt(mainHp));
+  html += statRow('장갑(AV)', avLabel(part.armor));
+  html += statRow('메인 기여율', fmtPct(part.toMain));
+  html += statRow('치명(파괴시 즉사)', part.lethal ? 'Yes' : 'No');
+  if(part.exdr) html += statRow('ExDR', fmtPct(part.exdr));
+  if(part.badr) html += statRow('BaDR', fmtPct(part.badr));
+  if(part.fireMult || e.fireMult) html += statRow('화염 배율', fmtPct(part.fireMult || e.fireMult));
+  if(e.regen){
+    var exempt = e.regen.exempt.indexOf(part.name) !== -1;
+    html += statRow('재생', exempt ? '없음 (이 부위는 재생 제외)' : ('초당 '+e.regen.rate+' (피격 후 '+e.regen.delay+'초 뒤 재개)'));
+  }
+  if(part.lightStagger || part.mediumStagger || part.heavyStagger || part.massiveStagger){
+    html += '<div class="bp-subhead">스태거 임계값 (경/중/중重/massive)</div>';
+    html += '<div class="bp-stat"><span class="mono" style="font-size:11px;">'+
+      [part.lightStagger,part.mediumStagger,part.heavyStagger,part.massiveStagger].map(function(s){return s||'-';}).join(' · ')+
+      '</span></div>';
+  }
+  html += '<div class="bp-tiles">';
+  html += '<div class="bp-tile"><span>BTK</span><b>'+fmtNum(c.btk)+'</b></div>';
+  html += '<div class="bp-tile"><span>TTK(초)</span><b>'+fmtNum(c.ttk,2)+'</b></div>';
+  html += '<div class="bp-tile"><span>오버킬</span><b>'+fmtNum(c.overkill)+'</b></div>';
+  html += '<div class="bp-tile"><span>재장전 횟수</span><b>'+fmtNum(c.reloads)+'</b></div>';
+  html += '<div class="bp-tile"><span>탄창 소모</span><b>'+fmtPct(c.magPct)+'</b></div>';
+  html += '<div class="bp-tile"><span>탄창당 처치</span><b>'+c.killsPerMag+'</b></div>';
+  html += '</div>';
+  html += '</div>';
+
+  // ---- column 3: detailed calculation ----
+  html += '<div class="bp-col bp-col-wide"><div class="bp-col-title">상세 계산</div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>피해 성분</th><th class="mono">관통(직격)</th><th class="mono">장갑(AV)</th><th>판정</th><th class="mono">피해</th><th>BTK 반영</th></tr></thead><tbody>';
+  hits.forEach(function(h, i){
+    var pen = h.apDirect >= part.armor;
+    html += '<tr'+(i>0?' style="opacity:.55;"':'')+'><td>'+esc(h.type)+'</td><td class="mono">'+h.apDirect+'</td><td class="mono">'+part.armor+'</td>'+
+      '<td>'+(pen?'<span class="status-pill status-full">관통</span>':'<span class="status-pill status-partial">내구만</span>')+'</td>'+
+      '<td class="mono">'+fmtNum(pen?h.dmg:h.dmg*h.durable)+'</td>'+
+      '<td>'+(i===0?'<span class="status-pill status-full">적용</span>':'<span class="status-pill status-blocked">참고용</span>')+'</td></tr>';
+  });
+  html += '<tr style="font-weight:600;"><td colspan="4">BTK/TTK에 실제 적용된 피해 (직격 성분만)</td><td class="mono">'+fmtNum(c.eff)+'</td><td></td></tr>';
+  if(!part.lethal){
+    html += '<tr><td colspan="4">메인 체력 반영분 (× 메인 기여율 '+fmtPct(part.toMain)+')</td><td class="mono">'+fmtNum(c.eff*part.toMain)+'</td><td></td></tr>';
+  }
+  html += '</tbody></table></div>';
+  if(hits.length > 1){
+    html += '<div class="img-credit" style="margin-top:6px;">2번째 이후 성분(주로 폭발 스플래시)은 참고용으로만 표시됩니다 — 직격 지점과 같은 부위에 얼마나 들어가는지는 원본 시트도 "실험적"이라 명시한 부분이라 BTK 계산엔 포함하지 않았습니다.</div>';
+  }
+
+  html += '<div class="section-label" style="margin-top:14px;">결과 요약</div>';
+  html += '<div class="intel"><ul>';
+  html += '<li>'+esc(w.name)+'(으)로 '+esc(part.name)+' 부위를 '+fmtNum(c.btk)+'발 맞히면 '+(part.lethal?'그 부위 파괴로 즉사':'메인 체력 소모로 처치')+'됩니다 (약 '+fmtNum(c.ttk,2)+'초, 재장전 '+fmtNum(c.reloads)+'회 포함).</li>';
+  html += '<li>마지막 한 발의 초과 피해(오버킬)는 약 '+fmtNum(c.overkill)+'이며, 탄창의 '+fmtPct(c.magPct)+'을 소모합니다.</li>';
+  if(c.sever!==null && c.sever!==c.btk){ html += '<li>이 부위 자체(껍데기)만 파괴하는 데는 '+c.sever+'발이면 충분합니다 (전체 처치와는 별개).</li>'; }
+  if(c.regenWarning){ html += '<li style="color:var(--danger);">⚠ 이 무기의 지속 DPS가 이 부위의 재생 속도를 못 넘습니다 — 계속 쏴도 체력이 안 줄어들 수 있습니다. 재생 없는 부위(위 "재생" 항목 참고)나 순간 폭딜 수단으로 바꾸세요.</li>'; }
+  html += '</ul></div>';
+  html += '</div>';
+
+  html += '</div>'; // .bp-grid
+  return html;
+}
+
+function wireWeaponPanelEvents(){
+  Array.prototype.forEach.call(document.querySelectorAll('.weapon-head .tab-btn'), function(btn){
+    btn.addEventListener('click', function(){ viewMode = btn.getAttribute('data-view'); renderWeaponPanel(); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.part-chip'), function(chip){
+    chip.addEventListener('click', function(){ selectedPart = +chip.getAttribute('data-idx'); renderWeaponPanel(); });
+  });
+  document.getElementById('reset-btn').addEventListener('click', function(){
+    if(confirm('모든 적/무기 데이터를 기본값으로 되돌립니다. 계속할까요?')) resetAll();
+  });
+
+  if(viewMode === "compare"){
+    Array.prototype.forEach.call(document.querySelectorAll('.chips-row .tab-btn[data-cat]'), function(btn){
+      btn.addEventListener('click', function(){ catFilter = btn.getAttribute('data-cat'); renderWeaponPanel(); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('th.sortable'), function(th){
+      th.addEventListener('click', function(){
+        var k = th.getAttribute('data-sort');
+        if(sortKey===k) sortDir *= -1; else { sortKey = k; sortDir = 1; }
+        renderWeaponPanel();
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.bp-jump'), function(btn){
+      btn.addEventListener('click', function(){
+        selectedWeapon = btn.getAttribute('data-id');
+        viewMode = "breakpoint";
+        renderWeaponPanel();
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#weapon-panel input.num-in'), function(inp){
+      inp.addEventListener('change', function(){
+        var id = inp.getAttribute('data-id'), field = inp.getAttribute('data-field');
+        var w = findWeapon(id);
+        var h0 = weaponHits(w)[0];
+        var v = +inp.value;
+        if(field==="durablePct"){ h0.durable = Math.max(0, Math.min(100, v))/100; }
+        else if(field==="mag"){ w.mag = Math.max(1, Math.round(v)); }
+        else if(field==="pen"){ h0.apDirect = Math.max(0, Math.round(v)); }
+        else if(field==="dmg"){ h0.dmg = Math.max(0, v); }
+        else { w[field] = Math.max(0, v); }
+        save(); renderWeaponPanel();
+      });
+    });
+  } else {
+    var sel = document.getElementById('bp-weapon-sel');
+    if(sel) sel.addEventListener('change', function(){ selectedWeapon = this.value; renderWeaponPanel(); });
+  }
+}
+
+
+function renderAll(){ renderSidebar(); renderDossier(); renderWeaponPanel(); }
+renderAll();
+})();
+</script>
