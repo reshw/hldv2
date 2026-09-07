@@ -322,8 +322,9 @@ footer a{color:var(--text-faint); text-decoration:underline;}
    Entity proper nouns (enemy/weapon names) are NOT auto-translated - HD2's own Korean
    localization mixes transliteration ("Bile Spewer" -> "바일 스퓨어") and semantic
    translation ("PATRIOT" -> "애국자") unpredictably per term, so guessing would risk
-   real inaccuracy. Each enemy/weapon has an optional `nameKo` field (currently empty)
-   that display falls back from - fill it in per-item with verified names, not generated. */
+   real inaccuracy. Each enemy/weapon has an optional `nameKo` field - filled in per-item
+   with verified names via a separate data-entry tool, never auto-generated. All 50 enemies
+   are done (2026-09-07); weapons are not yet. */
 var STRINGS = {
   ko: {
     app_sub: "전장 병기 데이터 · 몹 대응 전략 단말", app_tag: "Managed Democracy Field Manual", lang_toggle: "EN",
