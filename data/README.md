@@ -137,6 +137,16 @@ someone wants to chase it further. `raw_changelog`'s last real entry is 2025-06-
 (v2.3), and the author's own to-do list there doesn't even mention Crusher/Wretch -
 confirms the sheet is roughly a year-plus stale as of this writing.
 
+**Known correction (2026-09-07):** the live gviz CSV fetch that populates
+`raw_weapon_stats` silently dropped ~80 cells across the sheet - mostly the
+`projectiles` column's text labels for non-bullet weapons (`Beam`/`Melee`/`Throwable`/`Arc`),
+those same weapons' `speed`, and a handful of `tactical_reload` range strings
+(e.g. `"1.3 - 3.3"`). Found by diffing the DB against a manually-exported xlsx of the
+same tab (`mcp-server/scripts/verify_weapon_stats_xlsx.py`) and patched in place
+(`db/patch_raw_weapon_stats.cjs`) - zero actual conflicts, every other cell already
+matched exactly. If a fresher export ever gets handed over again, re-run the verify
+script first (point `XLSX_PATH` at it) rather than assuming the live fetch is complete.
+
 ## Keeping this in sync
 
 These files are generated FROM `ballistics.html` (not the other way around)
