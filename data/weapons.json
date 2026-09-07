@@ -2,6 +2,7 @@
   {
     "id": "ar_2_coyote",
     "name": "AR-2 Coyote",
+    "nameKo": "AR-2 코요테",
     "cat": "primary",
     "subcat": "assault_rifle",
     "pen": 3,
@@ -49,6 +50,7 @@
   {
     "id": "ar_23_liberator",
     "name": "AR-23 Liberator",
+    "nameKo": "AR-23 리버레이터",
     "cat": "primary",
     "subcat": "assault_rifle",
     "pen": 2,
@@ -117,6 +119,7 @@
   {
     "id": "ar_23a_liberator_carbine",
     "name": "AR-23A Liberator Carbine",
+    "nameKo": "AR-23A 리버레이터 카빈",
     "cat": "primary",
     "subcat": "assault_rifle",
     "pen": 2,
@@ -185,6 +188,7 @@
   {
     "id": "ar_23c_liberator_concussive",
     "name": "AR-23C Liberator Concussive",
+    "nameKo": "AR-23C 리버레이터 컨커시브",
     "cat": "primary",
     "subcat": "assault_rifle",
     "pen": 2,
@@ -252,6 +256,7 @@
   {
     "id": "ar_23p_liberator_penetrator",
     "name": "AR-23P Liberator Penetrator",
+    "nameKo": "AR-23P 리버레이터 페네트레이터",
     "cat": "primary",
     "subcat": "assault_rifle",
     "pen": 3,
@@ -320,6 +325,7 @@
   {
     "id": "ar_32_pacifier",
     "name": "AR-32 Pacifier",
+    "nameKo": "AR-32 퍼시파이어",
     "cat": "primary",
     "subcat": "assault_rifle",
     "pen": 3,
@@ -358,6 +364,7 @@
   {
     "id": "ar_61_tenderizer",
     "name": "AR-61 Tenderizer",
+    "nameKo": "AR-61 텐더라이저",
     "cat": "primary",
     "subcat": "assault_rifle",
     "pen": 2,
@@ -444,6 +451,7 @@
   {
     "id": "br_14_adjudicator",
     "name": "BR-14 Adjudicator",
+    "nameKo": "BR-14 어드주디케이터",
     "cat": "primary",
     "subcat": "assault_rifle",
     "pen": 3,
@@ -481,6 +489,7 @@
   {
     "id": "cb_9_exploding_crossbow",
     "name": "CB-9 Exploding Crossbow",
+    "nameKo": "CB-9 익스플로딩 크로스보우",
     "cat": "primary",
     "subcat": "explosive",
     "pen": 3,
@@ -533,6 +542,7 @@
   {
     "id": "flam_66_torcher",
     "name": "FLAM-66 Torcher",
+    "nameKo": "FLAM-66 토처",
     "cat": "primary",
     "subcat": "special",
     "pen": 4,
@@ -610,6 +620,7 @@
   {
     "id": "jar_5_dominator",
     "name": "JAR-5 Dominator",
+    "nameKo": "JAR-5 도미네이터",
     "cat": "primary",
     "subcat": "special",
     "pen": 3,
@@ -645,6 +656,7 @@
   {
     "id": "las_16_sickle",
     "name": "LAS-16 Sickle",
+    "nameKo": "LAS-16 시클",
     "cat": "primary",
     "subcat": "energy",
     "pen": 2,
@@ -680,6 +692,7 @@
   {
     "id": "las_17_double_edge_sickle_0_25",
     "name": "LAS-17 Double-Edge Sickle (0-25%)",
+    "nameKo": "LAS-17 더블 엣지 시클",
     "cat": "primary",
     "subcat": "energy",
     "pen": 2,
@@ -715,6 +728,7 @@
   {
     "id": "las_17_double_edge_sickle_26_50",
     "name": "LAS-17 Double-Edge Sickle (26-50%)",
+    "nameKo": "LAS-17 더블 엣지 시클",
     "cat": "primary",
     "subcat": "energy",
     "pen": 3,
@@ -750,6 +764,7 @@
   {
     "id": "las_17_double_edge_sickle_51_90",
     "name": "LAS-17 Double-Edge Sickle (51-90%)",
+    "nameKo": "LAS-17 더블 엣지 시클",
     "cat": "primary",
     "subcat": "energy",
     "pen": 3,
@@ -785,6 +800,7 @@
   {
     "id": "las_17_double_edge_sickle_91_100",
     "name": "LAS-17 Double-Edge Sickle (91-100%)",
+    "nameKo": "LAS-17 더블 엣지 시클",
     "cat": "primary",
     "subcat": "energy",
     "pen": 4,
@@ -820,6 +836,7 @@
   {
     "id": "las_5_scythe",
     "name": "LAS-5 Scythe",
+    "nameKo": "LAS-5 사이스",
     "cat": "primary",
     "subcat": "energy",
     "pen": 2,
@@ -857,6 +874,7 @@
   {
     "id": "m7s_smg",
     "name": "M7S SMG",
+    "nameKo": "M7S 기관단총",
     "cat": "primary",
     "subcat": "smg",
     "pen": 2,
@@ -895,6 +913,7 @@
   {
     "id": "m90a_shotgun",
     "name": "M90A Shotgun",
+    "nameKo": "M90A 샷건",
     "cat": "primary",
     "subcat": "shotgun",
     "pen": 2,
@@ -932,6 +951,7 @@
   {
     "id": "ma5c_assault_rifle",
     "name": "MA5C Assault Rifle",
+    "nameKo": "MA5C 어썰트 라이플",
     "cat": "primary",
     "subcat": "assault_rifle",
     "pen": 3,
@@ -969,6 +989,7 @@
   {
     "id": "mp_98_knight",
     "name": "MP-98 Knight",
+    "nameKo": "MP-98 나이트",
     "cat": "primary",
     "subcat": "smg",
     "pen": 2,
@@ -1022,6 +1043,7 @@
   {
     "id": "plas_1_scorcher",
     "name": "PLAS-1 Scorcher",
+    "nameKo": "PLAS-1 스코처",
     "cat": "primary",
     "subcat": "energy",
     "pen": 2,
@@ -1075,6 +1097,7 @@
   {
     "id": "plas_101_purifier_charged",
     "name": "PLAS-101 Purifier (charged)",
+    "nameKo": "PLAS-101 퓨리파이어",
     "cat": "primary",
     "subcat": "energy",
     "pen": 3,
@@ -1128,6 +1151,7 @@
   {
     "id": "plas_101_purifier_uncharged",
     "name": "PLAS-101 Purifier (uncharged)",
+    "nameKo": "PLAS-101 퓨리파이어",
     "cat": "primary",
     "subcat": "energy",
     "pen": 3,
@@ -1181,6 +1205,7 @@
   {
     "id": "plas_39_accelerator_rifle",
     "name": "PLAS-39 Accelerator Rifle",
+    "nameKo": "PLAS-39 가속 소총",
     "cat": "primary",
     "subcat": "energy",
     "pen": 3,
@@ -1234,6 +1259,7 @@
   {
     "id": "r_2_amendment",
     "name": "R-2 Amendment",
+    "nameKo": "R-2 어멘드멘트",
     "cat": "primary",
     "subcat": "marksman_rifle",
     "pen": 2,
@@ -1299,6 +1325,7 @@
   {
     "id": "r_2124_constitution",
     "name": "R-2124 Constitution",
+    "nameKo": "R-2124 콘스티튜션",
     "cat": "primary",
     "subcat": "marksman_rifle",
     "pen": 3,
@@ -1362,6 +1389,7 @@
   {
     "id": "r_36_eruptor",
     "name": "R-36 Eruptor",
+    "nameKo": "R-36 이럽터",
     "cat": "primary",
     "subcat": "explosive",
     "pen": 4,
@@ -1427,6 +1455,7 @@
   {
     "id": "r_6_deadeye",
     "name": "R-6 Deadeye",
+    "nameKo": "R-6 데드아이",
     "cat": "primary",
     "subcat": "marksman_rifle",
     "pen": 3,
@@ -1463,6 +1492,7 @@
   {
     "id": "r_63_diligence",
     "name": "R-63 Diligence",
+    "nameKo": "R-63 딜리전스",
     "cat": "primary",
     "subcat": "marksman_rifle",
     "pen": 2,
@@ -1500,6 +1530,7 @@
   {
     "id": "r_63cs_diligence_counter_sniper",
     "name": "R-63CS Diligence Counter Sniper",
+    "nameKo": "R-63CS 딜리전스 카운터 저격소총",
     "cat": "primary",
     "subcat": "marksman_rifle",
     "pen": 3,
@@ -1537,6 +1568,7 @@
   {
     "id": "sg_20_halt_flechette",
     "name": "SG-20 Halt (flechette)",
+    "nameKo": "SG-20 홀트",
     "cat": "primary",
     "subcat": "shotgun",
     "pen": 3,
@@ -1574,6 +1606,7 @@
   {
     "id": "sg_20_halt_stun",
     "name": "SG-20 Halt (stun)",
+    "nameKo": "SG-20 홀트",
     "cat": "primary",
     "subcat": "shotgun",
     "pen": 2,
@@ -1611,6 +1644,7 @@
   {
     "id": "sg_225_breaker",
     "name": "SG-225 Breaker",
+    "nameKo": "SG-225 브레이커",
     "cat": "primary",
     "subcat": "shotgun",
     "pen": 2,
@@ -1679,6 +1713,7 @@
   {
     "id": "sg_225ie_breaker_incendiary",
     "name": "SG-225IE Breaker Incendiary",
+    "nameKo": "SG-225IE 브레이커 인센디어리",
     "cat": "primary",
     "subcat": "shotgun",
     "pen": 2,
@@ -1747,6 +1782,7 @@
   {
     "id": "sg_225sp_breaker_spray_pray",
     "name": "SG-225SP Breaker Spray & Pray",
+    "nameKo": "SG-225SP 브레이커 스프레이 앤 프레이",
     "cat": "primary",
     "subcat": "shotgun",
     "pen": 2,
@@ -1815,6 +1851,7 @@
   {
     "id": "sg_451_cookout",
     "name": "SG-451 Cookout",
+    "nameKo": "SG-451 쿡아웃",
     "cat": "primary",
     "subcat": "shotgun",
     "pen": 2,
@@ -1861,6 +1898,7 @@
   {
     "id": "sg_8_punisher",
     "name": "SG-8 Punisher",
+    "nameKo": "SG-8 퍼니셔",
     "cat": "primary",
     "subcat": "shotgun",
     "pen": 2,
@@ -1898,6 +1936,7 @@
   {
     "id": "sg_8p_punisher_plasma",
     "name": "SG-8P Punisher Plasma",
+    "nameKo": "SG-8P 퍼니셔 플라즈마",
     "cat": "primary",
     "subcat": "energy",
     "pen": 2,
@@ -1951,6 +1990,7 @@
   {
     "id": "sg_8s_slugger",
     "name": "SG-8S Slugger",
+    "nameKo": "SG-8S 슬러거",
     "cat": "primary",
     "subcat": "shotgun",
     "pen": 3,
@@ -1987,6 +2027,7 @@
   {
     "id": "smg_32_reprimand",
     "name": "SMG-32 Reprimand",
+    "nameKo": "SMG-32 레프리맨드",
     "cat": "primary",
     "subcat": "smg",
     "pen": 3,
@@ -2025,6 +2066,7 @@
   {
     "id": "smg_37_defender",
     "name": "SMG-37 Defender",
+    "nameKo": "SMG-37 디펜더",
     "cat": "primary",
     "subcat": "smg",
     "pen": 2,
@@ -2093,6 +2135,7 @@
   {
     "id": "smg_72_pummeler",
     "name": "SMG-72 Pummeler",
+    "nameKo": "SMG-72 퍼멜러",
     "cat": "primary",
     "subcat": "smg",
     "pen": 2,
@@ -2161,6 +2204,7 @@
   {
     "id": "sta_11_smg",
     "name": "StA-11 SMG",
+    "nameKo": "StA-11 기관단총",
     "cat": "primary",
     "subcat": "smg",
     "pen": 2,
@@ -2199,6 +2243,7 @@
   {
     "id": "sta_52_assault_rifle",
     "name": "StA-52 Assault Rifle",
+    "nameKo": "StA-52 돌격소총",
     "cat": "primary",
     "subcat": "assault_rifle",
     "pen": 2,
@@ -2236,6 +2281,7 @@
   {
     "id": "vg_70_variable",
     "name": "VG-70 Variable",
+    "nameKo": "VG-70 배리어블",
     "cat": "primary",
     "subcat": "special",
     "pen": 2,
@@ -2304,6 +2350,7 @@
   {
     "id": "vg_70_variable_total",
     "name": "VG-70 Variable (total)",
+    "nameKo": "VG-70 배리어블",
     "cat": "primary",
     "subcat": "special",
     "pen": 2,
@@ -2342,6 +2389,7 @@
   {
     "id": "vg_70_variable_volley",
     "name": "VG-70 Variable (volley)",
+    "nameKo": "VG-70 배리어블",
     "cat": "primary",
     "subcat": "special",
     "pen": 2,
@@ -3040,6 +3088,7 @@
   {
     "id": "ac_8_autocannon_aphet",
     "name": "AC-8 Autocannon APHET",
+    "nameKo": "AC-8 오토캐넌 철갑고폭예광탄",
     "cat": "support",
     "subcat": "explosive",
     "pen": 4,
@@ -3092,6 +3141,7 @@
   {
     "id": "ac_8_autocannon_flak",
     "name": "AC-8 Autocannon FLAK",
+    "nameKo": "AC-8 오토캐넌 대공포탄",
     "cat": "support",
     "subcat": "explosive",
     "pen": 2,
@@ -3160,6 +3210,7 @@
   {
     "id": "apw_1_anti_materiel_rifle",
     "name": "APW-1 Anti-Materiel Rifle",
+    "nameKo": "APW-1 대물소총",
     "cat": "support",
     "subcat": "precision",
     "pen": 4,
@@ -3197,6 +3248,7 @@
   {
     "id": "arc_3_arc_thrower",
     "name": "ARC-3 Arc Thrower",
+    "nameKo": "ARC-3 아크 발사기",
     "cat": "support",
     "subcat": "energy",
     "pen": 7,
@@ -3229,6 +3281,7 @@
   {
     "id": "eat_17_expendable_anti_tank",
     "name": "EAT-17 Expendable Anti-Tank",
+    "nameKo": "EAT-17 일회성 대전차",
     "cat": "support",
     "subcat": "launcher",
     "pen": 6,
@@ -3278,6 +3331,7 @@
   {
     "id": "eat_700_expendable_napalm_wip",
     "name": "EAT-700 Expendable Napalm (WIP)",
+    "nameKo": "EAT-700 일회성 네이팜",
     "cat": "support",
     "subcat": "launcher",
     "pen": 5,
@@ -3313,6 +3367,7 @@
   {
     "id": "faf_14_spear",
     "name": "FAF-14 Spear",
+    "nameKo": "FAF-14 스피어",
     "cat": "support",
     "subcat": "launcher",
     "pen": 7,
@@ -3361,6 +3416,7 @@
   {
     "id": "flam_40_flamethrower",
     "name": "FLAM-40 Flamethrower",
+    "nameKo": "FLAM-40 화염방사기",
     "cat": "support",
     "subcat": "heavy",
     "pen": 4,
@@ -3438,6 +3494,7 @@
   {
     "id": "gl_21_grenade_launcher",
     "name": "GL-21 Grenade Launcher",
+    "nameKo": "GL-21 유탄 발사기",
     "cat": "support",
     "subcat": "explosive",
     "pen": 0,
@@ -3491,6 +3548,7 @@
   {
     "id": "gl_52_de_escalator",
     "name": "GL-52 De-Escalator",
+    "nameKo": "GL-52 디에스컬레이터",
     "cat": "support",
     "subcat": "explosive",
     "pen": 0,
@@ -3528,6 +3586,7 @@
   {
     "id": "gr_8_recoilless_rifle_at",
     "name": "GR-8 Recoilless Rifle AT",
+    "nameKo": "GR-8 무반동포 대전차고폭탄",
     "cat": "support",
     "subcat": "launcher",
     "pen": 6,
@@ -3581,6 +3640,7 @@
   {
     "id": "gr_8_recoilless_rifle_he",
     "name": "GR-8 Recoilless Rifle HE",
+    "nameKo": "GR-8 무반동포 고폭탄",
     "cat": "support",
     "subcat": "launcher",
     "pen": 5,
@@ -3631,6 +3691,7 @@
   {
     "id": "las_98_laser_cannon",
     "name": "LAS-98 Laser Cannon",
+    "nameKo": "LAS-98 레이저 캐넌",
     "cat": "support",
     "subcat": "energy",
     "pen": 4,
@@ -3664,6 +3725,7 @@
   {
     "id": "las_99_quasar_cannon",
     "name": "LAS-99 Quasar Cannon",
+    "nameKo": "LAS-99 퀘이사 캐넌",
     "cat": "support",
     "subcat": "energy",
     "pen": 6,
@@ -3714,6 +3776,7 @@
   {
     "id": "m_105_stalwart",
     "name": "M-105 Stalwart",
+    "nameKo": "M-105 스털워트",
     "cat": "support",
     "subcat": "heavy",
     "pen": 2,
@@ -3781,6 +3844,7 @@
   {
     "id": "mg_206_heavy_machine_gun",
     "name": "MG-206 Heavy Machine Gun",
+    "nameKo": "MG-206 중기관총",
     "cat": "support",
     "subcat": "heavy",
     "pen": 4,
@@ -3847,6 +3911,7 @@
   {
     "id": "mg_43_machine_gun",
     "name": "MG-43 Machine Gun",
+    "nameKo": "MG-43 기관총",
     "cat": "support",
     "subcat": "heavy",
     "pen": 3,
@@ -3914,6 +3979,7 @@
   {
     "id": "mls_4x_commando",
     "name": "MLS-4X Commando",
+    "nameKo": "MLS-4X 코만도",
     "cat": "support",
     "subcat": "launcher",
     "pen": 6,
@@ -3961,6 +4027,7 @@
   {
     "id": "plas_45_epoch_charged",
     "name": "PLAS-45 Epoch (charged)",
+    "nameKo": "PLAS-45 에포크",
     "cat": "support",
     "subcat": "energy",
     "pen": 5,
@@ -4014,6 +4081,7 @@
   {
     "id": "plas_45_epoch_uncharged",
     "name": "PLAS-45 Epoch (uncharged)",
+    "nameKo": "PLAS-45 에포크",
     "cat": "support",
     "subcat": "energy",
     "pen": 4,
@@ -4067,6 +4135,7 @@
   {
     "id": "rl_77_airburst_rocket_launcher_bomblet",
     "name": "RL-77 Airburst Rocket Launcher (bomblet)",
+    "nameKo": "RL-77 공중폭발 로켓 발사기",
     "cat": "support",
     "subcat": "launcher",
     "pen": 3,
@@ -4111,6 +4180,7 @@
   {
     "id": "rs_422_railgun",
     "name": "RS-422 Railgun",
+    "nameKo": "RS-422 레일건",
     "cat": "support",
     "subcat": "precision",
     "pen": 5,
@@ -4149,6 +4219,7 @@
   {
     "id": "s_11_speargun",
     "name": "S-11 Speargun",
+    "nameKo": "S-11 작살총",
     "cat": "support",
     "subcat": "precision",
     "pen": 5,
@@ -4185,6 +4256,7 @@
   {
     "id": "sg_88_break_action_shotgun",
     "name": "SG-88 Break-Action Shotgun",
+    "nameKo": "SG-88 중절식 산탄총",
     "cat": "support",
     "subcat": "shotgun",
     "pen": 2,
@@ -4223,6 +4295,7 @@
   {
     "id": "sta_x3_wasp_launcher",
     "name": "StA-X3 WASP Launcher",
+    "nameKo": "StA-X3 WASP 발사기",
     "cat": "support",
     "subcat": "launcher",
     "pen": 6,
@@ -4271,6 +4344,7 @@
   {
     "id": "tx_41_sterilizer",
     "name": "TX-41 Sterilizer",
+    "nameKo": "TX-41 스터릴라이저",
     "cat": "support",
     "subcat": "heavy",
     "pen": 5,

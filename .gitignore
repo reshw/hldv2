@@ -1,3 +1,16 @@
 node_modules/
 .DS_Store
 *.log
+
+# next.js
+/.next/
+/out/
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# vercel
+.vercel
+
+# env files (db/.env is separately gitignored; this covers root-level ones)
+/.env*
