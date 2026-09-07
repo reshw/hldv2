@@ -210,20 +210,11 @@ select.armor-sel{
 .bp-tile span{font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.04em;}
 .bp-tile b{font-family:'IBM Plex Mono'; font-size:17px; color:var(--accent); font-weight:600;}
 
-.stat-cards{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; margin:10px 0;}
-@media (max-width:420px){ .stat-cards{grid-template-columns:repeat(2, minmax(0,1fr));} }
-.stat-card{background:var(--surface); border:1px solid var(--border-soft); border-radius:4px; padding:8px 10px; display:flex; flex-direction:column; gap:4px; min-width:0;}
-.stat-card-wide{grid-column:1 / -1;}
-.stat-card > span:first-child{font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.04em;}
-.stat-card b{font-family:'IBM Plex Mono'; font-size:16px; color:var(--accent); font-weight:600;}
-.stat-card .stat-val-row{display:flex; align-items:baseline; gap:3px;}
-.stat-card input.num-in{
-  width:100%; box-sizing:border-box; background:transparent; border:none; padding:0;
-  font-family:'IBM Plex Mono'; font-size:16px; color:var(--accent); font-weight:600;
-}
-.stat-card input.num-in:focus{outline:1px solid var(--accent); outline-offset:2px; border-radius:2px;}
-.stat-card .unit{font-family:'IBM Plex Mono'; font-size:13px; color:var(--accent-dim);}
-.stat-card .starbtn{font-size:20px; text-align:left; padding:0;}
+.stat-sections{display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; margin:10px 0;}
+@media (max-width:520px){ .stat-sections{grid-template-columns:minmax(0,1fr);} }
+.stat-section{background:var(--surface); border:1px solid var(--border-soft); border-radius:4px; padding:10px 14px; align-self:start; min-width:0;}
+.stat-section-title{font-family:'Oswald'; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent); margin-bottom:6px; padding-bottom:5px; border-bottom:1px solid var(--border-soft);}
+.stat-section .bp-stat input.num-in{width:64px; text-align:right;}
 .part-chip.active .w{color:var(--accent-ink);}
 
 .weapon-panel{padding:18px 20px;}
@@ -346,7 +337,7 @@ var STRINGS = {
     target_parthp: "부위 체력", target_parthp_na: "해당없음(메인만)", target_mainhp: "메인 체력", target_armor: "장갑(AV)",
     target_durability: "부위 내구%", target_tomain: "메인 기여율", target_lethal: "치명(파괴시 즉사)",
     target_exdr: "ExDR", target_badr: "BaDR", target_firemult: "화염 배율", target_regen: "재생", target_regen_none: "없음 (이 부위는 재생 제외)", regen_resume_suffix: "뒤 재개",
-    target_stagger_label: "스태거 임계값 (경/중/중重/massive)",
+    target_stagger_label: "스태거 임계값 (경/중/중重/massive)", target_extra_label: "추가 특성",
     tile_btk:"BTK", tile_ttk:"TTK(초)", tile_overkill:"오버킬", tile_reloads:"재장전 횟수", tile_magpct:"탄창 소모", tile_killspermag:"탄창당 처치",
     detail_col_component:"피해 성분", detail_col_pen:"관통(직격)", detail_col_armor:"장갑(AV)", detail_col_judge:"판정",
     detail_col_dmg:"피해", detail_col_applied:"BTK 반영", detail_applied:"적용(최댓값)", detail_notapplied:"미적용",
@@ -389,7 +380,7 @@ var STRINGS = {
     target_parthp: "Part HP", target_parthp_na: "N/A (main only)", target_mainhp: "Main HP", target_armor: "Armor(AV)",
     target_durability: "Part durability%", target_tomain: "Main share", target_lethal: "Lethal (kills on destroy)",
     target_exdr: "ExDR", target_badr: "BaDR", target_firemult: "Fire multiplier", target_regen: "Regen", target_regen_none: "None (exempt part)", regen_resume_suffix: "delay",
-    target_stagger_label: "Stagger thresholds (light/medium/heavy/massive)",
+    target_stagger_label: "Stagger thresholds (light/medium/heavy/massive)", target_extra_label: "Additional traits",
     tile_btk:"BTK", tile_ttk:"TTK(s)", tile_overkill:"Overkill", tile_reloads:"Reloads", tile_magpct:"Mag used", tile_killspermag:"Kills/mag",
     detail_col_component:"Component", detail_col_pen:"Pen(direct)", detail_col_armor:"Armor(AV)", detail_col_judge:"Result",
     detail_col_dmg:"Damage", detail_col_applied:"Used for BTK", detail_applied:"Used (max)", detail_notapplied:"Not used",
@@ -965,24 +956,28 @@ function renderMobInfo(){
       (isInvuln?'<b>'+t("invuln_prefix")+'</b> ':'<b>'+t("ref_prefix")+'</b> ')+esc(part.notes)+'</div>';
   }
 
-  html += '<div class="bp-subhead">'+esc(part.name)+' — '+t('parts_table_label')+'</div>';
-  html += '<div class="stat-cards">';
-  html += '<div class="stat-card"><span>'+t('col_hp')+'</span><input class="num-in" type="number" min="1" value="'+part.hp+'" data-field="hp"></div>';
-  html += '<div class="stat-card"><span>'+t('col_armor')+'</span><input class="num-in" type="number" min="0" max="10" value="'+part.armor+'" data-field="armor"></div>';
-  html += '<div class="stat-card"><span>'+t('col_durability')+'</span><div class="stat-val-row"><input class="num-in" type="number" min="0" max="100" step="5" value="'+Math.round((part.durability||0)*100)+'" data-field="durabilityPct"><span class="unit">%</span></div></div>';
-  html += '<div class="stat-card"><span>'+t('col_tomain')+'</span><div class="stat-val-row"><input class="num-in" type="number" min="0" max="500" step="5" value="'+Math.round(part.toMain*100)+'" data-field="toMainPct"><span class="unit">%</span></div></div>';
-  html += '<div class="stat-card"><span>'+t('col_lethal')+'</span><button class="starbtn'+(part.lethal?' on':'')+'" id="lethal-toggle-btn">'+(part.lethal?'★':'☆')+'</button></div>';
-  if(part.exdr) html += '<div class="stat-card"><span>'+t('target_exdr')+'</span><b>'+fmtPct(part.exdr)+'</b></div>';
-  if(part.badr) html += '<div class="stat-card"><span>'+t('target_badr')+'</span><b>'+fmtPct(part.badr)+'</b></div>';
-  if(part.fireMult || e.fireMult) html += '<div class="stat-card"><span>'+t('target_firemult')+'</span><b>'+fmtPct(part.fireMult || e.fireMult)+'</b></div>';
+  html += '<div class="stat-sections">';
+  html += '<div class="stat-section"><div class="stat-section-title">'+esc(part.name)+'</div>';
+  html += '<div class="bp-stat"><span>'+t('col_hp')+'</span><input class="num-in mono" type="number" min="1" value="'+part.hp+'" data-field="hp"></div>';
+  html += '<div class="bp-stat"><span>'+t('col_armor')+'</span><input class="num-in mono" type="number" min="0" max="10" value="'+part.armor+'" data-field="armor"></div>';
+  html += '<div class="bp-stat"><span>'+t('col_durability')+'</span><input class="num-in mono" type="number" min="0" max="100" step="5" value="'+Math.round((part.durability||0)*100)+'" data-field="durabilityPct"></div>';
+  html += '<div class="bp-stat"><span>'+t('col_tomain')+'</span><input class="num-in mono" type="number" min="0" max="500" step="5" value="'+Math.round(part.toMain*100)+'" data-field="toMainPct"></div>';
+  html += '<div class="bp-stat"><span>'+t('col_lethal')+'</span><button class="starbtn'+(part.lethal?' on':'')+'" id="lethal-toggle-btn">'+(part.lethal?'★':'☆')+'</button></div>';
+  html += '</div>';
+
+  var extraRows = '';
+  if(part.exdr) extraRows += statRow(t('target_exdr'), fmtPct(part.exdr));
+  if(part.badr) extraRows += statRow(t('target_badr'), fmtPct(part.badr));
+  if(part.fireMult || e.fireMult) extraRows += statRow(t('target_firemult'), fmtPct(part.fireMult || e.fireMult));
   if(e.regen){
     var exempt = e.regen.exempt.indexOf(part.name) !== -1;
-    html += '<div class="stat-card"><span>'+t('target_regen')+'</span><b>'+(exempt ? t('target_regen_none') : (e.regen.rate+'/s ('+e.regen.delay+'s '+t('regen_resume_suffix')+')'))+'</b></div>';
+    extraRows += statRow(t('target_regen'), exempt ? t('target_regen_none') : (e.regen.rate+'/s ('+e.regen.delay+'s '+t('regen_resume_suffix')+')'));
   }
   if(part.lightStagger || part.mediumStagger || part.heavyStagger || part.massiveStagger){
-    html += '<div class="stat-card stat-card-wide"><span>'+t('target_stagger_label')+'</span><b class="mono" style="font-size:13px;">'+
-      [part.lightStagger,part.mediumStagger,part.heavyStagger,part.massiveStagger].map(function(s){return s||'-';}).join(' · ')+
-      '</b></div>';
+    extraRows += statRow(t('target_stagger_label'), [part.lightStagger,part.mediumStagger,part.heavyStagger,part.massiveStagger].map(function(s){return s||'-';}).join(' · '));
+  }
+  if(extraRows){
+    html += '<div class="stat-section"><div class="stat-section-title">'+t('target_extra_label')+'</div>'+extraRows+'</div>';
   }
   html += '</div>';
 
@@ -1126,16 +1121,17 @@ function renderWeaponInfo(){
   if(w.img){
     html += '<div class="bp-weapon-img"><img src="'+esc(w.img)+'" alt="'+esc(w.name)+'" onerror="this.parentElement.style.display=\'none\'"></div>';
   }
+  html += '<div class="stat-sections">';
+  html += '<div class="stat-section"><div class="stat-section-title">'+t('bp_col_weapon')+'</div>';
   html += statRow(t('stat_cat'), catLabel(w.cat));
   html += statRow(t('stat_mag'), fmt(w.mag));
   html += statRow(t('stat_rpm'), fmt(w.rpm));
   html += statRow(t('stat_reload'), fmt(w.reload,2));
   if(w.tacReload) html += statRow(t('stat_tacreload'), fmt(w.tacReload,2));
   if(w.ergonomics) html += statRow(t('stat_ergo'), fmt(w.ergonomics));
-  html += '<div class="bp-subhead">'+t('hit_components')+' ('+hits.length+')</div>';
+  html += '</div>';
   hits.forEach(function(h){
-    html += '<div class="bp-hit">';
-    html += '<div class="bp-hit-type">'+esc(h.type)+'</div>';
+    html += '<div class="stat-section"><div class="stat-section-title">'+esc(h.type)+'</div>';
     html += statRow(t('stat_dmg'), fmt(h.dmg));
     html += statRow(t('stat_durabledmg'), fmt(h.dmg*h.durable));
     html += statRow(t('stat_pen4'), h.apDirect+' / '+h.apSlight+' / '+h.apLarge+' / '+h.apExtreme);
@@ -1143,6 +1139,7 @@ function renderWeaponInfo(){
     if(h.falloff50m) html += statRow(t('stat_falloff50'), fmtPct(h.falloff50m));
     html += '</div>';
   });
+  html += '</div>';
 
   document.getElementById("weapon-info").innerHTML = html;
 }
