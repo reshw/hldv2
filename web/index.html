@@ -95,7 +95,8 @@ button{font-family:inherit;}
 
 .split-layout{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start;}
 @media (max-width:800px){ .split-layout{grid-template-columns:minmax(0,1fr);} }
-#result-panel, #compare-panel{margin-top:18px;}
+#compare-panel{margin-top:18px;}
+#result-panel{border-top:1px solid var(--border-soft);}
 
 /* ---------- panels (weapon / mob) ---------- */
 .panel{
@@ -280,7 +281,7 @@ footer a{color:var(--text-faint); text-decoration:underline;}
       <div id="weapon-info"></div>
     </div>
 
-    <!-- MOB: search + info -->
+    <!-- MOB + CALCULATOR: search + info + BTK/TTK result, merged into one section -->
     <div class="panel" id="mob-col">
       <div class="panel-head" id="mob-col-head"></div>
       <div class="weapon-combo" style="padding:10px 14px 0;">
@@ -288,10 +289,9 @@ footer a{color:var(--text-faint); text-decoration:underline;}
         <div id="enemy-search-overlay" class="weapon-combo-list" hidden></div>
       </div>
       <div id="mob-info"></div>
+      <div id="result-panel"></div>
     </div>
   </div>
-
-  <div class="panel" id="result-panel"></div>
 
   <div class="panel" id="compare-panel" hidden></div>
 
