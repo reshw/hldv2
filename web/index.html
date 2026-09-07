@@ -93,15 +93,11 @@ button{font-family:inherit;}
 }
 .disclaimer b{color:var(--warn);}
 
-.picker-layout{display:grid; grid-template-columns:minmax(0,260px) minmax(0,260px) minmax(0,1fr); gap:18px; align-items:start;}
-@media (max-width:1150px){ .picker-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);} #calculator-panel{grid-column:1 / -1;} }
-@media (max-width:700px){ .picker-layout{grid-template-columns:minmax(0,1fr);} #calculator-panel{grid-column:auto;} }
-#mob-detail, #compare-panel{margin-top:18px;}
-.panel-head-row{display:flex; justify-content:space-between; align-items:center; gap:8px; padding-right:10px;}
-.panel-head-row .panel-head{padding-right:0;}
-.panel-head-row .reset-btn{flex:none;}
+.split-layout{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start;}
+@media (max-width:800px){ .split-layout{grid-template-columns:minmax(0,1fr);} }
+#result-panel, #compare-panel{margin-top:18px;}
 
-/* ---------- pickers (mob / weapon) ---------- */
+/* ---------- panels (weapon / mob) ---------- */
 .panel{
   background:var(--surface); border:1px solid var(--border); border-radius:4px;
   box-shadow:var(--shadow); min-width:0;
@@ -110,35 +106,15 @@ button{font-family:inherit;}
   padding:10px 14px; border-bottom:1px solid var(--border-soft);
   font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-faint); font-weight:600;
 }
-.faction-group + .faction-group{border-top:1px solid var(--border-soft);}
-.faction-title{
-  display:flex; align-items:center; gap:8px; padding:10px 14px 4px;
-  font-family:'Oswald'; font-size:13px; letter-spacing:.06em; text-transform:uppercase;
-}
 .dot{width:9px; height:9px; border-radius:50%; flex:none;}
-.enemy-list{list-style:none; margin:0; padding:0 6px 8px;}
-.pick-list-wrap{max-height:340px; overflow-y:auto;}
-.pick-btn{
-  width:100%; text-align:left; background:transparent; border:1px solid transparent; color:var(--text-dim);
-  padding:7px 8px; border-radius:3px; cursor:pointer; font-size:13.5px; display:flex; justify-content:space-between; gap:8px;
-  align-items:center; overflow:hidden; box-sizing:border-box;
-}
-.pick-btn:hover{background:var(--surface-2); color:var(--text);}
-.pick-btn.active{background:var(--surface-3); border-color:var(--border); color:var(--accent); font-weight:600;}
-.pick-btn .pick-name{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;}
-.pick-btn .hp{font-size:10.5px; color:var(--text-faint); font-family:'IBM Plex Mono'; flex:none;}
-.pick-btn.active .hp{color:var(--accent-dim);}
 .sub-tag{
   display:inline-block; font-size:9px; letter-spacing:.03em; text-transform:uppercase;
   color:var(--illuminate); border:1px solid var(--illuminate); border-radius:3px;
   padding:1px 4px; margin-right:2px; vertical-align:middle; opacity:.85;
 }
-.weapon-pick-list{list-style:none; margin:0; padding:6px;}
-.weapon-pick-list li + li{margin-top:2px;}
-.weapon-pick-cat{font-size:9.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.03em;}
 
 /* ---------- calculator / mob detail ---------- */
-#mob-detail, #calculator-panel{padding:16px 18px;}
+#weapon-info, #mob-info, #result-panel{padding:16px 18px;}
 .dossier-top{display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;}
 .dossier-name{font-size:28px; margin:0 0 4px; color:var(--text);}
 .dossier-meta{display:flex; gap:8px; flex-wrap:wrap;}
@@ -199,9 +175,12 @@ select.armor-sel{
 .part-images figcaption{font-size:10.5px; color:var(--text-faint); margin-top:4px; letter-spacing:.04em; text-transform:uppercase;}
 .img-credit{font-size:10.5px; color:var(--text-faint); align-self:center;}
 
-.bp-weapon-select{margin:6px 0 12px; font-size:13px; color:var(--text-dim); display:flex; align-items:center; gap:8px;}
-.weapon-combo{position:relative; width:320px; max-width:100%;}
-.weapon-combo input{width:100%; box-sizing:border-box;}
+.weapon-combo{position:relative; width:100%;}
+.weapon-combo input.combo-input{
+  width:100%; box-sizing:border-box; background:var(--surface-2); border:1px solid var(--border);
+  color:var(--text); padding:8px 12px; border-radius:20px; font-size:13.5px;
+}
+.weapon-combo input.combo-input:focus{border-color:var(--accent);}
 .weapon-combo-list{
   position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:20; max-height:280px; overflow-y:auto;
   background:var(--surface-3); border:1px solid var(--border); border-radius:4px; box-shadow:var(--shadow);
@@ -283,30 +262,29 @@ footer a{color:var(--text-faint); text-decoration:underline;}
 
   <div class="disclaimer" id="disclaimer-box"></div>
 
-  <div class="picker-layout">
-    <!-- 1. MOB PICKER -->
-    <div class="panel" id="mob-panel">
-      <div class="panel-head-row">
-        <div class="panel-head" id="mob-panel-head"></div>
-        <button class="reset-btn" id="mobdetail-toggle-btn" style="padding:3px 8px;font-size:10.5px;"></button>
+  <div class="split-layout">
+    <!-- WEAPON: search + info -->
+    <div class="panel" id="weapon-col">
+      <div class="panel-head" id="weapon-col-head"></div>
+      <div class="weapon-combo" style="padding:10px 14px 0;">
+        <input type="text" id="weapon-search-input" class="combo-input" autocomplete="off">
+        <div id="weapon-search-overlay" class="weapon-combo-list" hidden></div>
       </div>
-      <div class="sidebar-search"><input type="text" id="enemy-search-input" autocomplete="off"></div>
-      <div id="mob-list"></div>
+      <div id="weapon-info"></div>
     </div>
 
-    <!-- 2. WEAPON PICKER -->
-    <div class="panel" id="weapon-picker-panel">
-      <div class="panel-head" id="weapon-picker-head"></div>
-      <div class="sidebar-search"><input type="text" id="weapon-search-input" autocomplete="off"></div>
-      <div class="chips-row" id="weapon-cat-filter" style="padding:8px 10px 0;"></div>
-      <div id="weapon-list"></div>
+    <!-- MOB: search + info -->
+    <div class="panel" id="mob-col">
+      <div class="panel-head" id="mob-col-head"></div>
+      <div class="weapon-combo" style="padding:10px 14px 0;">
+        <input type="text" id="enemy-search-input" class="combo-input" autocomplete="off">
+        <div id="enemy-search-overlay" class="weapon-combo-list" hidden></div>
+      </div>
+      <div id="mob-info"></div>
     </div>
-
-    <!-- 3. CALCULATOR -->
-    <div class="panel" id="calculator-panel"></div>
   </div>
 
-  <div class="panel" id="mob-detail"></div>
+  <div class="panel" id="result-panel"></div>
 
   <div class="panel" id="compare-panel" hidden></div>
 
@@ -359,8 +337,7 @@ var STRINGS = {
     detail_total_row: "BTK/TTK에 실제 적용된 피해 (장갑 대비 가장 센 성분 하나)", detail_mainshare_row: "메인 체력 반영분 (× 메인 기여율",
     results_summary_label: "결과 요약", invuln_prefix: "⚠ 이 부위는 관통·데미지 무관하게 무적입니다.", ref_prefix: "참고:", subfaction_suffix: "서브팩션 전용", invuln_tag: "[무적]",
     multi_hit_note: '이 부위 장갑 기준으로 가장 효과적인 피해 성분 하나만 골라 씁니다(예: 스코처는 저장갑엔 직격탄, 중장갑엔 폭발탄). 같은 발사에 여러 성분이 동시에 같은 부위에 들어가는지는 원본 시트도 "실험적"이라 명시한 부분이라 합산하지 않습니다.',
-    weapon_picker_head: "무기 검색", compare_toggle_show: "전체 무기 비교표 보기", compare_toggle_hide: "비교표 닫기",
-    mobdetail_toggle_show: "상세정보 보기", mobdetail_toggle_hide: "상세정보 숨기기",
+    weapon_col_head: "무기", mob_col_head: "몹", compare_toggle_show: "전체 무기 비교표 보기", compare_toggle_hide: "비교표 닫기",
     disclaimer_html: '<b>데이터 출처:</b> 무기 92종·몹 48종 전체가 <b>DiversDex</b>(커뮤니티 제작, 인게임 테스트로 교차검증된 스프레드시트)와 '+
       '<a href="https://github.com/helldivers-2/json" target="_blank" rel="noopener">helldivers-2/json</a>(MIT, GitHub)로 채워져 있습니다 — 더 이상 순수 추정값이 아닙니다. '+
       '다만 두 소스 다 Arrowhead 공식은 아니라 패치 후 오차가 생길 수 있어요. '+
@@ -403,8 +380,7 @@ var STRINGS = {
     detail_total_row: "Damage actually applied to BTK/TTK (best component vs this armor)", detail_mainshare_row: "Main HP share (× main share",
     results_summary_label: "Summary", invuln_prefix: "⚠ This part is invulnerable regardless of penetration/damage.", ref_prefix: "Note:", subfaction_suffix: "subfaction-only", invuln_tag: "[INVULN]",
     multi_hit_note: 'Only the single most effective damage component for this part\'s armor is used (e.g. the Scorcher uses its direct shot on light armor, its explosion on medium armor). Whether multiple components from one shot both land on the same part is something even the source sheet calls "experimental", so they are not summed.',
-    weapon_picker_head: "Weapon Search", compare_toggle_show: "Show full weapon comparison", compare_toggle_hide: "Hide comparison",
-    mobdetail_toggle_show: "Show details", mobdetail_toggle_hide: "Hide details",
+    weapon_col_head: "Weapon", mob_col_head: "Mob", compare_toggle_show: "Show full weapon comparison", compare_toggle_hide: "Hide comparison",
     disclaimer_html: '<b>Data sources:</b> all 92 weapons and 48 enemies come from <b>DiversDex</b> (a community spreadsheet, cross-checked and in-game tested) and '+
       '<a href="https://github.com/helldivers-2/json" target="_blank" rel="noopener">helldivers-2/json</a> (MIT, GitHub) — no longer pure guesswork. '+
       "Neither source is official Arrowhead data though, so patches can drift out of sync. "+
@@ -897,131 +873,142 @@ function penStatus(w, armor, partDurability){
   return (pd > 0 && h.durable > 0) ? "partial" : "blocked";
 }
 
-/* ============ 1. mob picker ============ */
-var enemySearchQuery = "";
-
-function renderMobList(){
-  var searchInput = document.getElementById("enemy-search-input");
-  searchInput.placeholder = t("sidebar_search_ph");
-
-  var q = enemySearchQuery.trim().toLowerCase();
-  var byFaction = {};
-  state.enemies.forEach(function(e){
-    if(q && e.name.toLowerCase().indexOf(q) === -1) return;
-    (byFaction[e.faction]=byFaction[e.faction]||[]).push(e);
-  });
-
-  var html = "";
-  var any = false;
-  Object.keys(FACTIONS).forEach(function(fid){
-    var f = FACTIONS[fid];
-    var list = byFaction[fid]||[];
-    if(!list.length) return;
-    any = true;
-    html += '<div class="faction-group">';
-    html += '<div class="faction-title" style="color:'+f.color+'"><span class="dot" style="background:'+f.color+'"></span>'+factionName(fid)+'</div>';
-    html += '<ul class="enemy-list">';
-    list.forEach(function(e){
-      var sub = e.subfaction ? '<span class="sub-tag" title="'+esc(e.subfaction)+'">'+esc(e.subfaction)+'</span> ' : '';
-      html += '<li><button class="pick-btn'+(e.id===selectedEnemy?' active':'')+'" data-id="'+e.id+'">'+
-        '<span class="pick-name">'+sub+esc(e.name)+'</span><span class="hp">'+fmt(e.mainHp)+'HP</span></button></li>';
-    });
-    html += '</ul></div>';
-  });
-  if(!any) html += '<div class="enemy-empty">'+esc(t("enemy_empty"))+'</div>';
-
-  document.getElementById("mob-list").innerHTML = '<div class="pick-list-wrap">'+html+'</div>';
-  Array.prototype.forEach.call(document.querySelectorAll("#mob-list .pick-btn"), function(btn){
-    btn.addEventListener("click", function(){
-      selectedEnemy = btn.getAttribute("data-id");
+/* ============ 1. mob search (dropdown) + info ============ */
+function renderEnemySearchOverlay(query){
+  var overlay = document.getElementById("enemy-search-overlay");
+  var q = (query||"").trim().toLowerCase();
+  var matches = state.enemies.filter(function(x){ return !q || x.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 40);
+  if(!matches.length){ overlay.innerHTML = '<div class="weapon-combo-empty">'+esc(t("enemy_empty"))+'</div>'; return; }
+  overlay.innerHTML = matches.map(function(x){
+    var f = FACTIONS[x.faction];
+    return '<div class="weapon-combo-item'+(x.id===selectedEnemy?' hl':'')+'" data-id="'+x.id+'">'+
+      '<span><span class="dot" style="display:inline-block;background:'+f.color+';margin-right:6px;"></span>'+esc(x.name)+'</span>'+
+      '<span class="cat">'+fmt(x.mainHp)+'HP</span></div>';
+  }).join('');
+  Array.prototype.forEach.call(overlay.querySelectorAll(".weapon-combo-item"), function(item){
+    item.addEventListener("mousedown", function(ev){
+      ev.preventDefault(); // fires before input's blur, so the click still registers
+      selectedEnemy = item.getAttribute("data-id");
       selectedPart = 0;
-      renderAll();
+      renderMobInfo();
+      renderResultPanel();
+      if(compareVisible) renderComparePanel();
+      overlay.hidden = true;
     });
   });
 }
-document.getElementById("enemy-search-input").addEventListener("input", function(){
-  enemySearchQuery = this.value;
-  renderMobList();
-});
+(function(){
+  var input = document.getElementById("enemy-search-input");
+  var overlay = document.getElementById("enemy-search-overlay");
+  input.addEventListener("focus", function(){ this.select(); renderEnemySearchOverlay(""); overlay.hidden = false; });
+  input.addEventListener("input", function(){ renderEnemySearchOverlay(this.value); overlay.hidden = false; });
+  input.addEventListener("blur", function(){ setTimeout(function(){ overlay.hidden = true; renderMobInfo(); }, 150); });
+})();
 
-/* ---- mob detail: reference info + editable data for the selected creature ---- */
-var mobDetailVisible = true;
-function updateMobDetailToggleBtn(){
-  document.getElementById('mobdetail-toggle-btn').textContent = mobDetailVisible ? t('mobdetail_toggle_hide') : t('mobdetail_toggle_show');
-}
-document.getElementById('mobdetail-toggle-btn').addEventListener('click', function(){
-  mobDetailVisible = !mobDetailVisible;
-  updateMobDetailToggleBtn();
-  renderMobDetail();
-});
-
-function renderMobDetail(){
-  var panel = document.getElementById("mob-detail");
-  panel.hidden = !mobDetailVisible;
-  if(!mobDetailVisible) return;
-
+function renderMobInfo(){
   var e = findEnemy(selectedEnemy);
+  if(selectedPart >= e.parts.length) selectedPart = 0;
+  var part = e.parts[selectedPart];
   var f = FACTIONS[e.faction];
+  document.getElementById("enemy-search-input").value = e.name;
+
   var html = '';
   html += '<div class="dossier-top">';
   html += '<div>';
   html += '<div class="dossier-meta" style="margin-bottom:6px;"><span class="chip" style="color:'+f.color+';border-color:'+f.color+'">'+factionName(e.faction)+'</span>'+
     (e.subfaction ? '<span class="chip" style="color:'+f.color+';border-color:'+f.color+';border-style:dashed;">'+esc(e.subfaction)+' '+t('subfaction_suffix')+'</span>' : '')+
     '</div>';
-  html += '<h2 class="dossier-name">'+esc(e.name)+'</h2>';
+  html += '<h2 class="dossier-name" style="font-size:20px;">'+esc(e.name)+'</h2>';
   html += '</div>';
   html += markSVG(f.mark, f.color);
   html += '</div>';
 
-  html += '<div class="section-label">'+t('main_hp_label')+'</div>';
-  html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">'+
-    '<input class="num-in mono" id="main-hp-in" type="number" min="1" value="'+e.mainHp+'">'+
-    '<span style="color:var(--text-faint);font-size:12px;">'+t('main_hp_hint')+'</span></div>';
+  html += '<div class="bp-stat"><span>'+t('main_hp_label')+'</span><input class="num-in mono" id="main-hp-in" type="number" min="1" value="'+e.mainHp+'"></div>';
 
-  html += '<div class="section-label">'+t('parts_table_label')+'</div>';
-  html += '<div class="table-wrap"><table><thead><tr><th>'+t('col_part')+'</th><th>'+t('col_armor')+'</th><th>'+t('col_hp')+'</th><th>'+t('col_durability')+'</th><th>'+t('col_tomain')+'</th><th>'+t('col_lethal')+'</th></tr></thead><tbody>';
+  html += '<div class="section-label">'+t('part_select_label')+'</div>';
+  html += '<div class="chips-row">';
   e.parts.forEach(function(p, i){
-    html += '<tr class="'+(p.lethal?'weak-row':'')+'">';
-    html += '<td>'+esc(p.name)+'</td>';
-    html += '<td><input class="num-in mono" type="number" min="0" max="10" value="'+p.armor+'" data-part="'+i+'" data-field="armor"></td>';
-    html += '<td><input class="num-in mono" type="number" min="1" value="'+p.hp+'" data-part="'+i+'" data-field="hp"></td>';
-    html += '<td><input class="num-in mono" type="number" min="0" max="100" step="5" value="'+Math.round((p.durability||0)*100)+'" data-part="'+i+'" data-field="durabilityPct"></td>';
-    html += '<td><input class="num-in mono" type="number" min="0" max="500" step="5" value="'+Math.round(p.toMain*100)+'" data-part="'+i+'" data-field="toMainPct"></td>';
-    html += '<td><button class="starbtn'+(p.lethal?' on':'')+'" data-part="'+i+'" data-field="lethal">'+(p.lethal?'★':'☆')+'</button></td>';
-    html += '</tr>';
+    var invuln = p.notes && /invulnerable/i.test(p.notes);
+    html += '<button class="part-chip'+(i===selectedPart?' active':'')+'"'+(p.notes?' title="'+esc(p.notes)+'"':'')+' data-idx="'+i+'">'+(p.lethal?'<span class="w">★</span> ':'')+(invuln?'<span class="w" style="color:var(--danger);">'+t("invuln_tag")+'</span> ':'')+esc(p.name)+'</button>';
   });
-  html += '</tbody></table></div>';
+  html += '</div>';
+
+  if(part.img){
+    html += '<div class="part-images">';
+    html += '<figure><img src="'+esc(part.img)+'" alt="'+esc(part.name)+' '+t("fig_front")+'" onerror="this.closest(\'figure\').style.display=\'none\'"><figcaption>'+t("fig_front")+'</figcaption></figure>';
+    if(part.altImg){
+      html += '<figure><img src="'+esc(part.altImg)+'" alt="'+esc(part.name)+' '+t("fig_side")+'" onerror="this.closest(\'figure\').style.display=\'none\'"><figcaption>'+t("fig_side")+'</figcaption></figure>';
+    }
+    html += '<div class="img-credit">'+t("img_credit")+'</div>';
+    html += '</div>';
+  }
+
+  if(part.notes){
+    var isInvuln = /invulnerable/i.test(part.notes);
+    html += '<div class="disclaimer" style="border-left-color:'+(isInvuln?'var(--danger)':'var(--accent)')+';margin-bottom:12px;">'+
+      (isInvuln?'<b>'+t("invuln_prefix")+'</b> ':'<b>'+t("ref_prefix")+'</b> ')+esc(part.notes)+'</div>';
+  }
+
+  html += '<div class="bp-subhead">'+esc(part.name)+' — '+t('parts_table_label')+'</div>';
+  html += '<div class="bp-stat"><span>'+t('col_hp')+'</span><input class="num-in mono" type="number" min="1" value="'+part.hp+'" data-field="hp"></div>';
+  html += '<div class="bp-stat"><span>'+t('col_armor')+'</span><input class="num-in mono" type="number" min="0" max="10" value="'+part.armor+'" data-field="armor"></div>';
+  html += '<div class="bp-stat"><span>'+t('col_durability')+'</span><input class="num-in mono" type="number" min="0" max="100" step="5" value="'+Math.round((part.durability||0)*100)+'" data-field="durabilityPct"></div>';
+  html += '<div class="bp-stat"><span>'+t('col_tomain')+'</span><input class="num-in mono" type="number" min="0" max="500" step="5" value="'+Math.round(part.toMain*100)+'" data-field="toMainPct"></div>';
+  html += '<div class="bp-stat"><span>'+t('col_lethal')+'</span><button class="starbtn'+(part.lethal?' on':'')+'" id="lethal-toggle-btn">'+(part.lethal?'★':'☆')+'</button></div>';
+  if(part.exdr) html += statRow(t('target_exdr'), fmtPct(part.exdr));
+  if(part.badr) html += statRow(t('target_badr'), fmtPct(part.badr));
+  if(part.fireMult || e.fireMult) html += statRow(t('target_firemult'), fmtPct(part.fireMult || e.fireMult));
+  if(e.regen){
+    var exempt = e.regen.exempt.indexOf(part.name) !== -1;
+    html += statRow(t('target_regen'), exempt ? t('target_regen_none') : (e.regen.rate+'/s ('+e.regen.delay+'s '+t('regen_resume_suffix')+')'));
+  }
+  if(part.lightStagger || part.mediumStagger || part.heavyStagger || part.massiveStagger){
+    html += '<div class="bp-subhead">'+t('target_stagger_label')+'</div>';
+    html += '<div class="bp-stat"><span class="mono" style="font-size:11px;">'+
+      [part.lightStagger,part.mediumStagger,part.heavyStagger,part.massiveStagger].map(function(s){return s||'-';}).join(' · ')+
+      '</span></div>';
+  }
 
   html += '<div class="section-label">'+t('intel_label')+'</div>';
   html += '<div class="intel"><ul>'+e.tips.map(function(tip){return '<li>'+esc(tip)+'</li>';}).join('')+'</ul></div>';
 
-  panel.innerHTML = html;
+  document.getElementById("mob-info").innerHTML = html;
+  wireMobInfoEvents();
+}
 
+function wireMobInfoEvents(){
   document.getElementById('main-hp-in').addEventListener('change', function(){
     findEnemy(selectedEnemy).mainHp = Math.max(1, Math.round(+this.value || 1));
-    save(); renderMobList(); renderCalculator();
+    save(); renderResultPanel();
   });
-  Array.prototype.forEach.call(document.querySelectorAll('#mob-detail input.num-in[data-field]'), function(inp){
+  Array.prototype.forEach.call(document.querySelectorAll('#mob-info .part-chip'), function(chip){
+    chip.addEventListener('click', function(){
+      selectedPart = +chip.getAttribute('data-idx');
+      renderMobInfo();
+      renderResultPanel();
+      if(compareVisible) renderComparePanel();
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('#mob-info input.num-in[data-field]'), function(inp){
     inp.addEventListener('change', function(){
-      var i = +inp.getAttribute('data-part');
       var field = inp.getAttribute('data-field');
-      var part = findEnemy(selectedEnemy).parts[i];
+      var part = findEnemy(selectedEnemy).parts[selectedPart];
       var v = +inp.value;
       if(field==='toMainPct'){ part.toMain = Math.max(0, Math.min(100, v)) / 100; }
       else if(field==='durabilityPct'){ part.durability = Math.max(0, Math.min(100, v)) / 100; }
       else if(field==='armor'){ part.armor = Math.max(0, Math.round(v)); }
       else if(field==='hp'){ part.hp = Math.max(1, Math.round(v)); }
-      save(); renderCalculator();
+      save(); renderResultPanel();
     });
   });
-  Array.prototype.forEach.call(document.querySelectorAll('#mob-detail .starbtn'), function(btn){
-    btn.addEventListener('click', function(){
-      var i = +btn.getAttribute('data-part');
-      var parts = findEnemy(selectedEnemy).parts;
-      parts[i].lethal = !parts[i].lethal;
-      save(); renderMobDetail(); renderCalculator();
+  var lethalBtn = document.getElementById('lethal-toggle-btn');
+  if(lethalBtn){
+    lethalBtn.addEventListener('click', function(){
+      var part = findEnemy(selectedEnemy).parts[selectedPart];
+      part.lethal = !part.lethal;
+      save(); renderMobInfo(); renderResultPanel();
     });
-  });
+  }
 }
 
 /* ============ shared BTK/TTK math ============ */
@@ -1068,7 +1055,6 @@ function computeRow(w, part, mainHp, regen){
 }
 
 /* ============ 2. weapon picker ============ */
-var weaponSearchQuery = "";
 var compareVisible = false;
 
 function catChipsHtml(){
@@ -1080,106 +1066,140 @@ function wireCatChips(scopeSel){
   Array.prototype.forEach.call(document.querySelectorAll(scopeSel+' .cat-chip'), function(btn){
     btn.addEventListener('click', function(){
       catFilter = btn.getAttribute('data-cat');
-      renderWeaponPicker();
       if(compareVisible) renderComparePanel();
     });
   });
 }
 
-function renderWeaponPicker(){
-  var searchInput = document.getElementById("weapon-search-input");
-  searchInput.placeholder = t("bp_search_ph");
-
-  document.getElementById("weapon-cat-filter").innerHTML = catChipsHtml();
-
-  var q = weaponSearchQuery.trim().toLowerCase();
-  var byCat = {};
-  state.weapons.forEach(function(w){
-    if(catFilter !== "all" && w.cat !== catFilter) return;
-    if(q && w.name.toLowerCase().indexOf(q) === -1) return;
-    (byCat[w.cat]=byCat[w.cat]||[]).push(w);
-  });
-
-  var html = "";
-  var any = false;
-  ['primary','secondary','support'].forEach(function(cat){
-    var list = byCat[cat]||[];
-    if(!list.length) return;
-    any = true;
-    html += '<div class="weapon-pick-cat">'+catLabel(cat)+'</div>';
-    html += '<ul class="enemy-list">';
-    list.forEach(function(w){
-      html += '<li><button class="pick-btn'+(w.id===selectedWeapon?' active':'')+'" data-id="'+w.id+'">'+
-        '<span class="pick-name">'+esc(w.name)+'</span><span class="hp">'+t('col_pen')+' '+weaponHits(w)[0].apDirect+'</span></button></li>';
-    });
-    html += '</ul>';
-  });
-  if(!any) html += '<div class="enemy-empty">'+esc(t("bp_empty"))+'</div>';
-
-  document.getElementById("weapon-list").innerHTML = '<div class="pick-list-wrap weapon-pick-list">'+html+'</div>';
-  Array.prototype.forEach.call(document.querySelectorAll("#weapon-list .pick-btn"), function(btn){
-    btn.addEventListener("click", function(){
-      selectedWeapon = btn.getAttribute("data-id");
-      renderWeaponPicker();
-      renderCalculator();
+/* ============ 2. weapon search (dropdown) + info ============ */
+function renderWeaponSearchOverlay(query){
+  var overlay = document.getElementById("weapon-search-overlay");
+  var q = (query||"").trim().toLowerCase();
+  var matches = state.weapons.filter(function(x){ return !q || x.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 40);
+  if(!matches.length){ overlay.innerHTML = '<div class="weapon-combo-empty">'+esc(t('bp_empty'))+'</div>'; return; }
+  overlay.innerHTML = matches.map(function(x){
+    return '<div class="weapon-combo-item'+(x.id===selectedWeapon?' hl':'')+'" data-id="'+x.id+'"><span>'+esc(x.name)+'</span><span class="cat">'+catLabel(x.cat)+'</span></div>';
+  }).join('');
+  Array.prototype.forEach.call(overlay.querySelectorAll(".weapon-combo-item"), function(item){
+    item.addEventListener("mousedown", function(ev){
+      ev.preventDefault(); // fires before input's blur, so the click still registers
+      selectedWeapon = item.getAttribute("data-id");
+      renderWeaponInfo();
+      renderResultPanel();
       if(compareVisible) renderComparePanel();
+      overlay.hidden = true;
     });
   });
-  wireCatChips('#weapon-picker-panel');
 }
-document.getElementById("weapon-search-input").addEventListener("input", function(){
-  weaponSearchQuery = this.value;
-  renderWeaponPicker();
-});
+(function(){
+  var input = document.getElementById("weapon-search-input");
+  var overlay = document.getElementById("weapon-search-overlay");
+  input.addEventListener("focus", function(){ this.select(); renderWeaponSearchOverlay(""); overlay.hidden = false; });
+  input.addEventListener("input", function(){ renderWeaponSearchOverlay(this.value); overlay.hidden = false; });
+  input.addEventListener("blur", function(){ setTimeout(function(){ overlay.hidden = true; renderWeaponInfo(); }, 150); });
+})();
 
-/* ============ 3. calculator ============ */
-function renderCalculator(){
+function renderWeaponInfo(){
+  var w = findWeapon(selectedWeapon);
+  var hits = weaponHits(w);
+  document.getElementById("weapon-search-input").value = w.name;
+
+  var html = '';
+  html += '<h2 class="dossier-name" style="font-size:20px;">'+esc(w.name)+'</h2>';
+  if(w.img){
+    html += '<div class="bp-weapon-img"><img src="'+esc(w.img)+'" alt="'+esc(w.name)+'" onerror="this.parentElement.style.display=\'none\'"></div>';
+  }
+  html += statRow(t('stat_cat'), catLabel(w.cat));
+  html += statRow(t('stat_mag'), fmt(w.mag));
+  html += statRow(t('stat_rpm'), fmt(w.rpm));
+  html += statRow(t('stat_reload'), fmt(w.reload,2));
+  if(w.tacReload) html += statRow(t('stat_tacreload'), fmt(w.tacReload,2));
+  if(w.ergonomics) html += statRow(t('stat_ergo'), fmt(w.ergonomics));
+  html += '<div class="bp-subhead">'+t('hit_components')+' ('+hits.length+')</div>';
+  hits.forEach(function(h){
+    html += '<div class="bp-hit">';
+    html += '<div class="bp-hit-type">'+esc(h.type)+'</div>';
+    html += statRow(t('stat_dmg'), fmt(h.dmg));
+    html += statRow(t('stat_durabledmg'), fmt(h.dmg*h.durable));
+    html += statRow(t('stat_pen4'), h.apDirect+' / '+h.apSlight+' / '+h.apLarge+' / '+h.apExtreme);
+    if(h.outerRadius) html += statRow(t('stat_blastradius'), fmt(h.innerRadius,1)+'m / '+fmt(h.outerRadius,1)+'m');
+    if(h.falloff50m) html += statRow(t('stat_falloff50'), fmtPct(h.falloff50m));
+    html += '</div>';
+  });
+
+  document.getElementById("weapon-info").innerHTML = html;
+}
+
+/* ============ 3. result panel (BTK/TTK output, shared by whichever weapon+mob are picked) ============ */
+function renderResultPanel(){
   var e = findEnemy(selectedEnemy);
   if(selectedPart >= e.parts.length) selectedPart = 0;
   var part = e.parts[selectedPart];
+  var w = findWeapon(selectedWeapon);
+  var mainHp = e.mainHp;
+  var c = computeRow(w, part, mainHp, e.regen);
+  var hits = weaponHits(w);
 
-  var html = '';
-  html += '<div class="weapon-head">';
+  var html = '<div class="weapon-head">';
   html += '<div class="tabs"><button class="tab-btn active" disabled>'+t("bp_title")+'</button></div>';
   html += '<button class="reset-btn" id="compare-toggle-btn">'+(compareVisible?t("compare_toggle_hide"):t("compare_toggle_show"))+'</button>';
   html += '<button class="reset-btn" id="reset-btn">'+t("reset_btn")+'</button>';
   html += '</div>';
 
-  html += '<div class="section-label">'+t("part_select_label")+' <span class="mono" style="color:var(--text-dim)">'+esc(e.name)+'</span></div>';
-  html += '<div class="chips-row">';
-  e.parts.forEach(function(p, i){
-    var invuln = p.notes && /invulnerable/i.test(p.notes);
-    html += '<button class="part-chip'+(i===selectedPart?' active':'')+'"'+(p.notes?' title="'+esc(p.notes)+'"':'')+' data-idx="'+i+'">'+(p.lethal?'<span class="w">★</span> ':'')+(invuln?'<span class="w" style="color:var(--danger);">'+t("invuln_tag")+'</span> ':'')+esc(p.name)+' <span class="mono">('+fmt(p.hp)+'HP · '+avLabel(p.armor)+')</span></button>';
-  });
+  html += '<div class="section-label">'+esc(w.name)+' → '+esc(e.name)+' / '+esc(part.name)+'</div>';
+
+  html += '<div class="bp-tiles">';
+  html += '<div class="bp-tile"><span>'+t('tile_btk')+'</span><b>'+fmtNum(c.btk)+'</b></div>';
+  html += '<div class="bp-tile"><span>'+t('tile_ttk')+'</span><b>'+fmtNum(c.ttk,2)+'</b></div>';
+  html += '<div class="bp-tile"><span>'+t('tile_overkill')+'</span><b>'+fmtNum(c.overkill)+'</b></div>';
+  html += '<div class="bp-tile"><span>'+t('tile_reloads')+'</span><b>'+fmtNum(c.reloads)+'</b></div>';
+  html += '<div class="bp-tile"><span>'+t('tile_magpct')+'</span><b>'+fmtPct(c.magPct)+'</b></div>';
+  html += '<div class="bp-tile"><span>'+t('tile_killspermag')+'</span><b>'+c.killsPerMag+'</b></div>';
   html += '</div>';
 
-  if(part.img){
-    html += '<div class="part-images">';
-    html += '<figure><img src="'+esc(part.img)+'" alt="'+esc(part.name)+' '+t("fig_front")+'" onerror="this.closest(\'figure\').style.display=\'none\'"><figcaption>'+t("fig_front")+'</figcaption></figure>';
-    if(part.altImg){
-      html += '<figure><img src="'+esc(part.altImg)+'" alt="'+esc(part.name)+' '+t("fig_side")+'" onerror="this.closest(\'figure\').style.display=\'none\'"><figcaption>'+t("fig_side")+'</figcaption></figure>';
-    }
-    html += '<div class="img-credit">'+t("img_credit")+'</div>';
-    html += '</div>';
+  html += '<div class="section-label" style="margin-top:16px;">'+t("bp_col_detail")+'</div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>'+t('detail_col_component')+'</th><th class="mono">'+t('detail_col_pen')+'</th><th class="mono">'+t('detail_col_armor')+'</th><th>'+t('detail_col_judge')+'</th><th class="mono">'+t('detail_col_dmg')+'</th><th>'+t('detail_col_applied')+'</th></tr></thead><tbody>';
+  var chosen = bestHit(w, part.armor, part.durability).hit;
+  hits.forEach(function(h){
+    var mult = armorMultiplier(h.apDirect, part.armor);
+    var judgeHtml = mult===1 ? '<span class="status-pill status-full">'+t('status_full')+'</span>'
+      : mult===0.65 ? '<span class="status-pill status-partial">'+t('status_half')+'</span>'
+      : '<span class="status-pill status-blocked">'+t('status_blocked')+'</span>';
+    var isChosen = h === chosen;
+    html += '<tr'+(isChosen?'':' style="opacity:.55;"')+'><td>'+esc(h.type)+'</td><td class="mono">'+h.apDirect+'</td><td class="mono">'+part.armor+'</td>'+
+      '<td>'+judgeHtml+'</td>'+
+      '<td class="mono">'+fmtNum(hitEffDamage(h, part.armor, part.durability))+'</td>'+
+      '<td>'+(isChosen?'<span class="status-pill status-full">'+t('detail_applied')+'</span>':'<span class="status-pill status-blocked">'+t('detail_notapplied')+'</span>')+'</td></tr>';
+  });
+  html += '<tr style="font-weight:600;"><td colspan="4">'+t('detail_total_row')+'</td><td class="mono">'+fmtNum(c.eff)+'</td><td></td></tr>';
+  if(!part.lethal){
+    html += '<tr><td colspan="4">'+t('detail_mainshare_row')+' '+fmtPct(part.toMain)+')</td><td class="mono">'+fmtNum(c.eff*part.toMain)+'</td><td></td></tr>';
+  }
+  html += '</tbody></table></div>';
+  if(hits.length > 1){
+    html += '<div class="img-credit" style="margin-top:6px;">'+t('multi_hit_note')+'</div>';
   }
 
-  html += renderBreakpointHtml(e, part);
+  html += '<div class="section-label" style="margin-top:14px;">'+t('results_summary_label')+'</div>';
+  html += '<div class="intel"><ul>';
+  html += '<li>'+esc(w.name)+'(으)로 '+esc(part.name)+' 부위를 '+fmtNum(c.btk)+'발 맞히면 '+(part.lethal?'그 부위 파괴로 즉사':'메인 체력 소모로 처치')+'됩니다 (약 '+fmtNum(c.ttk,2)+'초, 재장전 '+fmtNum(c.reloads)+'회 포함).</li>';
+  html += '<li>마지막 한 발의 초과 피해(오버킬)는 약 '+fmtNum(c.overkill)+'이며, 탄창의 '+fmtPct(c.magPct)+'을 소모합니다.</li>';
+  if(c.sever!==null && c.sever!==c.btk){ html += '<li>이 부위 자체(껍데기)만 파괴하는 데는 '+c.sever+'발이면 충분합니다 (전체 처치와는 별개).</li>'; }
+  if(c.regenWarning){ html += '<li style="color:var(--danger);">⚠ 이 무기의 지속 DPS가 이 부위의 재생 속도를 못 넘습니다 — 계속 쏴도 체력이 안 줄어들 수 있습니다. 재생 없는 부위(위 "재생" 항목 참고)나 순간 폭딜 수단으로 바꾸세요.</li>'; }
+  html += '</ul></div>';
 
-  document.getElementById("calculator-panel").innerHTML = html;
-  wireCalculatorEvents();
+  document.getElementById("result-panel").innerHTML = html;
+  wireResultPanelEvents();
 }
 
-function wireCalculatorEvents(){
-  Array.prototype.forEach.call(document.querySelectorAll('#calculator-panel .part-chip'), function(chip){
-    chip.addEventListener('click', function(){ selectedPart = +chip.getAttribute('data-idx'); renderCalculator(); if(compareVisible) renderComparePanel(); });
-  });
+function wireResultPanelEvents(){
   document.getElementById('reset-btn').addEventListener('click', function(){
     if(confirm(t('reset_confirm'))) resetAll();
   });
   document.getElementById('compare-toggle-btn').addEventListener('click', function(){
     compareVisible = !compareVisible;
     document.getElementById('compare-panel').hidden = !compareVisible;
-    renderCalculator();
+    renderResultPanel();
     if(compareVisible) renderComparePanel();
   });
 }
@@ -1261,8 +1281,8 @@ function wireComparePanelEvents(){
   Array.prototype.forEach.call(document.querySelectorAll('#compare-panel .bp-jump'), function(btn){
     btn.addEventListener('click', function(){
       selectedWeapon = btn.getAttribute('data-id');
-      renderWeaponPicker();
-      renderCalculator();
+      renderWeaponInfo();
+      renderResultPanel();
     });
   });
   Array.prototype.forEach.call(document.querySelectorAll('#compare-panel input.num-in'), function(inp){
@@ -1277,7 +1297,7 @@ function wireComparePanelEvents(){
       else if(field==="dmg"){ h0.dmg = Math.max(0, v); }
       else { w[field] = Math.max(0, v); }
       save(); renderComparePanel();
-      if(id===selectedWeapon){ renderCalculator(); renderWeaponPicker(); }
+      if(id===selectedWeapon){ renderResultPanel(); renderWeaponInfo(); }
     });
   });
 }
@@ -1286,121 +1306,14 @@ function statRow(label, value){
   return '<div class="bp-stat"><span>'+label+'</span><span class="mono">'+value+'</span></div>';
 }
 
-function renderBreakpointHtml(e, part){
-  var w = findWeapon(selectedWeapon);
-  var mainHp = e.mainHp;
-  var c = computeRow(w, part, mainHp, e.regen);
-  var hits = weaponHits(w);
-
-  var html = '<div class="section-label" style="margin-top:16px;">'+t("bp_title")+'</div>';
-
-  if(part.notes){
-    var isInvuln = /invulnerable/i.test(part.notes);
-    html += '<div class="disclaimer" style="border-left-color:'+(isInvuln?'var(--danger)':'var(--accent)')+';margin-bottom:12px;">'+
-      (isInvuln?'<b>'+t("invuln_prefix")+'</b> ':'<b>'+t("ref_prefix")+'</b> ')+esc(part.notes)+'</div>';
-  }
-
-  html += '<div class="bp-grid">';
-
-  // ---- column 1: weapon ----
-  html += '<div class="bp-col"><div class="bp-col-title">'+t("bp_col_weapon")+'</div>';
-  if(w.img){
-    html += '<div class="bp-weapon-img"><img src="'+esc(w.img)+'" alt="'+esc(w.name)+'" onerror="this.parentElement.style.display=\'none\'"></div>';
-  }
-  html += statRow(t('stat_cat'), catLabel(w.cat));
-  html += statRow(t('stat_mag'), fmt(w.mag));
-  html += statRow(t('stat_rpm'), fmt(w.rpm));
-  html += statRow(t('stat_reload'), fmt(w.reload,2));
-  if(w.tacReload) html += statRow(t('stat_tacreload'), fmt(w.tacReload,2));
-  if(w.ergonomics) html += statRow(t('stat_ergo'), fmt(w.ergonomics));
-  html += '<div class="bp-subhead">'+t('hit_components')+' ('+hits.length+')</div>';
-  hits.forEach(function(h){
-    html += '<div class="bp-hit">';
-    html += '<div class="bp-hit-type">'+esc(h.type)+'</div>';
-    html += statRow(t('stat_dmg'), fmt(h.dmg));
-    html += statRow(t('stat_durabledmg'), fmt(h.dmg*h.durable));
-    html += statRow(t('stat_pen4'), h.apDirect+' / '+h.apSlight+' / '+h.apLarge+' / '+h.apExtreme);
-    if(h.outerRadius) html += statRow(t('stat_blastradius'), fmt(h.innerRadius,1)+'m / '+fmt(h.outerRadius,1)+'m');
-    if(h.falloff50m) html += statRow(t('stat_falloff50'), fmtPct(h.falloff50m));
-    html += '</div>';
-  });
-  html += '</div>';
-
-  // ---- column 2: target ----
-  html += '<div class="bp-col"><div class="bp-col-title">'+t("bp_col_target")+' '+esc(e.name)+' / '+esc(part.name)+'</div>';
-  html += statRow(t('target_parthp'), part.hp > 0 ? fmt(part.hp) : t('target_parthp_na'));
-  html += statRow(t('target_mainhp'), fmt(mainHp));
-  html += statRow(t('target_armor'), avLabel(part.armor));
-  html += statRow(t('target_durability'), fmtPct(part.durability||0));
-  html += statRow(t('target_tomain'), fmtPct(part.toMain));
-  html += statRow(t('target_lethal'), part.lethal ? 'Yes' : 'No');
-  if(part.exdr) html += statRow(t('target_exdr'), fmtPct(part.exdr));
-  if(part.badr) html += statRow(t('target_badr'), fmtPct(part.badr));
-  if(part.fireMult || e.fireMult) html += statRow(t('target_firemult'), fmtPct(part.fireMult || e.fireMult));
-  if(e.regen){
-    var exempt = e.regen.exempt.indexOf(part.name) !== -1;
-    html += statRow(t('target_regen'), exempt ? t('target_regen_none') : (e.regen.rate+'/s ('+e.regen.delay+'s '+t('regen_resume_suffix')+')'));
-  }
-  if(part.lightStagger || part.mediumStagger || part.heavyStagger || part.massiveStagger){
-    html += '<div class="bp-subhead">'+t('target_stagger_label')+'</div>';
-    html += '<div class="bp-stat"><span class="mono" style="font-size:11px;">'+
-      [part.lightStagger,part.mediumStagger,part.heavyStagger,part.massiveStagger].map(function(s){return s||'-';}).join(' · ')+
-      '</span></div>';
-  }
-  html += '<div class="bp-tiles">';
-  html += '<div class="bp-tile"><span>'+t('tile_btk')+'</span><b>'+fmtNum(c.btk)+'</b></div>';
-  html += '<div class="bp-tile"><span>'+t('tile_ttk')+'</span><b>'+fmtNum(c.ttk,2)+'</b></div>';
-  html += '<div class="bp-tile"><span>'+t('tile_overkill')+'</span><b>'+fmtNum(c.overkill)+'</b></div>';
-  html += '<div class="bp-tile"><span>'+t('tile_reloads')+'</span><b>'+fmtNum(c.reloads)+'</b></div>';
-  html += '<div class="bp-tile"><span>'+t('tile_magpct')+'</span><b>'+fmtPct(c.magPct)+'</b></div>';
-  html += '<div class="bp-tile"><span>'+t('tile_killspermag')+'</span><b>'+c.killsPerMag+'</b></div>';
-  html += '</div>';
-  html += '</div>';
-
-  // ---- column 3: detailed calculation ----
-  html += '<div class="bp-col bp-col-wide"><div class="bp-col-title">'+t("bp_col_detail")+'</div>';
-  html += '<div class="table-wrap"><table><thead><tr><th>'+t('detail_col_component')+'</th><th class="mono">'+t('detail_col_pen')+'</th><th class="mono">'+t('detail_col_armor')+'</th><th>'+t('detail_col_judge')+'</th><th class="mono">'+t('detail_col_dmg')+'</th><th>'+t('detail_col_applied')+'</th></tr></thead><tbody>';
-  var chosen = bestHit(w, part.armor, part.durability).hit;
-  hits.forEach(function(h){
-    var mult = armorMultiplier(h.apDirect, part.armor);
-    var judgeHtml = mult===1 ? '<span class="status-pill status-full">'+t('status_full')+'</span>'
-      : mult===0.65 ? '<span class="status-pill status-partial">'+t('status_half')+'</span>'
-      : '<span class="status-pill status-blocked">'+t('status_blocked')+'</span>';
-    var isChosen = h === chosen;
-    html += '<tr'+(isChosen?'':' style="opacity:.55;"')+'><td>'+esc(h.type)+'</td><td class="mono">'+h.apDirect+'</td><td class="mono">'+part.armor+'</td>'+
-      '<td>'+judgeHtml+'</td>'+
-      '<td class="mono">'+fmtNum(hitEffDamage(h, part.armor, part.durability))+'</td>'+
-      '<td>'+(isChosen?'<span class="status-pill status-full">'+t('detail_applied')+'</span>':'<span class="status-pill status-blocked">'+t('detail_notapplied')+'</span>')+'</td></tr>';
-  });
-  html += '<tr style="font-weight:600;"><td colspan="4">'+t('detail_total_row')+'</td><td class="mono">'+fmtNum(c.eff)+'</td><td></td></tr>';
-  if(!part.lethal){
-    html += '<tr><td colspan="4">'+t('detail_mainshare_row')+' '+fmtPct(part.toMain)+')</td><td class="mono">'+fmtNum(c.eff*part.toMain)+'</td><td></td></tr>';
-  }
-  html += '</tbody></table></div>';
-  if(hits.length > 1){
-    html += '<div class="img-credit" style="margin-top:6px;">'+t('multi_hit_note')+'</div>';
-  }
-
-  html += '<div class="section-label" style="margin-top:14px;">'+t('results_summary_label')+'</div>';
-  html += '<div class="intel"><ul>';
-  html += '<li>'+esc(w.name)+'(으)로 '+esc(part.name)+' 부위를 '+fmtNum(c.btk)+'발 맞히면 '+(part.lethal?'그 부위 파괴로 즉사':'메인 체력 소모로 처치')+'됩니다 (약 '+fmtNum(c.ttk,2)+'초, 재장전 '+fmtNum(c.reloads)+'회 포함).</li>';
-  html += '<li>마지막 한 발의 초과 피해(오버킬)는 약 '+fmtNum(c.overkill)+'이며, 탄창의 '+fmtPct(c.magPct)+'을 소모합니다.</li>';
-  if(c.sever!==null && c.sever!==c.btk){ html += '<li>이 부위 자체(껍데기)만 파괴하는 데는 '+c.sever+'발이면 충분합니다 (전체 처치와는 별개).</li>'; }
-  if(c.regenWarning){ html += '<li style="color:var(--danger);">⚠ 이 무기의 지속 DPS가 이 부위의 재생 속도를 못 넘습니다 — 계속 쏴도 체력이 안 줄어들 수 있습니다. 재생 없는 부위(위 "재생" 항목 참고)나 순간 폭딜 수단으로 바꾸세요.</li>'; }
-  html += '</ul></div>';
-  html += '</div>';
-
-  html += '</div>'; // .bp-grid
-  return html;
-}
-
 function applyStaticStrings(){
   document.getElementById("hdr-sub").textContent = t("app_sub");
   document.getElementById("hdr-tag").textContent = t("app_tag");
   document.getElementById("disclaimer-box").innerHTML = t("disclaimer_html");
-  document.getElementById("mob-panel-head").textContent = t("sidebar_head");
-  document.getElementById("weapon-picker-head").textContent = t("weapon_picker_head");
-  updateMobDetailToggleBtn();
+  document.getElementById("weapon-col-head").textContent = t("weapon_col_head");
+  document.getElementById("mob-col-head").textContent = t("mob_col_head");
+  document.getElementById("weapon-search-input").placeholder = t("bp_search_ph");
+  document.getElementById("enemy-search-input").placeholder = t("sidebar_search_ph");
   document.getElementById("footer-box").innerHTML = t("footer_html");
   var toggle = document.getElementById("lang-toggle");
   toggle.textContent = t("lang_toggle");
@@ -1411,10 +1324,9 @@ document.getElementById("lang-toggle").addEventListener("click", function(){
 });
 
 function renderAll(){
-  renderMobList();
-  renderMobDetail();
-  renderWeaponPicker();
-  renderCalculator();
+  renderWeaponInfo();
+  renderMobInfo();
+  renderResultPanel();
   if(compareVisible) renderComparePanel();
 }
 document.getElementById("compare-panel").hidden = true;
