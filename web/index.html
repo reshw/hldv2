@@ -817,6 +817,9 @@ var sortDir = 1;
 function findEnemy(id){ for(var i=0;i<state.enemies.length;i++) if(state.enemies[i].id===id) return state.enemies[i]; return state.enemies[0]; }
 function findWeapon(id){ for(var i=0;i<state.weapons.length;i++) if(state.weapons[i].id===id) return state.weapons[i]; return state.weapons[0]; }
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function dispName(x){
+  return x.nameKo ? esc(x.nameKo)+' <span class="mono" style="color:var(--text-faint);font-weight:400;">('+esc(x.name)+')</span>' : esc(x.name);
+}
 function fmt(n, d){ d = d===undefined?0:d; return Number(n).toLocaleString("ko-KR", {minimumFractionDigits:d, maximumFractionDigits:d}); }
 function fmtNum(n, d){ return isFinite(n) ? fmt(n, d) : "-"; }
 function fmtPct(n, d){ return isFinite(n) ? fmt(n*100, d===undefined?0:d)+"%" : "-"; }
@@ -907,7 +910,7 @@ function renderEnemySearchOverlay(query){
   overlay.innerHTML = matches.map(function(x){
     var f = FACTIONS[x.faction];
     return '<div class="weapon-combo-item'+(x.id===selectedEnemy?' hl':'')+'" data-id="'+x.id+'">'+
-      '<span><span class="dot" style="display:inline-block;background:'+f.color+';margin-right:6px;"></span>'+esc(x.name)+(x.nameKo?' <span class="mono" style="color:var(--text-faint);">· '+esc(x.nameKo)+'</span>':'')+'</span>'+
+      '<span><span class="dot" style="display:inline-block;background:'+f.color+';margin-right:6px;"></span>'+dispName(x)+'</span>'+
       '<span class="cat">'+fmt(x.mainHp)+'HP</span></div>';
   }).join('');
   Array.prototype.forEach.call(overlay.querySelectorAll(".weapon-combo-item"), function(item){
@@ -935,7 +938,7 @@ function renderMobInfo(){
   if(selectedPart >= e.parts.length) selectedPart = 0;
   var part = e.parts[selectedPart];
   var f = FACTIONS[e.faction];
-  document.getElementById("enemy-search-input").value = e.name;
+  document.getElementById("enemy-search-input").value = e.nameKo || e.name;
 
   var html = '';
   html += '<div class="dossier-top">';
@@ -943,7 +946,7 @@ function renderMobInfo(){
   html += '<div class="dossier-meta" style="margin-bottom:6px;"><span class="chip" style="color:'+f.color+';border-color:'+f.color+'">'+factionName(e.faction)+'</span>'+
     (e.subfaction ? '<span class="chip" style="color:'+f.color+';border-color:'+f.color+';border-style:dashed;">'+esc(e.subfaction)+' '+t('subfaction_suffix')+'</span>' : '')+
     '</div>';
-  html += '<h2 class="dossier-name" style="font-size:20px;">'+esc(e.name)+(e.nameKo?' <span class="mono" style="color:var(--text-faint);font-size:14px;font-weight:400;">'+esc(e.nameKo)+'</span>':'')+'</h2>';
+  html += '<h2 class="dossier-name" style="font-size:20px;">'+dispName(e)+'</h2>';
   html += '</div>';
   html += markSVG(f.mark, f.color);
   html += '</div>';
@@ -1101,10 +1104,12 @@ function wireCatChips(scopeSel){
 function renderWeaponSearchOverlay(query){
   var overlay = document.getElementById("weapon-search-overlay");
   var q = (query||"").trim().toLowerCase();
-  var matches = state.weapons.filter(function(x){ return !q || x.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 40);
+  var matches = state.weapons.filter(function(x){
+    return !q || x.name.toLowerCase().indexOf(q) !== -1 || (x.nameKo && x.nameKo.indexOf(q) !== -1);
+  }).slice(0, 40);
   if(!matches.length){ overlay.innerHTML = '<div class="weapon-combo-empty">'+esc(t('bp_empty'))+'</div>'; return; }
   overlay.innerHTML = matches.map(function(x){
-    return '<div class="weapon-combo-item'+(x.id===selectedWeapon?' hl':'')+'" data-id="'+x.id+'"><span>'+esc(x.name)+'</span><span class="cat">'+catLabel(x.cat)+'</span></div>';
+    return '<div class="weapon-combo-item'+(x.id===selectedWeapon?' hl':'')+'" data-id="'+x.id+'"><span>'+dispName(x)+'</span><span class="cat">'+catLabel(x.cat)+'</span></div>';
   }).join('');
   Array.prototype.forEach.call(overlay.querySelectorAll(".weapon-combo-item"), function(item){
     item.addEventListener("mousedown", function(ev){
@@ -1128,10 +1133,10 @@ function renderWeaponSearchOverlay(query){
 function renderWeaponInfo(){
   var w = findWeapon(selectedWeapon);
   var hits = weaponHits(w);
-  document.getElementById("weapon-search-input").value = w.name;
+  document.getElementById("weapon-search-input").value = w.nameKo || w.name;
 
   var html = '';
-  html += '<h2 class="dossier-name" style="font-size:20px;">'+esc(w.name)+'</h2>';
+  html += '<h2 class="dossier-name" style="font-size:20px;">'+dispName(w)+'</h2>';
   if(w.img){
     html += '<div class="bp-weapon-img"><img src="'+esc(w.img)+'" alt="'+esc(w.name)+'" onerror="this.parentElement.style.display=\'none\'"></div>';
   }
@@ -1174,7 +1179,7 @@ function renderResultPanel(){
   html += '<button class="reset-btn" id="reset-btn">'+t("reset_btn")+'</button>';
   html += '</div>';
 
-  html += '<div class="section-label">'+esc(w.name)+' → '+esc(e.name)+' / '+esc(part.name)+'</div>';
+  html += '<div class="section-label">'+dispName(w)+' → '+dispName(e)+' / '+esc(part.name)+'</div>';
 
   html += '<div class="bp-tiles">';
   html += '<div class="bp-tile"><span>'+t('tile_btk')+'</span><b>'+fmtNum(c.btk)+'</b></div>';
@@ -1210,7 +1215,7 @@ function renderResultPanel(){
 
   html += '<div class="section-label" style="margin-top:14px;">'+t('results_summary_label')+'</div>';
   html += '<div class="intel"><ul>';
-  html += '<li>'+esc(w.name)+'(으)로 '+esc(part.name)+' 부위를 '+fmtNum(c.btk)+'발 맞히면 '+(part.lethal?'그 부위 파괴로 즉사':'메인 체력 소모로 처치')+'됩니다 (약 '+fmtNum(c.ttk,2)+'초, 재장전 '+fmtNum(c.reloads)+'회 포함).</li>';
+  html += '<li>'+dispName(w)+'(으)로 '+esc(part.name)+' 부위를 '+fmtNum(c.btk)+'발 맞히면 '+(part.lethal?'그 부위 파괴로 즉사':'메인 체력 소모로 처치')+'됩니다 (약 '+fmtNum(c.ttk,2)+'초, 재장전 '+fmtNum(c.reloads)+'회 포함).</li>';
   html += '<li>마지막 한 발의 초과 피해(오버킬)는 약 '+fmtNum(c.overkill)+'이며, 탄창의 '+fmtPct(c.magPct)+'을 소모합니다.</li>';
   if(c.sever!==null && c.sever!==c.btk){ html += '<li>이 부위 자체(껍데기)만 파괴하는 데는 '+c.sever+'발이면 충분합니다 (전체 처치와는 별개).</li>'; }
   if(c.regenWarning){ html += '<li style="color:var(--danger);">⚠ 이 무기의 지속 DPS가 이 부위의 재생 속도를 못 넘습니다 — 계속 쏴도 체력이 안 줄어들 수 있습니다. 재생 없는 부위(위 "재생" 항목 참고)나 순간 폭딜 수단으로 바꾸세요.</li>'; }
@@ -1275,7 +1280,7 @@ function renderComparePanel(){
       : '<span class="status-pill status-blocked">'+t("status_blocked")+'</span>';
     var thumb = w.img ? '<img class="weapon-thumb" src="'+esc(w.img)+'" alt="" onerror="this.style.display=\'none\'">' : '';
     html += '<tr>';
-    html += '<td><div class="weapon-name-cell">'+thumb+'<span>'+esc(w.name)+(c.btk===minBtk && isFinite(minBtk)?'<span class="best-badge">'+t("best_btk")+'</span>':'')+(c.ttk===minTtk && isFinite(minTtk) ?'<span class="best-badge">'+t("best_ttk")+'</span>':'')+'</span></div></td>';
+    html += '<td><div class="weapon-name-cell">'+thumb+'<span>'+dispName(w)+(c.btk===minBtk && isFinite(minBtk)?'<span class="best-badge">'+t("best_btk")+'</span>':'')+(c.ttk===minTtk && isFinite(minTtk) ?'<span class="best-badge">'+t("best_ttk")+'</span>':'')+'</span></div></td>';
     html += '<td>'+catLabel(w.cat)+'</td>';
     html += '<td><input class="num-in mono" type="number" min="0" max="10" data-id="'+w.id+'" data-field="pen" value="'+h0.apDirect+'"></td>';
     html += '<td><input class="num-in mono" type="number" data-id="'+w.id+'" data-field="dmg" value="'+h0.dmg+'"></td>';
