@@ -204,10 +204,26 @@ select.armor-sel{
 .bp-stat span:last-child{color:var(--text);}
 .bp-hit{background:var(--surface); border:1px solid var(--border-soft); border-radius:3px; padding:8px 10px; margin-bottom:8px;}
 .bp-hit-type{font-size:11px; font-weight:600; color:var(--accent-dim); text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px;}
-.bp-tiles{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px;}
-.bp-tile{background:var(--surface); border:1px solid var(--border-soft); border-radius:4px; padding:8px 10px; display:flex; flex-direction:column; gap:2px;}
+.bp-tiles{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; margin-top:12px;}
+@media (max-width:420px){ .bp-tiles{grid-template-columns:repeat(2, minmax(0,1fr));} }
+.bp-tile{background:var(--surface); border:1px solid var(--border-soft); border-radius:4px; padding:8px 10px; display:flex; flex-direction:column; gap:2px; min-width:0;}
 .bp-tile span{font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.04em;}
 .bp-tile b{font-family:'IBM Plex Mono'; font-size:17px; color:var(--accent); font-weight:600;}
+
+.stat-cards{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; margin:10px 0;}
+@media (max-width:420px){ .stat-cards{grid-template-columns:repeat(2, minmax(0,1fr));} }
+.stat-card{background:var(--surface); border:1px solid var(--border-soft); border-radius:4px; padding:8px 10px; display:flex; flex-direction:column; gap:4px; min-width:0;}
+.stat-card-wide{grid-column:1 / -1;}
+.stat-card > span:first-child{font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.04em;}
+.stat-card b{font-family:'IBM Plex Mono'; font-size:16px; color:var(--accent); font-weight:600;}
+.stat-card .stat-val-row{display:flex; align-items:baseline; gap:3px;}
+.stat-card input.num-in{
+  width:100%; box-sizing:border-box; background:transparent; border:none; padding:0;
+  font-family:'IBM Plex Mono'; font-size:16px; color:var(--accent); font-weight:600;
+}
+.stat-card input.num-in:focus{outline:1px solid var(--accent); outline-offset:2px; border-radius:2px;}
+.stat-card .unit{font-family:'IBM Plex Mono'; font-size:13px; color:var(--accent-dim);}
+.stat-card .starbtn{font-size:20px; text-align:left; padding:0;}
 .part-chip.active .w{color:var(--accent-ink);}
 
 .weapon-panel{padding:18px 20px;}
@@ -950,24 +966,25 @@ function renderMobInfo(){
   }
 
   html += '<div class="bp-subhead">'+esc(part.name)+' — '+t('parts_table_label')+'</div>';
-  html += '<div class="bp-stat"><span>'+t('col_hp')+'</span><input class="num-in mono" type="number" min="1" value="'+part.hp+'" data-field="hp"></div>';
-  html += '<div class="bp-stat"><span>'+t('col_armor')+'</span><input class="num-in mono" type="number" min="0" max="10" value="'+part.armor+'" data-field="armor"></div>';
-  html += '<div class="bp-stat"><span>'+t('col_durability')+'</span><input class="num-in mono" type="number" min="0" max="100" step="5" value="'+Math.round((part.durability||0)*100)+'" data-field="durabilityPct"></div>';
-  html += '<div class="bp-stat"><span>'+t('col_tomain')+'</span><input class="num-in mono" type="number" min="0" max="500" step="5" value="'+Math.round(part.toMain*100)+'" data-field="toMainPct"></div>';
-  html += '<div class="bp-stat"><span>'+t('col_lethal')+'</span><button class="starbtn'+(part.lethal?' on':'')+'" id="lethal-toggle-btn">'+(part.lethal?'★':'☆')+'</button></div>';
-  if(part.exdr) html += statRow(t('target_exdr'), fmtPct(part.exdr));
-  if(part.badr) html += statRow(t('target_badr'), fmtPct(part.badr));
-  if(part.fireMult || e.fireMult) html += statRow(t('target_firemult'), fmtPct(part.fireMult || e.fireMult));
+  html += '<div class="stat-cards">';
+  html += '<div class="stat-card"><span>'+t('col_hp')+'</span><input class="num-in" type="number" min="1" value="'+part.hp+'" data-field="hp"></div>';
+  html += '<div class="stat-card"><span>'+t('col_armor')+'</span><input class="num-in" type="number" min="0" max="10" value="'+part.armor+'" data-field="armor"></div>';
+  html += '<div class="stat-card"><span>'+t('col_durability')+'</span><div class="stat-val-row"><input class="num-in" type="number" min="0" max="100" step="5" value="'+Math.round((part.durability||0)*100)+'" data-field="durabilityPct"><span class="unit">%</span></div></div>';
+  html += '<div class="stat-card"><span>'+t('col_tomain')+'</span><div class="stat-val-row"><input class="num-in" type="number" min="0" max="500" step="5" value="'+Math.round(part.toMain*100)+'" data-field="toMainPct"><span class="unit">%</span></div></div>';
+  html += '<div class="stat-card"><span>'+t('col_lethal')+'</span><button class="starbtn'+(part.lethal?' on':'')+'" id="lethal-toggle-btn">'+(part.lethal?'★':'☆')+'</button></div>';
+  if(part.exdr) html += '<div class="stat-card"><span>'+t('target_exdr')+'</span><b>'+fmtPct(part.exdr)+'</b></div>';
+  if(part.badr) html += '<div class="stat-card"><span>'+t('target_badr')+'</span><b>'+fmtPct(part.badr)+'</b></div>';
+  if(part.fireMult || e.fireMult) html += '<div class="stat-card"><span>'+t('target_firemult')+'</span><b>'+fmtPct(part.fireMult || e.fireMult)+'</b></div>';
   if(e.regen){
     var exempt = e.regen.exempt.indexOf(part.name) !== -1;
-    html += statRow(t('target_regen'), exempt ? t('target_regen_none') : (e.regen.rate+'/s ('+e.regen.delay+'s '+t('regen_resume_suffix')+')'));
+    html += '<div class="stat-card"><span>'+t('target_regen')+'</span><b>'+(exempt ? t('target_regen_none') : (e.regen.rate+'/s ('+e.regen.delay+'s '+t('regen_resume_suffix')+')'))+'</b></div>';
   }
   if(part.lightStagger || part.mediumStagger || part.heavyStagger || part.massiveStagger){
-    html += '<div class="bp-subhead">'+t('target_stagger_label')+'</div>';
-    html += '<div class="bp-stat"><span class="mono" style="font-size:11px;">'+
+    html += '<div class="stat-card stat-card-wide"><span>'+t('target_stagger_label')+'</span><b class="mono" style="font-size:13px;">'+
       [part.lightStagger,part.mediumStagger,part.heavyStagger,part.massiveStagger].map(function(s){return s||'-';}).join(' · ')+
-      '</span></div>';
+      '</b></div>';
   }
+  html += '</div>';
 
   html += '<div class="section-label">'+t('intel_label')+'</div>';
   html += '<div class="intel"><ul>'+e.tips.map(function(tip){return '<li>'+esc(tip)+'</li>';}).join('')+'</ul></div>';
