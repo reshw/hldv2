@@ -8,6 +8,8 @@ function fakeEl() {
     getAttribute: function () { return null; },
     setAttribute: function () {},
     select: function () {},
+    focus: function () {},
+    querySelectorAll: function () { return []; },
     value: "0",
   };
 }
