@@ -82,6 +82,16 @@ export default function Page() {
     );
   }
 
+  function toggleIgnite(weaponId, hitIndex) {
+    setWeapons((prev) =>
+      prev.map((w) => {
+        if (w.id !== weaponId) return w;
+        const hits = w.hits.map((h, i) => (i === hitIndex ? { ...h, igniteIndependent: !h.igniteIndependent } : h));
+        return { ...w, hits };
+      })
+    );
+  }
+
   function resetAll() {
     setEnemies(DEFAULT_ENEMIES);
     setWeapons(DEFAULT_WEAPONS);
@@ -124,6 +134,7 @@ export default function Page() {
           onSelectWeapon={setSelectedWeaponId}
           catFilter={catFilter}
           onCatFilterChange={setCatFilter}
+          onToggleIgnite={(hitIndex) => toggleIgnite(selectedWeapon.id, hitIndex)}
         />
         <MobPanel
           enemies={enemies}

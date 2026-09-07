@@ -6,7 +6,7 @@ import { dispText, fmt, fmtPct, weaponHits, CAT_LABEL_KEY, SUBCAT_LABEL_KEY } fr
 
 const CATS = ["all", "primary", "secondary", "support"];
 
-export default function WeaponPanel({ weapons, lang, t, selectedWeapon, onSelectWeapon, catFilter, onCatFilterChange }) {
+export default function WeaponPanel({ weapons, lang, t, selectedWeapon, onSelectWeapon, catFilter, onCatFilterChange, onToggleIgnite }) {
   const [subcatFilter, setSubcatFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -186,6 +186,20 @@ export default function WeaponPanel({ weapons, lang, t, selectedWeapon, onSelect
               <StatRow label={t("stat_pen4")} value={`${h.apDirect} / ${h.apSlight} / ${h.apLarge} / ${h.apExtreme}`} />
               {h.outerRadius ? <StatRow label={t("stat_blastradius")} value={`${fmt(h.innerRadius, 1)}m / ${fmt(h.outerRadius, 1)}m`} /> : null}
               {h.falloff50m ? <StatRow label={t("stat_falloff50")} value={fmtPct(h.falloff50m)} /> : null}
+              {i > 0 && h.type && h.type.toLowerCase() === "fire" && (
+                <div className="bp-stat">
+                  <span>{t("stat_ignite_mode")}</span>
+                  <button
+                    type="button"
+                    className="reset-btn"
+                    style={{ padding: "2px 8px", fontSize: 11 }}
+                    onClick={() => onToggleIgnite(i)}
+                    title={t("stat_ignite_mode")}
+                  >
+                    {h.igniteIndependent ? t("ignite_independent") : t("ignite_gated")}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
