@@ -146,6 +146,10 @@ same tab (`mcp-server/scripts/verify_weapon_stats_xlsx.py`) and patched in place
 (`db/patch_raw_weapon_stats.cjs`) - zero actual conflicts, every other cell already
 matched exactly. If a fresher export ever gets handed over again, re-run the verify
 script first (point `XLSX_PATH` at it) rather than assuming the live fetch is complete.
+The same check against a manually-exported `raw_enemy_stats` xlsx found just 5 dropped
+cells (`hp`/`armor` on the Heavy Devastator's shield and two "Floor (Eagle 500 kg)" rows,
+where the sheet's own value is the literal text `"X"`) - same fix pattern
+(`mcp-server/scripts/verify_enemy_stats_xlsx.py` + `db/patch_raw_enemy_stats.cjs`).
 
 ## Keeping this in sync
 
