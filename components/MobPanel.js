@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DispName from "./DispName";
 import FactionMark from "./FactionMark";
 import { dispText, fmtPct } from "@/lib/calc";
@@ -14,12 +14,46 @@ export default function MobPanel({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef(null);
+  const listRef = useRef(null);
 
   const q = query.trim().toLowerCase();
   const matches = enemies
     .filter((e) => !q || e.name.toLowerCase().includes(q) || (e.nameKo && e.nameKo.includes(q)))
     .slice(0, 40);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [query, open]);
+
+  useEffect(() => {
+    if (!open || !listRef.current) return;
+    const el = listRef.current.querySelector(".weapon-combo-item.kb-active");
+    if (el) el.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, open]);
+
+  function handleKeyDown(ev) {
+    if (!open) return;
+    if (ev.key === "ArrowDown") {
+      ev.preventDefault();
+      setActiveIndex((i) => Math.min(i + 1, matches.length - 1));
+    } else if (ev.key === "ArrowUp") {
+      ev.preventDefault();
+      setActiveIndex((i) => Math.max(i - 1, 0));
+    } else if (ev.key === "Enter") {
+      ev.preventDefault();
+      const m = matches[activeIndex];
+      if (m) {
+        onSelectEnemy(m.id);
+        setOpen(false);
+        inputRef.current && inputRef.current.blur();
+      }
+    } else if (ev.key === "Escape") {
+      setOpen(false);
+      inputRef.current && inputRef.current.blur();
+    }
+  }
 
   const e = selectedEnemy;
   const part = e.parts[Math.min(selectedPart, e.parts.length - 1)];
@@ -57,18 +91,20 @@ export default function MobPanel({
           }}
           onChange={(ev) => setQuery(ev.target.value)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onKeyDown={handleKeyDown}
         />
         {open && (
-          <div className="weapon-combo-list">
+          <div className="weapon-combo-list" ref={listRef}>
             {matches.length === 0 ? (
               <div className="weapon-combo-empty">{t("enemy_empty")}</div>
             ) : (
-              matches.map((x) => {
+              matches.map((x, i) => {
                 const xf = FACTIONS[x.faction];
                 return (
                   <div
                     key={x.id}
-                    className={"weapon-combo-item" + (x.id === e.id ? " hl" : "")}
+                    className={"weapon-combo-item" + (i === activeIndex ? " hl kb-active" : "")}
+                    onMouseEnter={() => setActiveIndex(i)}
                     onMouseDown={(ev) => {
                       ev.preventDefault();
                       onSelectEnemy(x.id);

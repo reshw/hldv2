@@ -40,11 +40,22 @@ export default function ResultPanel({ weapon, enemy, part, t, compareVisible, on
       <div className="bp-tiles">
         <div className="bp-tile"><span>{t("tile_btk")}</span><b>{fmtNum(c.btk)}</b></div>
         <div className="bp-tile"><span>{t("tile_ttk")}</span><b>{fmtNum(c.ttk, 2)}</b></div>
+        {c.sever !== null && (
+          <div className="bp-tile" style={!isFinite(c.btk) ? { borderColor: "var(--accent)" } : undefined}>
+            <span>{t("tile_bts")}</span>
+            <b>{c.sever}</b>
+          </div>
+        )}
         <div className="bp-tile"><span>{t("tile_overkill")}</span><b>{fmtNum(c.overkill)}</b></div>
         <div className="bp-tile"><span>{t("tile_reloads")}</span><b>{fmtNum(c.reloads)}</b></div>
         <div className="bp-tile"><span>{t("tile_magpct")}</span><b>{fmtPct(c.magPct)}</b></div>
         <div className="bp-tile"><span>{t("tile_killspermag")}</span><b>{c.killsPerMag}</b></div>
       </div>
+      {!isFinite(c.btk) && c.sever !== null && (
+        <div className="disclaimer" style={{ marginTop: 10 }}>
+          <b>{t("ref_prefix")}</b> {t("note_no_kill_use_bts")}
+        </div>
+      )}
 
       <div className="section-label" style={{ marginTop: 16 }}>{t("bp_col_detail")}</div>
       <div className="table-wrap">

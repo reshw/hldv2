@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DispName from "./DispName";
 import StatRow from "./StatRow";
 import { dispText, fmt, fmtPct, weaponHits, CAT_LABEL_KEY, SUBCAT_LABEL_KEY } from "@/lib/calc";
@@ -10,7 +10,9 @@ export default function WeaponPanel({ weapons, lang, t, selectedWeapon, onSelect
   const [subcatFilter, setSubcatFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef(null);
+  const listRef = useRef(null);
 
   function catLabel(cat) {
     return cat === "all" ? t("cat_all") : t(CAT_LABEL_KEY[cat] || cat);
@@ -40,6 +42,38 @@ export default function WeaponPanel({ weapons, lang, t, selectedWeapon, onSelect
     inputRef.current && inputRef.current.focus();
   }
 
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [query, catFilter, subcatFilter, open]);
+
+  useEffect(() => {
+    if (!open || !listRef.current) return;
+    const el = listRef.current.querySelector(".weapon-combo-item.kb-active");
+    if (el) el.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, open]);
+
+  function handleKeyDown(e) {
+    if (!open) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.min(i + 1, matches.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIndex((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const m = matches[activeIndex];
+      if (m) {
+        onSelectWeapon(m.id);
+        setOpen(false);
+        inputRef.current && inputRef.current.blur();
+      }
+    } else if (e.key === "Escape") {
+      setOpen(false);
+      inputRef.current && inputRef.current.blur();
+    }
+  }
+
   const hits = weaponHits(selectedWeapon);
 
   return (
@@ -59,16 +93,18 @@ export default function WeaponPanel({ weapons, lang, t, selectedWeapon, onSelect
           }}
           onChange={(e) => setQuery(e.target.value)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onKeyDown={handleKeyDown}
         />
         {open && (
-          <div className="weapon-combo-list">
+          <div className="weapon-combo-list" ref={listRef}>
             {matches.length === 0 ? (
               <div className="weapon-combo-empty">{t("bp_empty")}</div>
             ) : (
-              matches.map((w) => (
+              matches.map((w, i) => (
                 <div
                   key={w.id}
-                  className={"weapon-combo-item" + (w.id === selectedWeapon.id ? " hl" : "")}
+                  className={"weapon-combo-item" + (i === activeIndex ? " hl kb-active" : "")}
+                  onMouseEnter={() => setActiveIndex(i)}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     onSelectWeapon(w.id);

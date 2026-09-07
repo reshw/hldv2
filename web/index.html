@@ -368,7 +368,8 @@ var STRINGS = {
     target_durability: "부위 내구%", target_tomain: "메인 기여율", target_lethal: "치명(파괴시 즉사)",
     target_exdr: "ExDR", target_badr: "BaDR", target_firemult: "화염 배율", target_regen: "재생", target_regen_none: "없음 (이 부위는 재생 제외)", regen_resume_suffix: "뒤 재개",
     target_stagger_label: "스태거 임계값 (경/중/중重/massive)", target_extra_label: "추가 특성",
-    tile_btk:"BTK", tile_ttk:"TTK(초)", tile_overkill:"오버킬", tile_reloads:"재장전 횟수", tile_magpct:"탄창 소모", tile_killspermag:"탄창당 처치",
+    tile_btk:"BTK", tile_ttk:"TTK(초)", tile_bts:"BTS(부위파괴)", tile_overkill:"오버킬", tile_reloads:"재장전 횟수", tile_magpct:"탄창 소모", tile_killspermag:"탄창당 처치",
+    note_no_kill_use_bts:"이 부위는 파괴해도 단독으로 처치되지 않는 부위입니다(치명 아님·메인 기여율 0%). 대신 이 부위 자체(껍데기)를 파괴하는 데 필요한 탄수는 BTS(Bullets To Sever)입니다.",
     detail_col_component:"피해 성분", detail_col_pen:"관통(직격)", detail_col_armor:"장갑(AV)", detail_col_judge:"판정",
     detail_col_dmg:"피해", detail_col_applied:"BTK 반영", detail_applied:"적용(최댓값)", detail_notapplied:"미적용",
     detail_total_row: "BTK/TTK에 실제 적용된 피해 (장갑 대비 가장 센 성분 하나)", detail_mainshare_row: "메인 체력 반영분 (× 메인 기여율",
@@ -415,7 +416,8 @@ var STRINGS = {
     target_durability: "Part durability%", target_tomain: "Main share", target_lethal: "Lethal (kills on destroy)",
     target_exdr: "ExDR", target_badr: "BaDR", target_firemult: "Fire multiplier", target_regen: "Regen", target_regen_none: "None (exempt part)", regen_resume_suffix: "delay",
     target_stagger_label: "Stagger thresholds (light/medium/heavy/massive)", target_extra_label: "Additional traits",
-    tile_btk:"BTK", tile_ttk:"TTK(s)", tile_overkill:"Overkill", tile_reloads:"Reloads", tile_magpct:"Mag used", tile_killspermag:"Kills/mag",
+    tile_btk:"BTK", tile_ttk:"TTK(s)", tile_bts:"BTS (Sever)", tile_overkill:"Overkill", tile_reloads:"Reloads", tile_magpct:"Mag used", tile_killspermag:"Kills/mag",
+    note_no_kill_use_bts:"This part can't be killed on its own even when destroyed (not lethal, 0% main share). BTS (Bullets To Sever) is the shot count needed to destroy the part itself instead.",
     detail_col_component:"Component", detail_col_pen:"Pen(direct)", detail_col_armor:"Armor(AV)", detail_col_judge:"Result",
     detail_col_dmg:"Damage", detail_col_applied:"Used for BTK", detail_applied:"Used (max)", detail_notapplied:"Not used",
     detail_total_row: "Damage actually applied to BTK/TTK (best component vs this armor)", detail_mainshare_row: "Main HP share (× main share",
@@ -903,13 +905,24 @@ function hitEffDamage(h, armor, partDurability){
  * actually gets through. So BTK/TTK use whichever component deals the most damage against
  * THIS target's armor, not just whichever is listed first.
  */
+/**
+ * "Fire" is different from a true alternate hit path like Scorcher's explosion: it's an
+ * ignition DOT the bullet's own impact causes (every Fire-type weapon's sheet notes say so -
+ * "Sets enemies on fire"), not an independent physical damage source. A ricocheted bullet never
+ * lands, so it can't ignite anything either - Fire can't win bestHit purely on its own (often
+ * higher) AP rating unless some non-Fire component actually penetrates first.
+ */
 function bestHit(w, armor, partDurability){
   var hits = weaponHits(w);
-  var best = hits[0], bestDmg = hitEffDamage(best, armor, partDurability);
-  for(var i=1;i<hits.length;i++){
-    var d = hitEffDamage(hits[i], armor, partDurability);
-    if(d > bestDmg){ bestDmg = d; best = hits[i]; }
-  }
+  function isFire(h){ return h.type && h.type.toLowerCase() === "fire"; }
+  var anyLands = hits.some(function(h){ return !isFire(h) && armorMultiplier(h.apDirect, armor) > 0; });
+  var best = null, bestDmg = -Infinity;
+  hits.forEach(function(h){
+    if(isFire(h) && !anyLands) return; // nothing penetrated - no ignition possible
+    var d = hitEffDamage(h, armor, partDurability);
+    if(d > bestDmg){ bestDmg = d; best = h; }
+  });
+  if(!best){ best = hits[0]; bestDmg = hitEffDamage(best, armor, partDurability); }
   return { hit: best, dmg: bestDmg };
 }
 function totalEffDamage(w, armor, partDurability){
@@ -925,37 +938,52 @@ function penStatus(w, armor, partDurability){
 }
 
 /* ============ 1. mob search (dropdown) + info ============ */
+var enemyActiveIdx = 0;
+var enemyOverlayMatches = [];
 function renderEnemySearchOverlay(query){
   var overlay = document.getElementById("enemy-search-overlay");
   var q = (query||"").trim().toLowerCase();
   var matches = state.enemies.filter(function(x){
     return !q || x.name.toLowerCase().indexOf(q) !== -1 || (x.nameKo && x.nameKo.indexOf(q) !== -1);
   }).slice(0, 40);
+  enemyOverlayMatches = matches;
+  if(enemyActiveIdx >= matches.length) enemyActiveIdx = Math.max(0, matches.length - 1);
   if(!matches.length){ overlay.innerHTML = '<div class="weapon-combo-empty">'+esc(t("enemy_empty"))+'</div>'; return; }
-  overlay.innerHTML = matches.map(function(x){
+  overlay.innerHTML = matches.map(function(x, i){
     var f = FACTIONS[x.faction];
-    return '<div class="weapon-combo-item'+(x.id===selectedEnemy?' hl':'')+'" data-id="'+x.id+'">'+
+    return '<div class="weapon-combo-item'+(i===enemyActiveIdx?' hl':'')+'" data-id="'+x.id+'" data-idx="'+i+'">'+
       '<span><span class="dot" style="display:inline-block;background:'+f.color+';margin-right:6px;"></span>'+dispName(x)+'</span>'+
       '<span class="cat">'+fmt(x.mainHp)+'HP</span></div>';
   }).join('');
   Array.prototype.forEach.call(overlay.querySelectorAll(".weapon-combo-item"), function(item){
+    item.addEventListener("mouseenter", function(){ enemyActiveIdx = +item.getAttribute("data-idx"); renderEnemySearchOverlay(document.getElementById("enemy-search-input").value); });
     item.addEventListener("mousedown", function(ev){
       ev.preventDefault(); // fires before input's blur, so the click still registers
-      selectedEnemy = item.getAttribute("data-id");
-      selectedPart = 0;
-      renderMobInfo();
-      renderResultPanel();
-      if(compareVisible) renderComparePanel();
-      overlay.hidden = true;
+      selectEnemyById(item.getAttribute("data-id"));
     });
   });
+}
+function selectEnemyById(id){
+  selectedEnemy = id;
+  selectedPart = 0;
+  renderMobInfo();
+  renderResultPanel();
+  if(compareVisible) renderComparePanel();
+  document.getElementById("enemy-search-overlay").hidden = true;
 }
 (function(){
   var input = document.getElementById("enemy-search-input");
   var overlay = document.getElementById("enemy-search-overlay");
-  input.addEventListener("focus", function(){ this.select(); renderEnemySearchOverlay(""); overlay.hidden = false; });
-  input.addEventListener("input", function(){ renderEnemySearchOverlay(this.value); overlay.hidden = false; });
+  input.addEventListener("focus", function(){ this.select(); enemyActiveIdx = 0; renderEnemySearchOverlay(""); overlay.hidden = false; });
+  input.addEventListener("input", function(){ enemyActiveIdx = 0; renderEnemySearchOverlay(this.value); overlay.hidden = false; });
   input.addEventListener("blur", function(){ setTimeout(function(){ overlay.hidden = true; renderMobInfo(); }, 150); });
+  input.addEventListener("keydown", function(ev){
+    if(overlay.hidden) return;
+    if(ev.key === "ArrowDown"){ ev.preventDefault(); enemyActiveIdx = Math.min(enemyActiveIdx+1, enemyOverlayMatches.length-1); renderEnemySearchOverlay(this.value); }
+    else if(ev.key === "ArrowUp"){ ev.preventDefault(); enemyActiveIdx = Math.max(enemyActiveIdx-1, 0); renderEnemySearchOverlay(this.value); }
+    else if(ev.key === "Enter"){ ev.preventDefault(); var m = enemyOverlayMatches[enemyActiveIdx]; if(m){ selectEnemyById(m.id); this.blur(); } }
+    else if(ev.key === "Escape"){ overlay.hidden = true; this.blur(); }
+  });
 })();
 
 function renderMobInfo(){
@@ -1150,6 +1178,7 @@ function showWeaponSearchOverlay(){
   var input = document.getElementById("weapon-search-input");
   input.value = "";
   input.focus();
+  weaponActiveIdx = 0;
   renderWeaponSearchOverlay("");
   document.getElementById("weapon-search-overlay").hidden = false;
 }
@@ -1169,6 +1198,8 @@ function wireCatChips(scopeSel){
 }
 
 /* ============ 2. weapon search (dropdown) + info ============ */
+var weaponActiveIdx = 0;
+var weaponOverlayMatches = [];
 function renderWeaponSearchOverlay(query){
   var overlay = document.getElementById("weapon-search-overlay");
   var q = (query||"").trim().toLowerCase();
@@ -1177,27 +1208,40 @@ function renderWeaponSearchOverlay(query){
     if(subcatFilter !== "all" && x.subcat !== subcatFilter) return false;
     return !q || x.name.toLowerCase().indexOf(q) !== -1 || (x.nameKo && x.nameKo.indexOf(q) !== -1);
   }).slice(0, 40);
+  weaponOverlayMatches = matches;
+  if(weaponActiveIdx >= matches.length) weaponActiveIdx = Math.max(0, matches.length - 1);
   if(!matches.length){ overlay.innerHTML = '<div class="weapon-combo-empty">'+esc(t('bp_empty'))+'</div>'; return; }
-  overlay.innerHTML = matches.map(function(x){
-    return '<div class="weapon-combo-item'+(x.id===selectedWeapon?' hl':'')+'" data-id="'+x.id+'"><span>'+dispName(x)+'</span><span class="cat">'+(x.subcat?subcatLabel(x.subcat):catLabel(x.cat))+'</span></div>';
+  overlay.innerHTML = matches.map(function(x, i){
+    return '<div class="weapon-combo-item'+(i===weaponActiveIdx?' hl':'')+'" data-id="'+x.id+'" data-idx="'+i+'"><span>'+dispName(x)+'</span><span class="cat">'+(x.subcat?subcatLabel(x.subcat):catLabel(x.cat))+'</span></div>';
   }).join('');
   Array.prototype.forEach.call(overlay.querySelectorAll(".weapon-combo-item"), function(item){
+    item.addEventListener("mouseenter", function(){ weaponActiveIdx = +item.getAttribute("data-idx"); renderWeaponSearchOverlay(document.getElementById("weapon-search-input").value); });
     item.addEventListener("mousedown", function(ev){
       ev.preventDefault(); // fires before input's blur, so the click still registers
-      selectedWeapon = item.getAttribute("data-id");
-      renderWeaponInfo();
-      renderResultPanel();
-      if(compareVisible) renderComparePanel();
-      overlay.hidden = true;
+      selectWeaponById(item.getAttribute("data-id"));
     });
   });
+}
+function selectWeaponById(id){
+  selectedWeapon = id;
+  renderWeaponInfo();
+  renderResultPanel();
+  if(compareVisible) renderComparePanel();
+  document.getElementById("weapon-search-overlay").hidden = true;
 }
 (function(){
   var input = document.getElementById("weapon-search-input");
   var overlay = document.getElementById("weapon-search-overlay");
-  input.addEventListener("focus", function(){ this.select(); renderWeaponSearchOverlay(""); overlay.hidden = false; });
-  input.addEventListener("input", function(){ renderWeaponSearchOverlay(this.value); overlay.hidden = false; });
+  input.addEventListener("focus", function(){ this.select(); weaponActiveIdx = 0; renderWeaponSearchOverlay(""); overlay.hidden = false; });
+  input.addEventListener("input", function(){ weaponActiveIdx = 0; renderWeaponSearchOverlay(this.value); overlay.hidden = false; });
   input.addEventListener("blur", function(){ setTimeout(function(){ overlay.hidden = true; renderWeaponInfo(); }, 150); });
+  input.addEventListener("keydown", function(ev){
+    if(overlay.hidden) return;
+    if(ev.key === "ArrowDown"){ ev.preventDefault(); weaponActiveIdx = Math.min(weaponActiveIdx+1, weaponOverlayMatches.length-1); renderWeaponSearchOverlay(this.value); }
+    else if(ev.key === "ArrowUp"){ ev.preventDefault(); weaponActiveIdx = Math.max(weaponActiveIdx-1, 0); renderWeaponSearchOverlay(this.value); }
+    else if(ev.key === "Enter"){ ev.preventDefault(); var m = weaponOverlayMatches[weaponActiveIdx]; if(m){ selectWeaponById(m.id); this.blur(); } }
+    else if(ev.key === "Escape"){ overlay.hidden = true; this.blur(); }
+  });
 })();
 
 function renderWeaponInfo(){
@@ -1254,11 +1298,17 @@ function renderResultPanel(){
   html += '<div class="bp-tiles">';
   html += '<div class="bp-tile"><span>'+t('tile_btk')+'</span><b>'+fmtNum(c.btk)+'</b></div>';
   html += '<div class="bp-tile"><span>'+t('tile_ttk')+'</span><b>'+fmtNum(c.ttk,2)+'</b></div>';
+  if(c.sever !== null){
+    html += '<div class="bp-tile"'+(!isFinite(c.btk)?' style="border-color:var(--accent);"':'')+'><span>'+t('tile_bts')+'</span><b>'+c.sever+'</b></div>';
+  }
   html += '<div class="bp-tile"><span>'+t('tile_overkill')+'</span><b>'+fmtNum(c.overkill)+'</b></div>';
   html += '<div class="bp-tile"><span>'+t('tile_reloads')+'</span><b>'+fmtNum(c.reloads)+'</b></div>';
   html += '<div class="bp-tile"><span>'+t('tile_magpct')+'</span><b>'+fmtPct(c.magPct)+'</b></div>';
   html += '<div class="bp-tile"><span>'+t('tile_killspermag')+'</span><b>'+c.killsPerMag+'</b></div>';
   html += '</div>';
+  if(!isFinite(c.btk) && c.sever !== null){
+    html += '<div class="disclaimer" style="margin-top:10px;"><b>'+t('ref_prefix')+'</b> '+t('note_no_kill_use_bts')+'</div>';
+  }
 
   html += '<div class="section-label" style="margin-top:16px;">'+t("bp_col_detail")+'</div>';
   html += '<div class="table-wrap"><table><thead><tr><th>'+t('detail_col_component')+'</th><th class="mono">'+t('detail_col_pen')+'</th><th class="mono">'+t('detail_col_armor')+'</th><th>'+t('detail_col_judge')+'</th><th class="mono">'+t('detail_col_dmg')+'</th><th>'+t('detail_col_applied')+'</th></tr></thead><tbody>';
