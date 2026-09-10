@@ -173,16 +173,17 @@ export default function WeaponPanel({ weapons, lang, t, selectedWeapon, onSelect
             <div className="stat-section-title">{t("bp_col_weapon")}</div>
             <StatRow label={t("stat_cat")} value={catLabel(selectedWeapon.cat)} />
             <StatRow label={t("stat_mag")} value={fmt(selectedWeapon.mag)} />
-            <StatRow label={t("stat_rpm")} value={fmt(selectedWeapon.rpm)} />
+            {!selectedWeapon.continuous && <StatRow label={t("stat_rpm")} value={fmt(selectedWeapon.rpm)} />}
             <StatRow label={t("stat_reload")} value={fmt(selectedWeapon.reload, 2)} />
+            {selectedWeapon.continuous && <StatRow label={t("stat_fireduration")} value={fmt(selectedWeapon.fireDuration, 1)} />}
             {selectedWeapon.tacReload ? <StatRow label={t("stat_tacreload")} value={fmt(selectedWeapon.tacReload, 2)} /> : null}
             {selectedWeapon.ergonomics ? <StatRow label={t("stat_ergo")} value={fmt(selectedWeapon.ergonomics)} /> : null}
           </div>
           {hits.map((h, i) => (
             <div className="stat-section" key={i}>
               <div className="stat-section-title">{h.type}</div>
-              <StatRow label={t("stat_dmg")} value={fmt(h.dmg)} />
-              <StatRow label={t("stat_durabledmg")} value={fmt(h.dmg * h.durable)} />
+              <StatRow label={selectedWeapon.continuous ? t("stat_dps") : t("stat_dmg")} value={fmt(h.dmg)} />
+              {!selectedWeapon.continuous && <StatRow label={t("stat_durabledmg")} value={fmt(h.dmg * h.durable)} />}
               <StatRow label={t("stat_pen4")} value={`${h.apDirect} / ${h.apSlight} / ${h.apLarge} / ${h.apExtreme}`} />
               {h.outerRadius ? <StatRow label={t("stat_blastradius")} value={`${fmt(h.innerRadius, 1)}m / ${fmt(h.outerRadius, 1)}m`} /> : null}
               {h.falloff50m ? <StatRow label={t("stat_falloff50")} value={fmtPct(h.falloff50m)} /> : null}

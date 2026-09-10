@@ -1,6 +1,6 @@
 "use client";
 import DispName from "./DispName";
-import { computeRow, weaponHits, fmtNum, fmtPct, CAT_LABEL_KEY } from "@/lib/calc";
+import { computeRow, fireMultFor, weaponHits, fmtNum, fmtPct, CAT_LABEL_KEY } from "@/lib/calc";
 
 const CATS = ["all", "primary", "secondary", "support"];
 
@@ -15,8 +15,9 @@ export default function ComparePanel({
     return cat === "all" ? t("cat_all") : t(CAT_LABEL_KEY[cat] || cat);
   }
 
+  const fireMult = fireMultFor(part, enemy);
   const rows = weapons.filter((w) => catFilter === "all" || w.cat === catFilter);
-  const computed = rows.map((w) => ({ w, c: computeRow(w, part, enemy.mainHp, enemy.regen) }));
+  const computed = rows.map((w) => ({ w, c: computeRow(w, part, enemy.mainHp, enemy.regen, fireMult) }));
   const minBtk = Math.min(...computed.map((r) => r.c.btk));
   const minTtk = Math.min(...computed.map((r) => r.c.ttk));
   computed.sort((a, b) => {

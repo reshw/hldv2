@@ -6,10 +6,11 @@ import WeaponPanel from "@/components/WeaponPanel";
 import MobPanel from "@/components/MobPanel";
 import ResultPanel from "@/components/ResultPanel";
 import ComparePanel from "@/components/ComparePanel";
+import KillPathPanel from "@/components/KillPathPanel";
 
 // bump whenever DEFAULT_WEAPONS()/DEFAULT_ENEMIES() gains fields - stale localStorage
 // silently shadows new data otherwise (see data/README.md's STORE_KEY history)
-const STORE_KEY = "se-ballistics-v7";
+const STORE_KEY = "se-ballistics-v8";
 
 export default function Page() {
   const [lang, setLangState] = useState("ko");
@@ -170,6 +171,7 @@ export default function Page() {
             onToggleCompare={() => setCompareVisible((v) => !v)}
             onReset={resetAll}
           />
+          <KillPathPanel weapon={selectedWeapon} enemy={selectedEnemy} t={t} />
         </MobPanel>
       </div>
 

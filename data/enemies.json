@@ -1895,7 +1895,8 @@
         "armor": 1,
         "durability": 0,
         "toMain": 1,
-        "lethal": true
+        "lethal": true,
+        "requires": "Helmet"
       },
       {
         "name": "Torso",

@@ -110,6 +110,63 @@ Planned shape once this gets built out (fill in gradually, don't guess):
 `subfaction` on the two existing entries should migrate to this once the full
 stage list exists - don't build UI on top of `subfaction` as-is, it's a stub.
 
+## FLAM-40 continuous-fire fields (2026-09-08)
+
+FLAM-40's `dmg`/`pen`/`mag`/`reload` were previously wrong (looked like a data-entry
+accident - values that didn't match anything on the weapon's actual wiki page). Replaced
+with helldivers.wiki.gg's own infobox numbers, read directly from the page's raw wikitext:
+`dmg:150` (the page's own "150 DPS Fire" headline stat), `pen:4`/AP Heavy, `mag:150`
+(canister capacity), `reload:4` (seconds). Two new fields drive the continuous-fire branch
+in `lib/calc.js`: `continuous:true` (no discrete "shots" - `dmg` is a DPS value, not
+per-hit damage) and `splash:true` (a wide cone that can plausibly hit several body parts
+at once, unlike a precision beam like the Laser Cannon). `fireDuration:16.5` (seconds of
+continuous fire per canister) is **not** on the wiki page - it's a user-reported figure,
+precision unverified. FLAM-66 Torcher has the same "mag:1, reload:0" shape and the same now-fixed `computeRow`
+TTK=0 bug, but wasn't re-verified against its own wiki page, so it's left as-is (still
+`continuous`-less) until someone does the same wiki check for it. LAS-98 Laser Cannon
+**was** re-verified (2026-09-10, see below) and is now fixed the same way.
+
+## LAS-98 Laser Cannon (2026-09-10)
+
+Same `continuous` treatment as FLAM-40, now with a wiki-confirmed `fireDuration` instead of
+a user-reported one: the raw infobox gives `capacity = 12.5s` directly, and it's independently
+re-derivable from the page's own Heat Data table (`Overheats at 100°C`, `Heat Per Second 8°C`
+-> 100/8 = 12.5s), so this one has two independent confirmations. `reload:3.65` uses the
+page's base (non-upgraded) `reload_time`, specifically the **full-overheat** reload rather
+than the slower manual/tactical one (`tac_reload_time:5.1s`, kept as a separate `tacReload`
+field for display) - matches how this calculator already always assumes firing a pool
+all the way down before reloading. The weapon's own damage numbers (`dmg:350`,
+`durable:0.57`, `pen:4`, the secondary `Fire` hit at `dmg:100`) were already correct in the
+data before this fix - only the top-level `rpm`/`mag`/`reload` (the actual source of its
+TTK=0 bug) and the `Fire` hit's `apSlight`/`apLarge` (were `0`, wiki says `Heavy`/`4` same
+as `apDirect`, only `apExtreme` is `0`/Unarmored) needed correcting. **Not** marked
+`splash` - wiki describes it as a precise, easy-to-aim single-point beam ("simply place
+the reticle on top of the target"), not a wide-cone weapon like FLAM-40.
+
+A user initially reported seeing the LAS-98's beam ricochet ("도탄") off Crusher's Helmet
+(AV4) in actual play, which looked like it might contradict this calculator's
+`armorMultiplier` rule (`AP === armor -> 65% damage`, not a full 0% bounce). Follow-up:
+the ricochet spark/cue does show up on those hits, but sustained fire still destroys the
+Helmet - i.e. it's a partial-penetration deflection effect, not a zero-damage bounce,
+consistent with the existing 65% rule (Helmet's own 300 HP dies in ~1.3s of continuous
+LAS-98 fire per `computeKillPaths`). No change needed; `armorMultiplier` stands as-is.
+
+## 40-K Meltagun (2026-09-10)
+
+Added from helldivers.wiki.gg's raw infobox: `pen:7` (Anti-Tank III), `dmg:3640`,
+`mag:3`, `rpm:50`, `reload:3.75` (base, not the Siege-Ready-upgraded value). Unlike
+FLAM-40, this one is modeled as an ordinary **discrete** weapon (no `continuous`/`splash`
+flags) even though it fires a beam - the wiki page states outright that it's a real
+3-round magazine of independent full-power bursts, not one continuous stream:
+"[the beam] fires continuously for roughly 1.4 seconds ... dealing a maximum theoretical
+damage of 3,640 per burst" and the infobox's own headline is "2,600 DPS" - `dmg:3640`
+here is exactly `2600 × 1.4`, both figures stated directly on the page, not derived from
+a guess. Its 15m-range damage falloff (wiki: "40% of damage is lost at its maximum range
+... ~1,560 DPS") isn't modeled - there's no generic per-weapon range-falloff field in this
+schema (the existing `falloff50m` etc. fields are a different, ballistic-drop mechanic,
+not a fit for a beam's flat range cutoff), so this calculator's numbers are the weapon's
+close-range max, same simplification as everywhere else.
+
 ## Known gaps / things to treat carefully
 
 - `durability` on enemy parts is captured but **not used** by the BTK

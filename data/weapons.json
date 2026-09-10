@@ -3086,6 +3086,35 @@
     ]
   },
   {
+    "id": "meltagun_40k",
+    "name": "40-K Meltagun",
+    "nameKo": "40-K 멜타건",
+    "cat": "support",
+    "subcat": "energy",
+    "pen": 7,
+    "dmg": 3640,
+    "durable": 1,
+    "rpm": 50,
+    "mag": 3,
+    "reload": 3.75,
+    "tacReload": 3.75,
+    "ergonomics": 10,
+    "hits": [
+      {
+        "type": "Projectile",
+        "dmg": 3640,
+        "durable": 1,
+        "apDirect": 7,
+        "apSlight": 7,
+        "apLarge": 7,
+        "apExtreme": 7,
+        "demolition": 30,
+        "stagger": 40,
+        "pushForce": 40
+      }
+    ]
+  },
+  {
     "id": "ac_8_autocannon_aphet",
     "name": "AC-8 Autocannon APHET",
     "nameKo": "AC-8 오토캐넌 철갑고폭예광탄",
@@ -3420,74 +3449,23 @@
     "cat": "support",
     "subcat": "heavy",
     "pen": 4,
-    "dmg": 240,
+    "dmg": 150,
     "durable": 1,
-    "rpm": 60,
-    "mag": 1,
-    "reload": 0,
+    "rpm": 0,
+    "mag": 150,
+    "reload": 4,
+    "continuous": true,
+    "splash": true,
+    "fireDuration": 16.5,
     "hits": [
       {
-        "type": "Projectile",
-        "dmg": 240,
-        "durable": 1,
-        "apDirect": 4,
-        "apSlight": 4,
-        "apLarge": 4,
-        "apExtreme": 0,
-        "demolition": 10,
-        "stagger": 5,
-        "pushForce": 5
-      },
-      {
-        "type": "Projectile",
-        "dmg": 130,
-        "durable": 1,
-        "apDirect": 4,
-        "apSlight": 4,
-        "apLarge": 4,
-        "apExtreme": 0,
-        "demolition": 10,
-        "stagger": 5,
-        "pushForce": 5
-      },
-      {
-        "type": "Projectile",
+        "type": "Fire",
         "dmg": 150,
         "durable": 1,
         "apDirect": 4,
         "apSlight": 4,
         "apLarge": 4,
-        "apExtreme": 0,
-        "demolition": 10,
-        "stagger": 5,
-        "pushForce": 5
-      },
-      {
-        "type": "Fire",
-        "dmg": 125,
-        "durable": 1,
-        "apDirect": 4,
-        "apSlight": 0,
-        "apLarge": 0,
-        "apExtreme": 0
-      },
-      {
-        "type": "Fire",
-        "dmg": 125,
-        "durable": 1,
-        "apDirect": 4,
-        "apSlight": 0,
-        "apLarge": 0,
-        "apExtreme": 0
-      },
-      {
-        "type": "Fire",
-        "dmg": 125,
-        "durable": 1,
-        "apDirect": 4,
-        "apSlight": 0,
-        "apLarge": 0,
-        "apExtreme": 0
+        "apExtreme": 4
       }
     ]
   },
@@ -3697,9 +3675,13 @@
     "pen": 4,
     "dmg": 350,
     "durable": 0.57,
-    "rpm": 60,
-    "mag": 1,
-    "reload": 0,
+    "rpm": 0,
+    "mag": 12.5,
+    "reload": 3.65,
+    "tacReload": 5.1,
+    "ergonomics": 45,
+    "continuous": true,
+    "fireDuration": 12.5,
     "hits": [
       {
         "type": "Projectile",
@@ -3716,8 +3698,8 @@
         "dmg": 100,
         "durable": 1,
         "apDirect": 4,
-        "apSlight": 0,
-        "apLarge": 0,
+        "apSlight": 4,
+        "apLarge": 4,
         "apExtreme": 0
       }
     ]

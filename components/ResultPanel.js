@@ -2,14 +2,18 @@
 import DispName from "./DispName";
 import { dispText } from "@/lib/calc";
 import {
-  armorMultiplier, bestHit, computeRow, hitEffDamage, weaponHits,
+  armorMultiplier, bestHit, computeRow, fireMultFor, hitEffDamage, weaponHits,
   fmtNum, fmtPct,
 } from "@/lib/calc";
 
 export default function ResultPanel({ weapon, enemy, part, t, compareVisible, onToggleCompare, onReset }) {
-  const c = computeRow(weapon, part, enemy.mainHp, enemy.regen);
+  const fireMult = fireMultFor(part, enemy);
+  const c = computeRow(weapon, part, enemy.mainHp, enemy.regen, fireMult);
   const hits = weaponHits(weapon);
-  const chosen = bestHit(weapon, part.armor, part.durability).hit;
+  const chosen = bestHit(weapon, part.armor, part.durability, fireMult).hit;
+  // btk is always Infinity for continuous weapons by design (no discrete "shots" concept) even
+  // when the kill is very much possible - ttk is the one that actually reflects unreachability.
+  const cantKill = weapon.continuous ? !isFinite(c.ttk) : !isFinite(c.btk);
 
   return (
     <div id="result-panel">
@@ -41,9 +45,9 @@ export default function ResultPanel({ weapon, enemy, part, t, compareVisible, on
         <div className="bp-tile"><span>{t("tile_btk")}</span><b>{fmtNum(c.btk)}</b></div>
         <div className="bp-tile"><span>{t("tile_ttk")}</span><b>{fmtNum(c.ttk, 2)}</b></div>
         {c.sever !== null && (
-          <div className="bp-tile" style={!isFinite(c.btk) ? { borderColor: "var(--accent)" } : undefined}>
+          <div className="bp-tile" style={cantKill ? { borderColor: "var(--accent)" } : undefined}>
             <span>{t("tile_bts")}</span>
-            <b>{c.sever}</b>
+            <b>{fmtNum(c.sever, weapon.continuous ? 1 : 0)}</b>
           </div>
         )}
         <div className="bp-tile"><span>{t("tile_overkill")}</span><b>{fmtNum(c.overkill)}</b></div>
@@ -51,7 +55,7 @@ export default function ResultPanel({ weapon, enemy, part, t, compareVisible, on
         <div className="bp-tile"><span>{t("tile_magpct")}</span><b>{fmtPct(c.magPct)}</b></div>
         <div className="bp-tile"><span>{t("tile_killspermag")}</span><b>{c.killsPerMag}</b></div>
       </div>
-      {!isFinite(c.btk) && c.sever !== null && (
+      {cantKill && c.sever !== null && (
         <div className="disclaimer" style={{ marginTop: 10 }}>
           <b>{t("ref_prefix")}</b> {t("note_no_kill_use_bts")}
         </div>
@@ -88,7 +92,7 @@ export default function ResultPanel({ weapon, enemy, part, t, compareVisible, on
                       <span className="status-pill status-blocked">{t("status_blocked")}</span>
                     )}
                   </td>
-                  <td className="mono">{fmtNum(hitEffDamage(h, part.armor, part.durability))}</td>
+                  <td className="mono">{fmtNum(hitEffDamage(h, part.armor, part.durability, fireMult))}</td>
                   <td>
                     {isChosen ? (
                       <span className="status-pill status-full">{t("detail_applied")}</span>
@@ -119,13 +123,25 @@ export default function ResultPanel({ weapon, enemy, part, t, compareVisible, on
       <div className="section-label" style={{ marginTop: 14 }}>{t("results_summary_label")}</div>
       <div className="intel">
         <ul>
-          <li>
-            {dispText(weapon)}(으)로 {part.name} 부위를 {fmtNum(c.btk)}발 맞히면 {part.lethal ? "그 부위 파괴로 즉사" : "메인 체력 소모로 처치"}됩니다
-            {" "}(약 {fmtNum(c.ttk, 2)}초, 재장전 {fmtNum(c.reloads)}회 포함).
-          </li>
-          <li>마지막 한 발의 초과 피해(오버킬)는 약 {fmtNum(c.overkill)}이며, 탄창의 {fmtPct(c.magPct)}을 소모합니다.</li>
+          {weapon.continuous ? (
+            <li>
+              {dispText(weapon)}(으)로 {part.name} 부위에 약 {fmtNum(c.ttk, 1)}초간 연사를 유지하면{" "}
+              {part.lethal ? "그 부위 파괴로 즉사" : "메인 체력 소모로 처치"}됩니다
+              {" "}(캐니스터 소모 {fmtPct(c.magPct)}, 교체 {fmtNum(c.reloads)}회 포함).
+            </li>
+          ) : (
+            <li>
+              {dispText(weapon)}(으)로 {part.name} 부위를 {fmtNum(c.btk)}발 맞히면 {part.lethal ? "그 부위 파괴로 즉사" : "메인 체력 소모로 처치"}됩니다
+              {" "}(약 {fmtNum(c.ttk, 2)}초, 재장전 {fmtNum(c.reloads)}회 포함).
+            </li>
+          )}
+          {!weapon.continuous && (
+            <li>마지막 한 발의 초과 피해(오버킬)는 약 {fmtNum(c.overkill)}이며, 탄창의 {fmtPct(c.magPct)}을 소모합니다.</li>
+          )}
           {c.sever !== null && c.sever !== c.btk && (
-            <li>이 부위 자체(껍데기)만 파괴하는 데는 {c.sever}발이면 충분합니다 (전체 처치와는 별개).</li>
+            <li>
+              이 부위 자체(껍데기)만 파괴하는 데는 {weapon.continuous ? `약 ${fmtNum(c.sever, 1)}초` : `${c.sever}발`}이면 충분합니다 (전체 처치와는 별개).
+            </li>
           )}
           {c.regenWarning && (
             <li style={{ color: "var(--danger)" }}>
